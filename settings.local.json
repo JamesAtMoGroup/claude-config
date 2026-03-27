@@ -104,7 +104,20 @@
       "Bash(cd /Users/jamesshih/article-video ffmpeg -y -i public/audio/ai-knowledge-2026-03-27.wav -i public/audio/course_bgmusic.wav -filter_complex \":*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(bash ~/.claude/scripts/sync.sh push)"
+      "Bash(bash ~/.claude/scripts/sync.sh push)",
+      "Bash(xxd)",
+      "Bash(unzip:*)",
+      "Bash(pkill -f 'remotion render FullVideo')",
+      "Bash(sed -i '' 's/title:  { from: 0,    to: 1523  }/title:  { from: 0,    to: 1515  }/' /Users/jamesshih/article-video/src/VideoComposition_2026_03_27.tsx)",
+      "Bash(__NEW_LINE_60ebeb802fe34661__ sed:*)",
+      "Bash(__NEW_LINE_60ebeb802fe34661__ echo:*)",
+      "Bash(sed -i '' 's/{ label: \"\"今日焦點\"\",             start: 1523 }/{ label: \"\"今日焦點\"\",             start: 1515 }/' /Users/jamesshih/article-video/src/VideoComposition_2026_03_27.tsx)",
+      "Bash(__NEW_LINE_c1523b6af13cae99__ sed:*)",
+      "Bash(__NEW_LINE_c1523b6af13cae99__ echo:*)",
+      "Bash(find /Users/jamesshih/Projects/vibe-coding-video -name *.vtt)",
+      "Bash(chmod +x /Users/jamesshih/Projects/vibe-coding-video/scripts/6_merge_vtt.sh)",
+      "Bash(bash /Users/jamesshih/Projects/vibe-coding-video/scripts/6_merge_vtt.sh)",
+      "Bash(bash /Users/jamesshih/.claude/scripts/sync.sh push)"
     ]
   }
 }

@@ -18,14 +18,20 @@ Remotion video project at `~/Projects/vibe-coding-video/` for the "Vibe Coding" 
 - HeyGen avatar script running for 14 segments (6,000 credits available)
 - Avatar currently showing as placeholder black circle; final re-render pending HeyGen completion
 
-## Key standards established this session
+## Key standards established
 
-- **CONTAINER_W = 1500**, **SUBTITLE_H = 160** (bottom reserved for subtitles)
-- Font sizes: 88px hero, 52px section header, 36px card body (all mobile-sized)
+- **CONTAINER_W = 1500**, **SUBTITLE_H = 160** (bottom reserved for subtitles — no content)
+- Font minimum: any content shown to learners ≥ 24px; main body ≥ 36px; UI chrome ≥ 16px
+- Compare table: th 28px, td label 26px fontWeight 700, td content 26px, borderRadius 22
+- Learning path steps: 48×48 circle, step# 18px, title 28px, desc 24px
+- Quiz box: label 18px Space Mono, body 26px, bullets 24px
+- Nav bar text: 16px Space Mono
 - iMessage callout: `maxWidth: NOTIF_W`, no `minHeight`, no `\n` in text (use `，`)
+- iMessage font: "訊息" 18px, "剛剛" 15px, sender 22px, body 34px fontWeight 800
 - Stacking: `calcStackOffset()` is a plain function (not hook) — all hooks before `return null`
 - Focus highlight: `useFocusHighlight(startFrame)` adds green glow when element first appears
-- HeyGen: upload to `upload.heygen.com/v1/asset`, Content-Type: `audio/x-wav`
+- Avatar: Lottie (`speaking-animation.json`) — NOT HeyGen video
+- Output: `out/CH{chapter}/CH{chapter}-complete.mp4` + `CH{chapter}-subtitles.vtt`
 
 ## Repo
 - GitHub: `JamesAtMoGroup/vibe-coding-video`

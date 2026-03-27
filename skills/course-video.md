@@ -19,7 +19,7 @@
 | **VTT Correction Agent** | 比對逐字稿修正 VTT 錯誤 |
 | **HTML Analysis & Scene Planning Agent** | 讀取 HTML、對應段落、建立時間軸計畫 |
 | **Scene Development Agent** | 撰寫 Remotion TSX 元件 |
-| **Integration & Render Agent** | 組裝 Root.tsx、執行 render、輸出 MP4 |
+| **Integration & Render Agent** | 組裝 Root.tsx、執行 render、輸出 MP4 + VTT |
 
 小任務可合併 Agent，但 **Director 必須獨立存在**。
 
@@ -35,10 +35,27 @@
 | Whisper 轉錄 | `1_transcribe.sh <chapter>` | ④ |
 | 品牌名修正 | `2_correct_vtts.sh <chapter>` | ⑤ |
 | 幀數計算 | `3_calc_frames.sh <chapter>` | ⑥ |
-| HeyGen avatar 生成 | `5_heygen_avatar.sh` | ⑦（背景執行） |
-| Remotion render | `4_render.sh <composition> <chapter>` | ⑧ 最後 |
+| Remotion render | `4_render.sh <composition> <chapter>` | ⑦ 最後 |
+| VTT 合併 | `6_merge_vtt.sh` | ⑧ render 完後立即執行 |
 
 **重要**：每次有新音檔，必須依序跑完 ①②③ 再 render。
+
+---
+
+## 輸出規格（強制）
+
+每個章節的完成檔案必須放在 `out/CH{chapter}/` 資料夾下，包含：
+
+```
+out/
+  CH{chapter}/
+    CH{chapter}-complete.mp4   — 完整影片
+    CH{chapter}-subtitles.vtt  — 合併完整字幕
+```
+
+- `4_render.sh` 輸出路徑：`out/CH{chapter}/CH{chapter}-complete.mp4`
+- `6_merge_vtt.sh` 同步產生：`out/CH{chapter}/CH{chapter}-subtitles.vtt`
+- VTT 以每個 segment 的累計幀數（÷30 = 秒數）為 offset 合併，時間戳格式為 `HH:MM:SS.mmm`
 
 ---
 
@@ -76,26 +93,37 @@ ffmpeg -af "loudnorm=I=-16:LRA=11:TP=-1.5"
 ```tsx
 const NAV_H       = 72;    // Progress Bar 高度
 const CONTAINER_W = 1500;  // 內容欄寬度（手機友善）
-const SUBTITLE_H  = 160;   // 底部字幕保留空間
+const SUBTITLE_H  = 160;   // 底部字幕保留空間（不放內容）
 // 內容欄水平置中：left = Math.round((1920 - 1500) / 2) = 210px
 // 內容區垂直：top: NAV_H, bottom: SUBTITLE_H
 ```
 
-### 字體大小標準（手機可讀）
+### 字體大小標準（手機可讀，最低標準）
 
-| 元素 | 字體大小 |
-|------|---------|
-| Hero 主標題 | 88px |
-| Hero 副標題 | 36px |
-| Hero meta badge | 20px |
-| Section Header h2 | 52px |
-| Section Number badge | 22px |
-| Card 內文 | 36px |
-| AnalogyBox 內文 | 34px |
-| AnalogyBox 標籤 | 18px |
-| 三欄 Grid 標題 | 30px |
-| 三欄 Grid 說明 | 24px |
-| Takeaway 條目 | 36px |
+| 元素 | 字體大小 | 備註 |
+|------|---------|------|
+| Hero 主標題 | 88px | |
+| Hero 副標題 / Card 內文 | 36px | |
+| Hero meta badge | 20px | |
+| Section Header h2 | 52px | |
+| Section Number badge | 22px | |
+| AnalogyBox 內文 | 34px | |
+| AnalogyBox 標籤 | 18px | Space Mono |
+| 三欄 Grid 標題 | 30px | |
+| 三欄 Grid 說明 | 24px | |
+| Takeaway 條目 | 36px | |
+| 比較表格 header | 28px | |
+| 比較表格 label 欄 | 26px fontWeight 700 | |
+| 比較表格 內容欄 | 26px | |
+| 學習路徑 step 標題 | 28px | |
+| 學習路徑 step 說明 | 24px | |
+| 學習路徑 step 號碼圓圈 | 48×48px, 18px | Space Mono |
+| Quiz 「想一想」label | 18px | Space Mono uppercase |
+| Quiz 主文 | 26px | |
+| Quiz 條列項目 | 24px | |
+| Nav bar 章節文字 | 16px | Space Mono |
+
+> **原則**：任何直接展示給學員的內容，最小字體不得低於 24px。UI chrome（nav bar、標籤）最小 16px。
 
 ### 色彩系統
 
@@ -180,6 +208,31 @@ function useFocusHighlight(startFrame: number, duration = 75) {
 // padding: "32px 38px", borderRadius: "0 16px 16px 0", label: 18px, body: 34px
 ```
 
+### 比較表格（CompareTable）
+
+```tsx
+// borderRadius: 22, overflow: hidden
+// th: padding "22px 28px", fontSize 28
+// td label: padding "20px 28px", fontSize 26, fontWeight 700
+// td content: padding "20px 28px", fontSize 26
+```
+
+### 學習路徑 Steps
+
+```tsx
+// 步驟號碼圓圈：width/height 48, borderRadius "50%", fontSize 18, Space Mono
+// 步驟標題：fontSize 28, fontWeight 700
+// 步驟說明：fontSize 24
+```
+
+### Quiz Box
+
+```tsx
+// "想一想" label：Space Mono, fontSize 18, uppercase, color C.yellow
+// 主文：fontSize 26, lineHeight 1.7
+// 條列項目：fontSize 24
+```
+
 ---
 
 ## iMessage 字卡規格（S=2 for 1080p）
@@ -195,6 +248,15 @@ const NOTIF_SLIDE_H = 110 * S;   // 220px 從上方往下滑入
 const NOTIF_SLOT_H  = 100 * S;   // 200px per slot（含 gap）
 const FADE_OUT_F    = 50;        // 1.67s 淡出
 ```
+
+### 字體大小
+
+| 元素 | 大小 |
+|------|------|
+| 「訊息」app 標籤 | 18px |
+| 「剛剛」時間戳 | 15px |
+| 寄件者名稱 / label | 22px, fontWeight 700 |
+| 訊息內文 | 34px, fontWeight 800 |
 
 ### 入場動畫：從頂部往下滑
 
@@ -230,7 +292,7 @@ function calcStackOffset(c: Callout, allCallouts: Callout[], frame: number, fps:
 const CalloutCard: React.FC<{ c: Callout; allCallouts: Callout[] }> = ({ c, allCallouts }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const stackOffset = calcStackOffset(c, allCallouts, frame, fps); // ← hook 規則：在 return null 之前
+  const stackOffset = calcStackOffset(c, allCallouts, frame, fps); // ← 在 return null 之前
   if (frame < c.from || frame > c.to) return null;
   // ...
   top: NAV_H + NOTIF_TOP + stackOffset,
@@ -240,10 +302,8 @@ const CalloutCard: React.FC<{ c: Callout; allCallouts: Callout[] }> = ({ c, allC
 ### 字卡文字規則
 
 - **禁用 `\n`** — 改用 `，`、`：`、`、` 等標點分隔
-- 例：`"AI 幫我們，實現困難的事"` 而非 `"AI 幫我們\n實現困難的事"`
 - 外層 div 用 `maxWidth: NOTIF_W`（非固定 width）— 讓短文字不留多餘空白
 - 移除 `minHeight`（讓卡片高度由文字決定）
-- 字體：34px, fontWeight: 800
 
 ### 渲染方式
 
@@ -254,46 +314,34 @@ const CalloutCard: React.FC<{ c: Callout; allCallouts: Callout[] }> = ({ c, allC
 
 ---
 
-## HeyGen Avatar 規格
+## Lottie Avatar 規格
 
-- Avatar ID：`f7af57d29abd4254a1e43441ec16ce40`
-- 腳本：`scripts/5_heygen_avatar.sh`
-- 正確 upload endpoint：`https://upload.heygen.com/v1/asset`（注意：不是 api.heygen.com）
-- Content-Type：`audio/x-wav`（不是 `audio/wav`）
-- 輸出目錄：`public/avatar/0-1_*.mp4`
+> **使用 Lottie，不使用 HeyGen 影片作為 avatar overlay。**
 
-### Remotion 圓形 Avatar
+- Lottie 檔案：`src/speaking-animation.json`（從 `speaking.lottie` 解壓）
+- 解壓方式：`unzip -p speaking.lottie animations/speaking-animation.json > src/speaking-animation.json`
+- `.lottie` 是 ZIP 格式，不可直接 import — 必須解壓為 JSON
 
 ```tsx
-const AVATAR_SIZE = 180;
+import { Lottie } from "@remotion/lottie";
+import speakingData from "./speaking-animation.json";
 
-const AvatarOverlay: React.FC<{ segmentId: string }> = ({ segmentId }) => {
+const AvatarOverlay: React.FC = () => {
   const frame = useCurrentFrame();
   const fadeIn = interpolate(frame, [0, 20], [0, 1], clamp);
   return (
     <div style={{
-      position: "absolute", bottom: 40, right: 40,
-      width: AVATAR_SIZE, height: AVATAR_SIZE,
+      position: "absolute", bottom: 40, right: 40, width: 200, height: 200,
       borderRadius: "50%", overflow: "hidden",
       border: "3px solid rgba(124,255,178,0.6)",
       boxShadow: "0 0 20px rgba(124,255,178,0.25), 0 4px 16px rgba(0,0,0,0.6)",
       opacity: fadeIn, zIndex: 20,
     }}>
-      <Video
-        src={staticFile(`avatar/0-1_${segmentId}.mp4`)}
-        style={{ width: "100%", height: "100%", objectFit: "cover" }}
-        muted
-      />
+      <Lottie animationData={speakingData} style={{ width: "100%", height: "100%" }} />
     </div>
   );
 };
-// 在每個 scene 加：<AvatarOverlay segmentId="1.1" />
-```
-
-**Placeholder 建立**（尚未跑 HeyGen 時先用）：
-```bash
-ffmpeg -f lavfi -i color=black:size=400x400:rate=30 -t 1 -c:v libx264 public/avatar/placeholder.mp4
-for id in 1.1 2.1 2.2 ...; do cp placeholder.mp4 public/avatar/0-1_${id}.mp4; done
+// 在每個 scene 加：<AvatarOverlay />
 ```
 
 ---
@@ -345,9 +393,11 @@ durationInFrames = Math.ceil(audioDurationSec × 30) + 10
 | 字卡跟台詞對不上 | 用估算秒數 | 用 Whisper VTT |
 | 音訊被放大時背景噪音明顯 | normalize 前未降噪 | 先跑 0a_denoise.sh |
 | 靜音間隙使 segments 跳接不自然 | 未裁切前後靜音 | 跑 0b_trim_silence.sh（用 silencedetect+atrim，不用 silenceremove） |
-| HeyGen 上傳失敗 | 用了 api.heygen.com/v1/asset | 改用 upload.heygen.com/v1/asset，Content-Type: audio/x-wav |
 | iMessage 字卡有大量空白 | 固定 width + minHeight | 改 maxWidth，移除 minHeight |
-| 手機畫面文字太小 | CONTAINER_W 太窄，字體太小 | CONTAINER_W=1500，字體至少 36px 內文 |
+| 手機畫面文字太小 | CONTAINER_W 太窄，字體太小 | CONTAINER_W=1500，內容字體至少 24px，主要文字 36px |
+| 表格文字太小 | fontSize 13/14 | th: 28px, td label: 26px fontWeight 700, td content: 26px |
+| Step/Quiz 文字太小 | fontSize 13-15 | Step 標題 28px, 說明 24px；Quiz 主文 26px, 條列 24px |
+| `.lottie` 無法 import | dotLottie 是 ZIP 格式 | unzip -p 解壓為 JSON 再 import |
 
 ---
 
@@ -379,10 +429,20 @@ durationInFrames = Math.ceil(audioDurationSec × 30) + 10
    - useFadeUp startFrame 來自 VTT × 30
    - useFocusHighlight 與 useFadeUp 同一 startFrame
    - 字卡 CALLOUTS 來自 VTT 關鍵詞時間戳
+   - 所有字體符合本 skill 的最低字體標準
 
-7. HeyGen Avatar（背景執行）
-   bash scripts/5_heygen_avatar.sh &
+7. Render（輸出到章節資料夾）
+   bash scripts/4_render.sh FullVideo {章節}
+   → 輸出：out/CH{章節}/CH{章節}-complete.mp4
 
-8. Render
-   npx remotion render FullVideo out/CH{章節}-complete.mp4 --codec=h264
+8. 合併 VTT（render 後立即執行）
+   bash scripts/6_merge_vtt.sh
+   → 輸出：out/CH{章節}/CH{章節}-subtitles.vtt
+
+9. 驗收清單
+   ✓ 所有文字在手機畫面清晰可讀
+   ✓ 底部 SUBTITLE_H=160px 保留空白（不放內容）
+   ✓ iMessage 字卡從頂部滑入、堆疊正確、文字無換行
+   ✓ 每個 scene 有 AvatarOverlay（Lottie）
+   ✓ out/CH{章節}/ 包含 .mp4 + .vtt
 ```
