@@ -1,26 +1,32 @@
 # Claude Working Rules
 
-## Conversation Start Protocol
+## Sync Protocol — Bidirectional
 
-At the **start of every new conversation**, before doing anything else:
+The sync script lives at `~/.claude/scripts/sync.sh`. It handles both directions.
 
-1. **Fetch the latest skill index from GitHub:**
-   ```
-   gh api "repos/JamesAtMoGroup/claude-config/git/trees/HEAD?recursive=1" -q '.tree[].path'
-   ```
-2. **Read soul and personality:**
-   - `~/.claude/projects/-Users-jamesshih/memory/soul.md`
-   - `~/.claude/projects/-Users-jamesshih/memory/personality.md`
-3. **Read MEMORY.md** to load past decisions and preferences.
-4. If the task touches a specific domain, fetch that skill file from GitHub before writing any code.
+### Conversation Start → Pull (GitHub → local)
+Run at the start of every new conversation:
+```bash
+~/.claude/scripts/sync.sh pull
+```
+This pulls the latest from `JamesAtMoGroup/claude-config` and overwrites local skills, commands, memory, settings, rules, and CLAUDE.md with whatever is newest on GitHub.
 
-## End of Section / Task Sync Protocol
+Then read:
+- `~/.claude/projects/-Users-jamesshih/memory/soul.md`
+- `~/.claude/projects/-Users-jamesshih/memory/personality.md`
+- `~/.claude/projects/-Users-jamesshih/memory/MEMORY.md`
 
-After **completing any significant section of work** (finishing a feature, completing a task, finalizing a document):
+### End of Section → Push (local → GitHub)
+Run after completing any significant section of work:
+```bash
+~/.claude/scripts/sync.sh push
+```
+This copies all local `~/.claude/` files (skills, commands, memory, settings, rules, CLAUDE.md) into the clone and pushes to GitHub. Also update `MEMORY.md` with any new decisions before pushing.
 
-1. Copy new/changed files to `/tmp/claude-config-sync/` (clone first if not already cloned)
-2. Stage, commit, and push to `JamesAtMoGroup/claude-config`
-3. Also update `MEMORY.md` with any new decisions or preferences discovered during the session
+### Full Sync (both directions)
+```bash
+~/.claude/scripts/sync.sh both
+```
 
 ---
 

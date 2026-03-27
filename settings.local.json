@@ -55,7 +55,18 @@
       "Bash(npx remotion:*)",
       "Bash(gh repo:*)",
       "Read(//private/tmp/**)",
-      "Bash(rm -rf claude-config-sync)"
+      "Bash(rm -rf claude-config-sync)",
+      "Bash(ffprobe -v quiet -show_entries format=duration -of csv=p=0 \"/Users/jamesshih/Projects/vibe-coding-video/public/audio/0-1_1.1_studio.wav\")",
+      "Bash(ffmpeg -y -i \"/Users/jamesshih/Projects/vibe-coding-video/public/audio/0-1_1.1_studio.wav\" -t 30 -c copy \"/tmp/avatar_audio_30s.wav\")",
+      "Bash(# Copy all updated/new files\ncp /Users/jamesshih/CLAUDE.md /tmp/claude-config-sync/CLAUDE.md\ncp /Users/jamesshih/.claude/rules.md /tmp/claude-config-sync/rules.md\ncp /Users/jamesshih/.claude/projects/-Users-jamesshih/memory/MEMORY.md /tmp/claude-config-sync/memory/MEMORY.md\ncp /Users/jamesshih/.claude/projects/-Users-jamesshih/memory/soul.md /tmp/claude-config-sync/memory/soul.md\ncp /Users/jamesshih/.claude/projects/-Users-jamesshih/memory/personality.md /tmp/claude-config-sync/memory/personality.md\n\ncd /tmp/claude-config-sync && git status --short)",
+      "Bash(cp /Users/jamesshih/.claude/projects/-Users-jamesshih/memory/soul.md /tmp/claude-config-sync/memory/soul.md)",
+      "Bash(cp /Users/jamesshih/.claude/projects/-Users-jamesshih/memory/personality.md /tmp/claude-config-sync/memory/personality.md)",
+      "Bash(cp /Users/jamesshih/.claude/projects/-Users-jamesshih/memory/feedback_leverage_mindset.md /tmp/claude-config-sync/memory/feedback_leverage_mindset.md)",
+      "Bash(cp /Users/jamesshih/.claude/projects/-Users-jamesshih/memory/MEMORY.md /tmp/claude-config-sync/memory/MEMORY.md)",
+      "Bash(__NEW_LINE_e6fee36ce5bf27f2__ cd:*)",
+      "WebFetch(domain:docs.heygen.com)",
+      "Bash(chmod +x /Users/jamesshih/.claude/scripts/sync.sh)",
+      "Bash(~/.claude/scripts/sync.sh push:*)"
     ]
   }
 }

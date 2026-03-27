@@ -1,7 +1,7 @@
 # About James (JamesAtMoGroup)
 
-> **Start of every conversation:** Read `~/.claude/rules.md`, fetch skill list from `JamesAtMoGroup/claude-config` on GitHub, read `soul.md` + `personality.md` from memory.
-> **End of every section:** Sync all new/changed config files back to `JamesAtMoGroup/claude-config` on GitHub.
+> **Start of every conversation:** Run `~/.claude/scripts/sync.sh pull` (GitHub → local), then read `soul.md` + `personality.md` + `MEMORY.md`.
+> **End of every section:** Run `~/.claude/scripts/sync.sh push` (local → GitHub). Update `MEMORY.md` first if anything new was learned.
 
 ## Local Skill & Config Paths
 - Skills: `~/.claude/skills/` (banner-design, brand, design, design-system, frontend-slides, slides, ui-styling, ui-ux-pro-max)
