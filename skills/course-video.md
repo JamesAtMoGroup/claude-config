@@ -29,10 +29,20 @@
 
 | 任務 | 用腳本 | 腳本位置 |
 |------|--------|---------|
+| **音量正規化（必須最先跑）** | `0_normalize_audio.sh` | `scripts/0_normalize_audio.sh` |
 | Whisper 轉錄 + 複製音檔 | `1_transcribe.sh <chapter>` | `scripts/1_transcribe.sh` |
 | 已知品牌名修正 | `2_correct_vtts.sh <chapter>` | `scripts/2_correct_vtts.sh` |
 | 音檔時長 → 幀數計算 | `3_calc_frames.sh <chapter>` | `scripts/3_calc_frames.sh` |
 | Remotion render | `4_render.sh <composition> <chapter>` | `scripts/4_render.sh` |
+
+### 音量標準（強制）
+
+> 每次有新音檔加入時，必須先跑 `0_normalize_audio.sh`，再 render。
+
+| 音源 | 設定 | 說明 |
+|------|------|------|
+| 講者音檔 | `-16 LUFS` (ffmpeg loudnorm) + Remotion `volume={1.0}` | 所有段落一致音量 |
+| 背景音樂 | Remotion `volume={0.10} loop` | 不蓋過講者聲音，全程循環播放 |
 
 **只有以下任務才需要 Agent 撰寫/判斷：**
 - 撰寫 Remotion TSX 場景元件（需讀 HTML + 理解內容）
