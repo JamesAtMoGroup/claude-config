@@ -1,7 +1,7 @@
 # About James (JamesAtMoGroup)
 
-> **Start of every conversation:** Run `~/.claude/scripts/sync.sh pull` (GitHub → local), then read `soul.md` + `personality.md` + `MEMORY.md`.
-> **End of every section:** Run `~/.claude/scripts/sync.sh push` (local → GitHub). Update `MEMORY.md` first if anything new was learned.
+> **Start of every conversation:** Read local files only — `~/.claude/rules.md`, `soul.md`, `personality.md`, `MEMORY.md`. Do NOT pull from GitHub; laptop is always up to date.
+> **End of every session:** Push everything new/changed to both laptop AND GitHub (`claude-config` repo). Update `MEMORY.md` index first if anything new was learned.
 
 ## Local Skill & Config Paths
 - Skills: `~/.claude/skills/` (banner-design, brand, design, design-system, frontend-slides, slides, ui-styling, ui-ux-pro-max)
