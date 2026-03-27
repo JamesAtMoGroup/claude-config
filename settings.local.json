@@ -74,7 +74,12 @@
       "Bash(/Users/jamesshih/Projects/vibe-coding-video/.gitignore:*)",
       "Bash(git remote:*)",
       "Bash(git push:*)",
-      "Bash(git pull:*)"
+      "Bash(git pull:*)",
+      "Bash(for f:*)",
+      "Bash(do /Users/jamesshih/Library/Python/3.9/bin/whisper \"$f\" --language zh --model small --output_format vtt --output_dir \"/Users/jamesshih/Downloads/Vibe Coding 剪輯/0-1/0-1 音檔/\")",
+      "Bash(echo \"DONE: $f\")",
+      "Bash(done)",
+      "Bash(python3 -c \":*)"
     ]
   }
 }

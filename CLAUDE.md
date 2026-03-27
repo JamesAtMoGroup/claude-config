@@ -1,40 +1,8 @@
-# About James (JamesAtMoGroup)
+# James — Claude Config
 
-> **Start of every conversation:** Read local files only — `~/.claude/rules.md`, `soul.md`, `personality.md`, `MEMORY.md`. Do NOT pull from GitHub; laptop is always up to date.
-> **End of every session:** Push everything new/changed to both laptop AND GitHub (`claude-config` repo). Update `MEMORY.md` index first if anything new was learned.
+> **Conversation start:** Read `~/.claude/rules.md` → `memory/soul.md` → `memory/personality.md` → `memory/MEMORY.md`
+> **Session end:** `~/.claude/scripts/sync.sh push` — update `MEMORY.md` first if anything new was learned.
 
-## Local Skill & Config Paths
-- Skills: `~/.claude/skills/` (banner-design, brand, design, design-system, frontend-slides, slides, ui-styling, ui-ux-pro-max)
-- Three.js/ECS/Game Skills: `~/.claude/skills/threejs-ecs-ts/skills/` — manifest: `~/.claude/skills/threejs-ecs-ts/claude-code-plugin.json`
-- Commands: `~/.claude/commands/remotion-video.md`
-- Memory: `~/.claude/projects/-Users-jamesshih/memory/`
-- Rules: `~/.claude/rules.md`
-
-## GitHub
-- Username: **JamesAtMoGroup**
-- Skills source: https://github.com/JamesAtMoGroup/claude-config ← always check here for updates
-- Public repos:
-  - `day1` — n8n course interactive page (HTML/CSS/JS)
-  - `n8ncourse` — 29-lecture n8n AI automation course site
-  - `line-liff-booking` → cloned to `~/Projects/line-liff-booking/`
-
-## Work & Projects
-- Runs a newsletter and creates video content for it
-- Teaches n8n automation (AI agents, Gmail integration, workflow automation)
-- Works with tools: n8n, LINE LIFF, Google Meet, Gmail, Pushover
-
-## Three.js / ECS / Game Dev Skills
-- Skills: `~/.claude/skills/threejs-ecs-ts/skills/`
-- Categories: `threejs`, `ecs`, `game-systems`, `typescript`, `mobile`, `react`
-- Plugin manifest: `~/.claude/skills/threejs-ecs-ts/claude-code-plugin.json`
-- Use when: building 3D scenes, Three.js, ECS architecture, React Three Fiber, mobile game optimization
-
-## Remotion / Video Skills
-- **Skill file**: `~/.claude/commands/remotion-video.md` — read this first for ALL Remotion work
-- **Style**: Glassmorphism + YouTube Tutorial (see `~/.claude/projects/-Users-jamesshih/memory/remotion_style_preference.md`)
-  - Glass cards: `background: rgba(255,255,255,0.08)`, `backdropFilter: blur(20px)`, `border: 1px solid rgba(255,255,255,0.18)`, `borderRadius: 20`
-  - Accent colors: `#FF6B35` (orange), `#20D9BA` (teal), `#FFD60A` (yellow)
-  - Fonts: Inter, Nunito, or Poppins
-  - Spring config: damping 18–22, stiffness 85–120
-  - Callout icons: emoji (💡 ⚡ 📌 ✅)
-  - Progress bar: chapter title + scrubber only — NO mm:ss timestamp
+- Skills: `~/.claude/skills/` | Commands: `~/.claude/commands/` | Memory: `~/.claude/projects/-Users-jamesshih/memory/`
+- GitHub: **JamesAtMoGroup** | Config repo: `claude-config`
+- Rules: `~/.claude/rules.md` (sync protocol, skill loading, domain-specific guides)

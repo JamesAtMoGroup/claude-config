@@ -6,6 +6,7 @@
 
 ## Feedback
 - [Session sync rule](./feedback_session_sync.md) — Read from laptop at start; push to laptop + GitHub at end. Never pull from GitHub to start
+- [Token usage report](./feedback_token_report.md) — Always report token usage at the end of every session
 - [High leverage, goal-first mindset](./feedback_leverage_mindset.md) — High value, lowest cost, biggest result; pursue goals not tasks
 - [Remotion style and skill source](./feedback_remotion_style.md) — Always use claude-config GitHub repo for Remotion; Glassmorphism + YouTube Tutorial style
 - [No timeframes or instructor sections](./feedback_no_timeframes.md) — Never mention 三週/fixed course duration or include instructor bios in lecture pages
