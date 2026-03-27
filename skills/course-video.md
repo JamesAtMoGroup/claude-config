@@ -6,6 +6,25 @@
 
 ---
 
+## 執行規則（強制）
+
+> **每次執行此技能，必須使用多 Agent 團隊，不得由單一 Agent 獨立完成。**
+
+### 標準團隊結構
+
+| 角色 | 職責 |
+|------|------|
+| **Director** | 讀取 skill + `progress.md`，分配任務，審查產出，做最終決定 |
+| **Asset & Transcription Agent** | 確認素材、執行 Whisper VTT、複製音檔 |
+| **VTT Correction Agent** | 比對逐字稿修正 VTT 錯誤 |
+| **HTML Analysis & Scene Planning Agent** | 讀取 HTML、對應段落、建立時間軸計畫 |
+| **Scene Development Agent** | 撰寫 Remotion TSX 元件 |
+| **Integration & Render Agent** | 組裝 Root.tsx、執行 render、輸出 MP4 |
+
+小任務可合併 Agent，但 **Director 必須獨立存在**。
+
+---
+
 ## 核心設計原則（最重要）
 
 > **影片畫面必須與 `(N){章節}.html` 的視覺和內容一致。**
