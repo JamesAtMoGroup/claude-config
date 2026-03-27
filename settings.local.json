@@ -68,7 +68,13 @@
       "Bash(chmod +x /Users/jamesshih/.claude/scripts/sync.sh)",
       "Bash(~/.claude/scripts/sync.sh push:*)",
       "Bash(rm -rf /Users/jamesshih/.claude/skills/.claude)",
-      "Bash(rm -rf /tmp/claude-config-sync/skills/.claude)"
+      "Bash(rm -rf /tmp/claude-config-sync/skills/.claude)",
+      "Bash(du -sh /Users/jamesshih/Downloads/Vibe Coding 剪輯/0-1/0-1 音檔//*.wav)",
+      "Bash(du -sh /Users/jamesshih/Projects/vibe-coding-video/public/audio/*.wav)",
+      "Bash(/Users/jamesshih/Projects/vibe-coding-video/.gitignore:*)",
+      "Bash(git remote:*)",
+      "Bash(git push:*)",
+      "Bash(git pull:*)"
     ]
   }
 }
