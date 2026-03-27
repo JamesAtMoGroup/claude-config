@@ -79,7 +79,10 @@
       "Bash(do /Users/jamesshih/Library/Python/3.9/bin/whisper \"$f\" --language zh --model small --output_format vtt --output_dir \"/Users/jamesshih/Downloads/Vibe Coding 剪輯/0-1/0-1 音檔/\")",
       "Bash(echo \"DONE: $f\")",
       "Bash(done)",
-      "Bash(python3 -c \":*)"
+      "Bash(python3 -c \":*)",
+      "Bash(npx tsc:*)",
+      "Bash(node:*)",
+      "Bash(ffprobe:*)"
     ]
   }
 }

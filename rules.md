@@ -37,10 +37,12 @@ This copies all local `~/.claude/` files (skills, commands, memory, settings, ru
 | Task type | Read this — nothing else |
 |-----------|--------------------------|
 | Remotion / video | `~/.claude/commands/remotion-video.md` |
+| Vibe Coding course video | `~/Downloads/Vibe Coding 剪輯/course-video.md` + `~/Projects/vibe-coding-video/progress.md` |
 | n8n course | `memory/n8ncourse.md` |
 | LINE booking app | `~/Projects/line-liff-booking/README.md` |
 | Design / UI | `~/.claude/skills/ui-ux-pro-max/SKILL.md` |
 | Slides | `~/.claude/skills/frontend-slides/SKILL.md` |
+| Three.js / ECS / game dev | `~/.claude/skills/threejs-ecs-ts/claude-code-plugin.json` (lists all skill paths) |
 | MCP large response | `~/.claude/skills/mcp-response-analyzer/SKILL.md` |
 
 ---
