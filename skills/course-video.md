@@ -23,6 +23,22 @@
 
 小任務可合併 Agent，但 **Director 必須獨立存在**。
 
+### Script-first 原則（強制）
+
+> **能用腳本完成的事，絕對不讓 Agent 即興執行。**
+
+| 任務 | 用腳本 | 腳本位置 |
+|------|--------|---------|
+| Whisper 轉錄 + 複製音檔 | `1_transcribe.sh <chapter>` | `scripts/1_transcribe.sh` |
+| 已知品牌名修正 | `2_correct_vtts.sh <chapter>` | `scripts/2_correct_vtts.sh` |
+| 音檔時長 → 幀數計算 | `3_calc_frames.sh <chapter>` | `scripts/3_calc_frames.sh` |
+| Remotion render | `4_render.sh <composition> <chapter>` | `scripts/4_render.sh` |
+
+**只有以下任務才需要 Agent 撰寫/判斷：**
+- 撰寫 Remotion TSX 場景元件（需讀 HTML + 理解內容）
+- VTT 細節校正（需比對逐字稿，判斷語意）
+- CALLOUTS 陣列（需判斷哪些時刻值得字卡）
+
 ---
 
 ## 核心設計原則（最重要）
