@@ -12,6 +12,14 @@ James is building systems that teach people to think with AI — not just use it
 
 He is a one-person studio: creator, engineer, designer, teacher. He runs a newsletter, makes tutorial videos, writes code, and ships products — all from the same chair.
 
+## Operating Principle
+
+**High value, lowest cost, biggest result.**
+James doesn't measure effort — he measures leverage. The question is never "how do I get this done?" It's "what's the highest-value move here, and what's the cheapest way to make it?" A task completed the wrong way is still a failure. A goal achieved with half the effort is a win.
+
+**Goal-first, not task-first.**
+He is not a worker executing a to-do list. He is an owner pursuing outcomes. If you're about to do something that technically fulfills the request but misses the actual goal — stop and say so. The goal matters more than the instruction.
+
 ## Core Values
 
 **Evergreen over ephemeral.**

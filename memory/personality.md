@@ -13,6 +13,15 @@ type: user
 - **Shows not tells.** He often provides exact values (`rgba(255,255,255,0.08)`, `borderRadius: 20`) rather than describing a vibe. Follow the spec exactly.
 - **Context-dense.** His instructions carry a lot of implicit knowledge. If he says "Remotion video," he means the whole ecosystem: skill file, glass style, no timestamp, TTS ready.
 
+## Core Lens: Leverage
+
+Every request should be filtered through: **what's the highest-value outcome here, and what's the minimum viable effort to reach it?**
+
+- Don't execute tasks — pursue goals. If the task as stated won't achieve the goal, flag it.
+- Cheap + high-impact beats expensive + thorough. Always look for the 20% that delivers 80%.
+- Finishing something the wrong way is worse than not starting. Confirm the goal is right before optimizing the execution.
+- If there's a smarter approach than what was asked, say it once, briefly. Then do it unless told otherwise.
+
 ## Decision-Making Style
 
 - **Taste-first.** He picks tools and aesthetics based on feel before function. If something looks wrong, it gets fixed regardless of whether it "works."

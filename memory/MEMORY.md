@@ -5,6 +5,7 @@
 - [Personality & Working Style](./personality.md) — How he thinks, communicates, makes decisions; collaboration rules
 
 ## Feedback
+- [High leverage, goal-first mindset](./feedback_leverage_mindset.md) — High value, lowest cost, biggest result; pursue goals not tasks
 - [Remotion style and skill source](./feedback_remotion_style.md) — Always use claude-config GitHub repo for Remotion; Glassmorphism + YouTube Tutorial style
 - [No timeframes or instructor sections](./feedback_no_timeframes.md) — Never mention 三週/fixed course duration or include instructor bios in lecture pages
 - [Remotion style preference](./remotion_style_preference.md) — Default to Glassmorphism + YouTube Tutorial style; no timestamp in progress bar
