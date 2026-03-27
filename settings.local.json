@@ -82,7 +82,29 @@
       "Bash(python3 -c \":*)",
       "Bash(npx tsc:*)",
       "Bash(node:*)",
-      "Bash(ffprobe:*)"
+      "Bash(ffprobe:*)",
+      "Bash(chmod +x ~/Projects/vibe-coding-video/scripts/*.sh)",
+      "Bash(chmod +x /Users/jamesshih/Projects/vibe-coding-video/scripts/0_normalize_audio.sh)",
+      "Bash(bash /Users/jamesshih/Projects/vibe-coding-video/scripts/0_normalize_audio.sh)",
+      "Bash(chmod +x /Users/jamesshih/Projects/vibe-coding-video/scripts/0b_trim_silence.sh)",
+      "Bash(bash /Users/jamesshih/Projects/vibe-coding-video/scripts/0b_trim_silence.sh)",
+      "Bash(bash /Users/jamesshih/Projects/vibe-coding-video/scripts/3_calc_frames.sh \"0-1\" 2>/dev/null)",
+      "Bash(__NEW_LINE_a6aced9629688b69__ curl:*)",
+      "Bash(find /Users/jamesshih/Projects/vibe-coding-video -name *.vtt -o -name *.srt)",
+      "Bash(find /Users/jamesshih/Downloads -name *.vtt)",
+      "Bash(bash scripts/0a_denoise.sh)",
+      "Bash(bash scripts/0b_trim_silence.sh)",
+      "Bash(bash scripts/0_normalize_audio.sh)",
+      "Bash(while ! ls /Users/jamesshih/Projects/vibe-coding-video/out/CH0-1-complete.mp4)",
+      "Bash(do sleep:*)",
+      "Bash(chmod +x /Users/jamesshih/Projects/vibe-coding-video/scripts/5_heygen_avatar.sh)",
+      "Bash(bash /Users/jamesshih/Projects/vibe-coding-video/scripts/5_heygen_avatar.sh 2>&1)",
+      "Bash(ffmpeg -filters)",
+      "Bash(ffmpeg -y -i /Users/jamesshih/article-video/ai-knowledge-2026-03-27.wav -i /Users/jamesshih/article-video/public/audio/course_bgmusic.wav -filter_complex \":*)",
+      "Bash(cd /Users/jamesshih/article-video ffmpeg -y -i public/audio/ai-knowledge-2026-03-27.wav -i public/audio/course_bgmusic.wav -filter_complex \":*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(bash ~/.claude/scripts/sync.sh push)"
     ]
   }
 }

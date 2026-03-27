@@ -12,6 +12,7 @@
 - [No timeframes or instructor sections](./feedback_no_timeframes.md) — Never mention 三週/fixed course duration or include instructor bios in lecture pages
 - [Remotion style preference](./remotion_style_preference.md) — Default to Glassmorphism + YouTube Tutorial style; no timestamp in progress bar
 - [Vibe Coding multi-agent requirement](./feedback_vibe_coding_multiagent.md) — Always use Director + scoped sub-agents for any Vibe Coding video work
+- [Cross-project universal rules](./feedback_cross_project_rules.md) — Both projects share: Vibe Coding style + 4K output + iMessage notifications (S=3 article-video, S=2 Vibe Coding)
 
 ## Projects
 - [online-class-booking](./online-class-booking.md) — Full deployment details and critical lessons
