@@ -66,7 +66,9 @@
       "Bash(__NEW_LINE_e6fee36ce5bf27f2__ cd:*)",
       "WebFetch(domain:docs.heygen.com)",
       "Bash(chmod +x /Users/jamesshih/.claude/scripts/sync.sh)",
-      "Bash(~/.claude/scripts/sync.sh push:*)"
+      "Bash(~/.claude/scripts/sync.sh push:*)",
+      "Bash(rm -rf /Users/jamesshih/.claude/skills/.claude)",
+      "Bash(rm -rf /tmp/claude-config-sync/skills/.claude)"
     ]
   }
 }
