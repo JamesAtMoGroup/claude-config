@@ -13,3 +13,4 @@
 ## Projects
 - [online-class-booking](./online-class-booking.md) — Full deployment details and critical lessons
 - [n8ncourse](./n8ncourse.md) — Repo structure, design tokens, URLs, convention that all day pages go in this one repo
+- [vibe-coding-video](./vibe_coding_video.md) — Remotion course video; CH 0-1 30s sample done; HeyGen avatar pending credits
