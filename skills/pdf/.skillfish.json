@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "name": "pdf",
+  "owner": "cam10001110101",
+  "repo": "claude-skills-base",
+  "path": "mnt/skills/public/pdf",
+  "branch": "main",
+  "sha": "f82a3f9f64893caad8c2d327109c5b9168ace2df",
+  "source": "manual"
+}

@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "name": "docx",
+  "owner": "cam10001110101",
+  "repo": "claude-skills-base",
+  "path": "mnt/skills/public/docx",
+  "branch": "main",
+  "sha": "6ddae7d6302c8e1bc33dd4475e047c8e10d092b7",
+  "source": "manual"
+}

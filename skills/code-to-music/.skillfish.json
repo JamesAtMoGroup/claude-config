@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "name": "code-to-music",
+  "owner": "cam10001110101",
+  "repo": "claude-skills-base",
+  "path": "mnt/skills/examples/code-to-music",
+  "branch": "main",
+  "sha": "a40d6201a1f13485da7ad058f6f10749bf01322f",
+  "source": "manual"
+}

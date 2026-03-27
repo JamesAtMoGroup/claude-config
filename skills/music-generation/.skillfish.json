@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "name": "music-generation",
+  "owner": "cam10001110101",
+  "repo": "claude-skills-base",
+  "path": "mnt/skills/examples/music-generation",
+  "branch": "main",
+  "sha": "0d3795589218f36d4040e0f34a7ea5ebac18a523",
+  "source": "manual"
+}

@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Code — The AI-Powered CLI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --surface: rgba(255,255,255,0.05);
+            --border: rgba(255,255,255,0.1);
+            --orange: #FF6B35;
+            --teal: #20D9BA;
+            --yellow: #FFD60A;
+            --purple: #A78BFA;
+            --text: #F0F0F5;
+            --muted: rgba(240,240,245,0.55);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* Progress bar */
+        .progress-bar {
+            position: fixed;
+            top: 0; left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--orange), var(--teal));
+            transition: width 0.4s ease;
+            z-index: 1000;
+        }
+
+        /* Slide deck */
+        .slide-deck {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        @media (min-width: 769px) {
+            .slide-deck {
+                max-width: calc(100vh * 16 / 9);
+                max-height: calc(100vw * 9 / 16);
+                margin: auto;
+                position: absolute;
+                inset: 0;
+            }
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 60px;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s ease;
+            overflow: hidden;
+        }
+        .slide.active { opacity: 1; visibility: visible; }
+
+        /* Background mesh blobs */
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.15;
+            pointer-events: none;
+        }
+
+        /* Glass card */
+        .glass {
+            background: rgba(255,255,255,0.06);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 20px;
+            padding: 28px 32px;
+        }
+
+        /* Typography */
+        .label {
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--teal);
+            margin-bottom: 12px;
+        }
+
+        .headline {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(36px, 6vw, 72px);
+            font-weight: 700;
+            line-height: 1.1;
+            background: linear-gradient(135deg, #fff 30%, rgba(255,255,255,0.6));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .headline-gradient {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(36px, 6vw, 72px);
+            font-weight: 700;
+            line-height: 1.1;
+            background: linear-gradient(135deg, var(--orange), var(--teal));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subheadline {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(20px, 3vw, 36px);
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .body-text {
+            font-size: clamp(14px, 1.6vw, 20px);
+            line-height: 1.7;
+            color: var(--muted);
+            max-width: 700px;
+            text-align: center;
+        }
+
+        /* Code block */
+        .code-block {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: clamp(12px, 1.4vw, 16px);
+            background: rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 20px 24px;
+            text-align: left;
+            line-height: 1.8;
+            width: 100%;
+            max-width: 680px;
+        }
+        .code-block .prompt { color: var(--teal); }
+        .code-block .cmd { color: var(--orange); }
+        .code-block .flag { color: var(--yellow); }
+        .code-block .comment { color: rgba(255,255,255,0.3); }
+
+        /* Feature grid */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            width: 100%;
+            max-width: 900px;
+        }
+
+        .feature-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 24px 20px;
+            text-align: left;
+            transition: border-color 0.3s;
+        }
+        .feature-card:hover { border-color: rgba(255,255,255,0.25); }
+
+        .feature-icon {
+            font-size: 28px;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .feature-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(13px, 1.4vw, 17px);
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--text);
+        }
+
+        .feature-desc {
+            font-size: clamp(11px, 1.1vw, 14px);
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        /* Tool pill */
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 999px;
+            padding: 8px 16px;
+            font-size: clamp(12px, 1.2vw, 15px);
+            font-weight: 500;
+        }
+        .pill-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+        }
+
+        /* Pills grid */
+        .pills-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            max-width: 800px;
+        }
+
+        /* Step list */
+        .step-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            width: 100%;
+            max-width: 700px;
+            text-align: left;
+        }
+        .step-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+        }
+        .step-num {
+            min-width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--orange), var(--teal));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        .step-text { padding-top: 6px; }
+        .step-text strong { color: var(--text); font-size: clamp(13px, 1.4vw, 17px); display: block; }
+        .step-text span { color: var(--muted); font-size: clamp(12px, 1.2vw, 15px); }
+
+        /* Big stat */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            max-width: 800px;
+            width: 100%;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 28px 20px;
+            text-align: center;
+        }
+        .stat-number {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(28px, 4vw, 52px);
+            font-weight: 700;
+        }
+        .stat-label {
+            font-size: clamp(11px, 1.2vw, 14px);
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        /* Two-column */
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            width: 100%;
+            max-width: 900px;
+        }
+
+        /* Slide slide-specific BG variants */
+        .slide-hero { background: radial-gradient(ellipse at 60% 40%, rgba(255,107,53,0.12) 0%, transparent 60%), radial-gradient(ellipse at 20% 80%, rgba(32,217,186,0.1) 0%, transparent 50%), var(--bg); }
+        .slide-dark { background: var(--bg); }
+        .slide-teal { background: radial-gradient(ellipse at 50% 0%, rgba(32,217,186,0.12) 0%, transparent 60%), var(--bg); }
+        .slide-orange { background: radial-gradient(ellipse at 50% 100%, rgba(255,107,53,0.12) 0%, transparent 60%), var(--bg); }
+        .slide-purple { background: radial-gradient(ellipse at 80% 20%, rgba(167,139,250,0.12) 0%, transparent 60%), var(--bg); }
+
+        /* Navigation */
+        .nav-controls {
+            position: fixed;
+            bottom: 28px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            z-index: 1000;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 999px;
+            padding: 8px 16px;
+            backdrop-filter: blur(20px);
+        }
+        .nav-btn {
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.7);
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s, background 0.2s;
+        }
+        .nav-btn:hover { color: #fff; background: rgba(255,255,255,0.1); }
+        .slide-counter { color: rgba(255,255,255,0.5); font-size: 13px; min-width: 50px; text-align: center; }
+
+        /* Animations */
+        .slide.active .animate-up { animation: fadeUp 0.6s ease-out forwards; }
+        .slide.active .animate-up:nth-child(1) { animation-delay: 0.05s; }
+        .slide.active .animate-up:nth-child(2) { animation-delay: 0.15s; }
+        .slide.active .animate-up:nth-child(3) { animation-delay: 0.25s; }
+        .slide.active .animate-up:nth-child(4) { animation-delay: 0.35s; }
+        .slide.active .animate-up:nth-child(5) { animation-delay: 0.45s; }
+        .slide.active .animate-up:nth-child(6) { animation-delay: 0.55s; }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .slide .animate-up { opacity: 0; }
+
+        @media (max-width: 768px) {
+            .slide { padding: 32px 24px; }
+            .feature-grid { grid-template-columns: repeat(2, 1fr); }
+            .stat-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+            .two-col { grid-template-columns: 1fr; gap: 16px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="progress-bar" id="progressBar"></div>
+
+<div class="slide-deck">
+
+    <!-- SLIDE 1: Hero -->
+    <div class="slide slide-hero active">
+        <div style="display:flex; flex-direction:column; align-items:center; gap:20px; text-align:center;">
+            <div class="label animate-up">Anthropic · 2024</div>
+            <h1 style="font-family:'Space Grotesk',sans-serif; font-size:clamp(48px,8vw,96px); font-weight:700; line-height:1.0; background:linear-gradient(135deg,#fff 0%,rgba(255,255,255,0.7) 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent;" class="animate-up">
+                Claude Code
+            </h1>
+            <p style="font-family:'Space Grotesk',sans-serif; font-size:clamp(18px,2.5vw,32px); font-weight:500; background:linear-gradient(135deg,var(--orange),var(--teal)); -webkit-background-clip:text; -webkit-text-fill-color:transparent;" class="animate-up">
+                The AI-Powered CLI for Developers
+            </p>
+            <p class="body-text animate-up" style="margin-top:8px;">
+                An agentic coding assistant that lives in your terminal — understands your codebase, edits files, runs commands, and ships code autonomously.
+            </p>
+            <div class="code-block animate-up" style="margin-top:8px; max-width:420px; text-align:center;">
+                <span class="prompt">$ </span><span class="cmd">npm install -g @anthropic-ai/claude-code</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 2: What is Claude Code -->
+    <div class="slide slide-dark">
+        <div style="display:flex; flex-direction:column; align-items:center; gap:24px; text-align:center; width:100%; max-width:900px;">
+            <div class="label animate-up">What is it?</div>
+            <h2 class="subheadline animate-up">Not a chatbot. An <span style="color:var(--orange);">autonomous agent</span> for your codebase.</h2>
+            <div class="two-col animate-up" style="margin-top:8px;">
+                <div class="glass" style="text-align:left;">
+                    <div style="font-size:24px; margin-bottom:12px;">🤖</div>
+                    <div class="feature-title">Traditional AI Assistants</div>
+                    <ul style="list-style:none; margin-top:10px; display:flex; flex-direction:column; gap:8px;">
+                        <li style="color:var(--muted); font-size:14px;">❌ Copy-paste code manually</li>
+                        <li style="color:var(--muted); font-size:14px;">❌ No file system access</li>
+                        <li style="color:var(--muted); font-size:14px;">❌ Can't run commands</li>
+                        <li style="color:var(--muted); font-size:14px;">❌ Loses context easily</li>
+                    </ul>
+                </div>
+                <div class="glass" style="text-align:left; border-color:rgba(32,217,186,0.3);">
+                    <div style="font-size:24px; margin-bottom:12px;">⚡</div>
+                    <div class="feature-title" style="color:var(--teal);">Claude Code</div>
+                    <ul style="list-style:none; margin-top:10px; display:flex; flex-direction:column; gap:8px;">
+                        <li style="color:var(--text); font-size:14px;">✅ Reads & edits your files directly</li>
+                        <li style="color:var(--text); font-size:14px;">✅ Runs bash commands</li>
+                        <li style="color:var(--text); font-size:14px;">✅ Understands full codebase</li>
+                        <li style="color:var(--text); font-size:14px;">✅ Works autonomously end-to-end</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 3: Key Features -->
+    <div class="slide slide-teal">
+        <div style="display:flex; flex-direction:column; align-items:center; gap:24px; text-align:center; width:100%; max-width:960px;">
+            <div class="label animate-up">Core Capabilities</div>
+            <h2 class="subheadline animate-up">Everything you need to <span style="color:var(--teal);">ship faster</span></h2>
+            <div class="feature-grid animate-up" style="margin-top:4px;">
+                <div class="feature-card">
+                    <span class="feature-icon">📁</span>
+                    <div class="feature-title">File Editing</div>
+                    <div class="feature-desc">Read, write, and refactor files across your entire project with surgical precision.</div>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">⚙️</span>
+                    <div class="feature-title">Bash Commands</div>
+                    <div class="feature-desc">Run tests, install packages, execute scripts — directly from the conversation.</div>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">🔍</span>
+                    <div class="feature-title">Codebase Search</div>
+                    <div class="feature-desc">Grep, glob, and semantically understand your entire repository structure.</div>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">🔌</span>
+                    <div class="feature-title">MCP Integration</div>
+                    <div class="feature-desc">Connect to external tools — databases, APIs, Slack, GitHub — via Model Context Protocol.</div>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">🧠</span>
+                    <div class="feature-title">Agentic Loops</div>
+                    <div class="feature-desc">Multi-step autonomous tasks: plan → implement → test → fix, all without you.</div>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">🪝</span>
+                    <div class="feature-title">Hooks & Automation</div>
+                    <div class="feature-desc">Trigger shell commands on events — pre/post tool use, session start, and more.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 4: File Editing & Bash -->
+    <div class="slide slide-orange">
+        <div style="display:flex; flex-direction:column; align-items:center; gap:24px; text-align:center; width:100%; max-width:820px;">
+            <div class="label animate-up">Tools in Action</div>
+            <h2 class="subheadline animate-up">Read. Edit. <span style="color:var(--orange);">Execute.</span></h2>
+            <div class="two-col animate-up" style="margin-top:4px;">
+                <div>
+                    <div style="font-size:13px; font-weight:600; letter-spacing:0.08em; color:var(--orange); margin-bottom:10px; text-align:left; text-transform:uppercase;">File Tools</div>
+                    <div class="code-block" style="font-size:13px;">
+                        <div><span class="comment"># Read any file</span></div>
+                        <div><span class="cmd">Read</span>(<span class="flag">"src/app.ts"</span>)</div>
+                        <br>
+                        <div><span class="comment"># Edit with precision</span></div>
+                        <div><span class="cmd">Edit</span>(<span class="flag">old</span>=<span style="color:#A78BFA;">"foo"</span>, <span class="flag">new</span>=<span style="color:#A78BFA;">"bar"</span>)</div>
+                        <br>
+                        <div><span class="comment"># Search the codebase</span></div>
+                        <div><span class="cmd">Grep</span>(<span class="flag">"useEffect"</span>, <span class="flag">"**/*.tsx"</span>)</div>
+                    </div>
+                </div>
+                <div>
+                    <div style="font-size:13px; font-weight:600; letter-spacing:0.08em; color:var(--teal); margin-bottom:10px; text-align:left; text-transform:uppercase;">Bash Tool</div>
+                    <div class="code-block" style="font-size:13px;">
+                        <div><span class="comment"># Run tests</span></div>
+                        <div><span class="prompt">$ </span><span class="cmd">npm run test</span></div>
+                        <br>
+                        <div><span class="comment"># Install deps</span></div>
+                        <div><span class="prompt">$ </span><span class="cmd">pip install -r requirements.txt</span></div>
+                        <br>
+                        <div><span class="comment"># Git workflows</span></div>
+                        <div><span class="prompt">$ </span><span class="cmd">git commit -m "feat: ..."</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 5: MCP -->
+    <div class="slide slide-purple">
+        <div style="display:flex; flex-direction:column; align-items:center; gap:24px; text-align:center; width:100%; max-width:860px;">
+            <div class="label animate-up">Model Context Protocol</div>
+            <h2 class="subheadline animate-up">Connect Claude to <span style="color:var(--purple);">any tool or service</span></h2>
+            <p class="body-text animate-up">MCP is an open standard that lets Claude Code talk to external systems — databases, APIs, browsers, and more — through standardized server integrations.</p>
+            <div class="pills-wrap animate-up" style="margin-top:4px;">
+                <div class="pill"><span class="pill-dot" style="background:var(--orange);"></span>GitHub</div>
+                <div class="pill"><span class="pill-dot" style="background:var(--teal);"></span>PostgreSQL</div>
+                <div class="pill"><span class="pill-dot" style="background:var(--yellow);"></span>Slack</div>
+                <div class="pill"><span class="pill-dot" style="background:var(--purple);"></span>Notion</div>
+                <div class="pill"><span class="pill-dot" style="background:#60A5FA;"></span>Gmail</div>
+                <div class="pill"><span class="pill-dot" style="background:var(--orange);"></span>Google Calendar</div>
+                <div class="pill"><span class="pill-dot" style="background:var(--teal);"></span>Figma</div>
+                <div class="pill"><span class="pill-dot" style="background:var(--yellow);"></span>Stripe</div>
+                <div class="pill"><span class="pill-dot" style="background:var(--purple);"></span>Jira</div>
+                <div class="pill"><span class="pill-dot" style="background:#F472B6;"></span>Custom APIs</div>
+            </div>
+            <div class="glass animate-up" style="font-size:13px; color:var(--muted); font-family:'JetBrains Mono',monospace; max-width:500px;">
+                <span style="color:var(--teal);">"mcpServers"</span>: &#123; <span style="color:var(--orange);">"github"</span>: &#123; <span style="color:var(--yellow);">"command"</span>: <span style="color:#A78BFA;">"npx @github/mcp"</span> &#125; &#125;
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 6: Agentic Coding -->
+    <div class="slide slide-dark">
+        <div style="display:flex; flex-direction:column; align-items:center; gap:24px; text-align:center; width:100%; max-width:780px;">
+            <div class="label animate-up">Agentic Mode</div>
+            <h2 class="subheadline animate-up">Give it a task. <span style="color:var(--orange);">Walk away.</span></h2>
+            <p class="body-text animate-up">Claude Code can autonomously loop through multi-step workflows — planning, implementing, testing, and fixing — without you steering every step.</p>
+            <div class="step-list animate-up" style="margin-top:8px;">
+                <div class="step-item">
+                    <div class="step-num">1</div>
+                    <div class="step-text">
+                        <strong>Plan</strong>
+                        <span>Explores codebase, identifies files, drafts implementation strategy</span>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-num">2</div>
+                    <div class="step-text">
+                        <strong>Implement</strong>
+                        <span>Reads, writes, and edits files across the project</span>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-num">3</div>
+                    <div class="step-text">
+                        <strong>Verify</strong>
+                        <span>Runs tests, linters, and build commands to validate changes</span>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-num">4</div>
+                    <div class="step-text">
+                        <strong>Fix & Iterate</strong>
+                        <span>Catches errors, self-corrects, and retries until the task is done</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 7: Why It's Powerful -->
+    <div class="slide slide-teal">
+        <div style="display:flex; flex-direction:column; align-items:center; gap:24px; text-align:center; width:100%; max-width:860px;">
+            <div class="label animate-up">Why Developers Love It</div>
+            <h2 class="subheadline animate-up">Less boilerplate. <span style="color:var(--teal);">More shipping.</span></h2>
+            <div class="stat-grid animate-up" style="margin-top:8px;">
+                <div class="stat-card">
+                    <div class="stat-number" style="color:var(--orange);">10×</div>
+                    <div class="stat-label">Faster on repetitive coding tasks</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" style="color:var(--teal);">0</div>
+                    <div class="stat-label">Context switching — stays in terminal</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" style="color:var(--yellow);">∞</div>
+                    <div class="stat-label">Extensible via MCP servers</div>
+                </div>
+            </div>
+            <div class="pills-wrap animate-up" style="margin-top:8px;">
+                <div class="pill" style="border-color:rgba(255,107,53,0.4); color:var(--orange);">Works in any terminal</div>
+                <div class="pill" style="border-color:rgba(32,217,186,0.4); color:var(--teal);">IDE integrations (VS Code, JetBrains)</div>
+                <div class="pill" style="border-color:rgba(255,214,10,0.4); color:var(--yellow);">Custom slash commands</div>
+                <div class="pill" style="border-color:rgba(167,139,250,0.4); color:var(--purple);">CLAUDE.md project context</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 8: Getting Started -->
+    <div class="slide slide-orange">
+        <div style="display:flex; flex-direction:column; align-items:center; gap:24px; text-align:center; width:100%; max-width:800px;">
+            <div class="label animate-up">Get Started in 60 Seconds</div>
+            <h2 class="subheadline animate-up">From zero to <span style="color:var(--orange);">agentic coding</span></h2>
+            <div class="step-list animate-up" style="max-width:620px;">
+                <div class="step-item">
+                    <div class="step-num">1</div>
+                    <div class="step-text">
+                        <strong>Install</strong>
+                        <span><code style="font-family:'JetBrains Mono',monospace; color:var(--teal);">npm install -g @anthropic-ai/claude-code</code></span>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-num">2</div>
+                    <div class="step-text">
+                        <strong>Navigate to your project</strong>
+                        <span><code style="font-family:'JetBrains Mono',monospace; color:var(--teal);">cd my-project && claude</code></span>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-num">3</div>
+                    <div class="step-text">
+                        <strong>Give it a task</strong>
+                        <span>"Add input validation to the signup form and write tests for it"</span>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-num">4</div>
+                    <div class="step-text">
+                        <strong>Add a CLAUDE.md</strong>
+                        <span>Project context file that teaches Claude about your stack & conventions</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 9: Closing -->
+    <div class="slide slide-hero">
+        <div style="display:flex; flex-direction:column; align-items:center; gap:20px; text-align:center;">
+            <div class="label animate-up">The Future of Development</div>
+            <h1 style="font-family:'Space Grotesk',sans-serif; font-size:clamp(36px,6vw,72px); font-weight:700; line-height:1.1; background:linear-gradient(135deg,var(--orange),var(--teal)); -webkit-background-clip:text; -webkit-text-fill-color:transparent;" class="animate-up">
+                Code Faster.<br>Think Bigger.
+            </h1>
+            <p class="body-text animate-up">
+                Claude Code isn't just an assistant — it's a collaborator that understands your entire codebase, executes your vision, and ships alongside you.
+            </p>
+            <div class="glass animate-up" style="margin-top:12px; padding:20px 36px;">
+                <div style="font-size:13px; color:var(--muted); margin-bottom:8px;">Try it now</div>
+                <div style="font-family:'JetBrains Mono',monospace; font-size:clamp(14px,1.8vw,20px); color:var(--teal);">
+                    <span style="color:var(--muted);">$ </span>claude
+                </div>
+            </div>
+            <div style="font-size:13px; color:var(--muted); margin-top:4px;" class="animate-up">
+                docs.anthropic.com/claude-code
+            </div>
+        </div>
+    </div>
+
+</div><!-- /.slide-deck -->
+
+<!-- Navigation -->
+<div class="nav-controls">
+    <button class="nav-btn" onclick="prevSlide()">←</button>
+    <span class="slide-counter"><span id="current">1</span> / <span id="total">9</span></span>
+    <button class="nav-btn" onclick="nextSlide()">→</button>
+</div>
+
+<script>
+    let current = 1;
+    const slides = document.querySelectorAll('.slide');
+    const total = slides.length;
+    document.getElementById('total').textContent = total;
+
+    function showSlide(n) {
+        if (n < 1) n = 1;
+        if (n > total) n = total;
+        slides.forEach((s, i) => {
+            s.classList.toggle('active', i === n - 1);
+        });
+        current = n;
+        document.getElementById('current').textContent = n;
+        document.getElementById('progressBar').style.width = (n / total * 100) + '%';
+    }
+
+    function nextSlide() { showSlide(current + 1); }
+    function prevSlide() { showSlide(current - 1); }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextSlide(); }
+        if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); }
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.nav-controls')) nextSlide();
+    });
+
+    showSlide(1);
+</script>
+</body>
+</html>

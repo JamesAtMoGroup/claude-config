@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "name": "xlsx",
+  "owner": "cam10001110101",
+  "repo": "claude-skills-base",
+  "path": "mnt/skills/public/xlsx",
+  "branch": "main",
+  "sha": "489906b7d9057e0c371e21467e1a9f96f40be387",
+  "source": "manual"
+}
