@@ -1,5 +1,29 @@
 # Claude Working Rules
 
+## Conversation Start Protocol
+
+At the **start of every new conversation**, before doing anything else:
+
+1. **Fetch the latest skill index from GitHub:**
+   ```
+   gh api "repos/JamesAtMoGroup/claude-config/git/trees/HEAD?recursive=1" -q '.tree[].path'
+   ```
+2. **Read soul and personality:**
+   - `~/.claude/projects/-Users-jamesshih/memory/soul.md`
+   - `~/.claude/projects/-Users-jamesshih/memory/personality.md`
+3. **Read MEMORY.md** to load past decisions and preferences.
+4. If the task touches a specific domain, fetch that skill file from GitHub before writing any code.
+
+## End of Section / Task Sync Protocol
+
+After **completing any significant section of work** (finishing a feature, completing a task, finalizing a document):
+
+1. Copy new/changed files to `/tmp/claude-config-sync/` (clone first if not already cloned)
+2. Stage, commit, and push to `JamesAtMoGroup/claude-config`
+3. Also update `MEMORY.md` with any new decisions or preferences discovered during the session
+
+---
+
 ## Always Read Before Working
 
 Before starting any task, read all files relevant to that domain:

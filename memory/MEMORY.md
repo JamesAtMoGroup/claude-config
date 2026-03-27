@@ -1,5 +1,9 @@
 # Memory Index
 
+## Who James Is
+- [Soul](./soul.md) — Core values, purpose, what drives him; read at start of every conversation
+- [Personality & Working Style](./personality.md) — How he thinks, communicates, makes decisions; collaboration rules
+
 ## Feedback
 - [Remotion style and skill source](./feedback_remotion_style.md) — Always use claude-config GitHub repo for Remotion; Glassmorphism + YouTube Tutorial style
 - [No timeframes or instructor sections](./feedback_no_timeframes.md) — Never mention 三週/fixed course duration or include instructor bios in lecture pages

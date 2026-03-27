@@ -1,6 +1,7 @@
 # About James (JamesAtMoGroup)
 
-> **Always read `~/.claude/rules.md` before starting any task.**
+> **Start of every conversation:** Read `~/.claude/rules.md`, fetch skill list from `JamesAtMoGroup/claude-config` on GitHub, read `soul.md` + `personality.md` from memory.
+> **End of every section:** Sync all new/changed config files back to `JamesAtMoGroup/claude-config` on GitHub.
 
 ## Local Skill & Config Paths
 - Skills: `~/.claude/skills/` (banner-design, brand, design, design-system, frontend-slides, slides, ui-styling, ui-ux-pro-max)
