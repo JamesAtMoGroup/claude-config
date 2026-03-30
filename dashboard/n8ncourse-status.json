@@ -1,0 +1,18 @@
+{
+  "project": "n8ncourse",
+  "director": "Course Director",
+  "subPM": "Course PM",
+  "repo": "JamesAtMoGroup/n8ncourse",
+  "local": null,
+  "liveUrl": "https://jamesatmogroup.github.io/n8ncourse/",
+  "stack": ["GitHub Pages", "Vanilla HTML/CSS/JS", "GitHub PAT CMS"],
+  "stateSource": "gh api: lecture dirs in repo = done",
+  "decisions": [
+    "Lecture pages: lecture{N}/index.html (never day{N}/)",
+    "Design tokens: --bg:#0e0918, --accent:#ee4f27, font:Inter",
+    "Forbidden: 三週/昨天/關於講師/任何時間性語言",
+    "Layout: left sidebar 272px + top bar + scrollable content + 3 orbs",
+    "Content must be evergreen — no schedule references"
+  ],
+  "skillFile": null
+}

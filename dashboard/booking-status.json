@@ -1,0 +1,28 @@
+{
+  "project": "online-class-booking",
+  "director": "Engineering Director",
+  "subPM": "Engineering PM",
+  "repo": "James-C-K/online-class-booking",
+  "local": "~/Projects/line-liff-booking",
+  "liveUrl": "https://learning-online-booking.zeabur.app",
+  "stack": ["Next.js 16", "Supabase", "Tailwind", "Zeabur"],
+  "stateSource": ".resolved/ folder (touch file per resolved blocker)",
+  "decisions": [
+    "Deploy: Zeabur only (never Vercel/Railway)",
+    "Auth: Supabase SSR @supabase/ssr, ref: ivhsfvqyuykmetjmppgf (Tokyo)",
+    "cookies() and createClient() are async — always await",
+    "Auth guard: proxy.js, export proxy (not middleware)",
+    "Role routing: /dashboard → student/teacher/admin",
+    "Bilingual: ZH-TW/EN via LanguageContext",
+    "Never commit .env.local"
+  ],
+  "preBuildBlockers": [
+    "Rate & commission versioning",
+    "Subject versioning",
+    "Soft delete (is_archived)",
+    "Session status lifecycle",
+    "Payout period model"
+  ],
+  "resolvedDir": "~/Projects/line-liff-booking/.resolved/",
+  "skillFile": null
+}

@@ -1,0 +1,18 @@
+{
+  "project": "article-video",
+  "director": "Video Director",
+  "subPM": "Video PM",
+  "repo": "JamesAtMoGroup/article-video",
+  "local": "~/Projects/article-video",
+  "stack": ["Remotion v4", "TypeScript", "@remotion/three", "ffmpeg"],
+  "outputPattern": "out/YYYY-MM-DD/YYYY-MM-DD.mp4",
+  "stateSource": "out/ directory (mp4 existence = done)",
+  "decisions": [
+    "4K render (S=3, 1280x720 base → 3840x2160)",
+    "Vibe Coding neon-green aesthetic (#000000 + #7cffb2)",
+    "Audio: -20 LUFS, Peak -2 dBFS, Crest ~11",
+    "Multi-agent: Audio / Transcription / Scene Dev 平行",
+    "iMessage QA → 通過 → Render"
+  ],
+  "skillFile": "~/.claude/skills/course-video.md"
+}

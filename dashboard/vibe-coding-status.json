@@ -1,0 +1,22 @@
+{
+  "project": "vibe-coding-video",
+  "director": "Video Director",
+  "subPM": "Video PM",
+  "repo": "JamesAtMoGroup/vibe-coding-video",
+  "local": "~/Projects/vibe-coding-video",
+  "stack": ["Remotion v4", "TypeScript", "Lottie", "ffmpeg"],
+  "outputPattern": "out/CH{N}/CH{N}-complete.mp4",
+  "stateSource": "out/CH*/ (mp4 existence = done); CH 0-1 hardcoded done",
+  "decisions": [
+    "4K render (S=2, 1920x1080 base → 3840x2160)",
+    "CONTAINER_W=1500, SUBTITLE_H=160",
+    "Audio: trim → -16 LUFS only (no denoise)",
+    "Avatar: Lottie speaking-animation.json (NOT HeyGen video)",
+    "iMessage callout: sender/text spec, top-right stacking",
+    "Multi-agent: Audio / Transcription / Scene Dev / Asset / HTML Analysis"
+  ],
+  "blockerFlags": {
+    "heygen_complete": "~/Projects/vibe-coding-video/out/.heygen_complete"
+  },
+  "skillFile": "~/.claude/skills/course-video.md"
+}

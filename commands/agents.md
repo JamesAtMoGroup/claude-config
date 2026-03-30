@@ -67,6 +67,27 @@
 | **SOP Agent** | 工作流有調整、優化、新步驟 | 更新對應 skill 檔 (`~/.claude/skills/`) 或 `agents.md` |
 | **Sync Agent** | 重要工作段落結束 / 對話結束 | `sync.sh push` → 確認 GitHub 有最新版 |
 | **Orchestrator** | 收到 James 的目標 | 讀 state → 判斷派給哪個 Director → 追蹤完成狀態 |
+| **Project Onboarding Agent** | `watch-projects.sh` 偵測到 `~/Projects/` 新目錄 | 讀 README/package.json/CLAUDE.md → 判斷類型 → 指派 Domain Director → 建 `{project}-status.json` → 更新 `dashboard.json` + `agents.md` → 建 memory 條目 |
+
+### Project Onboarding Agent — 完整流程
+
+```
+watch-projects.sh (cron, 零 token)
+  偵測 ~/Projects/ 有新目錄
+  寫 ~/.claude/dashboard/.new-project/{name} flag 檔
+        │
+        ▼ (James 開啟對話，System Director 啟動)
+Project Onboarding Agent (用 token，一次性)
+  1. 讀 flag 檔 → 取得新 project 名稱
+  2. 讀 ~/Projects/{name}/README.md + package.json + CLAUDE.md
+  3. 判斷類型：video / course / engineering / content
+  4. 指派對應 Domain Director
+  5. 建 ~/.claude/dashboard/{name}-status.json
+  6. 把新 project 加進 update-dashboard.sh 偵測邏輯
+  7. 更新 agents.md（新 project 對應哪個 Director）
+  8. 寫 memory/project_{name}.md
+  9. 刪除 flag 檔
+```
 
 ---
 
