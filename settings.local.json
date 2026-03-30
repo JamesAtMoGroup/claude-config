@@ -141,7 +141,8 @@
       "Bash(do mkdir:*)",
       "Bash(sqlite3 ~/Library/Messages/chat.db \"SELECT count\\(*\\) FROM message;\")",
       "Bash(sqlite3:*)",
-      "Bash(~/.claude/scripts/imessage_send.sh \"🎬 [QA Test] iMessage QA 流程測試 — 請回覆「通過」確認收到\" 2>&1)"
+      "Bash(~/.claude/scripts/imessage_send.sh \"🎬 [QA Test] iMessage QA 流程測試 — 請回覆「通過」確認收到\" 2>&1)",
+      "Bash(fc-list :lang=zh)"
     ]
   }
 }
