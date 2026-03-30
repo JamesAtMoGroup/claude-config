@@ -19,9 +19,18 @@ Daily AI knowledge video pipeline using Remotion + narrator's own recorded audio
 - Audio target: -20 LUFS, Peak -2 dBFS, Crest ~11 (ref: `0-1_4.3.wav`)
 
 ## Current Status (2026-03-30)
-- 03-27 video complete: 6:29 (11678f), 3D animations, podcast audio, looping BG music
-- SOP established: multi-agent parallel (Audio / Transcription / Scene Dev)
-- Next: 03-28+ videos following new SOP
+- 03-30 video in progress: Token & Context Window episode, VTT-driven timing
+- SOP revised: VTT-first pipeline (Audio+Script parallel → Whisper → QA VTT → Scene Dev → Animation QA → Render)
+- Key lessons: QA before render; ContentColumn maxHeight=570*S; SUBTITLE_SAFE=80*S; rich animations required
+
+## Critical Rules (all video Agents must know)
+1. **VTT-first**: Scene Dev CANNOT start until corrected VTT exists
+2. **QA before render**: No render until Animation QA passes
+3. **Subtitle safe zone**: ContentColumn maxHeight = H - contentTop - SUBTITLE_SAFE (80*S)
+4. **Rich animations required**: Every scene must have visual animation components, not just text fade-in
+5. **SummaryScene required**: Last ~30s must have dedicated SummaryScene with 3 recap cards
+6. **Whisper**: use `python3 -m whisper` (not `whisper`); sub-agents have no Bash access
+7. **No anlmdn**: Skip denoise filter; breaks audio quality
 
 ## Completed Videos
 | ID | Date | Notes |
@@ -29,3 +38,4 @@ Daily AI knowledge video pipeline using Remotion + narrator's own recorded audio
 | ArticleVideo | 2026-03-24 | Legacy 720p |
 | ArticleVideo-2026-03-26 | 2026-03-26 | 4K, no 3D |
 | ArticleVideo-2026-03-27 | 2026-03-27 | 4K + 3D + own audio + looping BG |
+| ArticleVideo-2026-03-30 | 2026-03-30 | Token & Context Window, VTT-driven timing, SummaryScene |

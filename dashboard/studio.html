@@ -205,65 +205,82 @@ main{margin-left:var(--nav-w);position:relative;z-index:3;}
 }
 .sec-s{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);margin-left:auto;}
 
-/* ── AGENT GRID ──────────────────────────────────── */
-.ag{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--b1);border:1px solid var(--b1);}
-.ac{
-  background:var(--bg);padding:clamp(22px,3vw,36px);
-  position:relative;overflow:hidden;cursor:pointer;
-  transition:background .3s;
+/* ── ORG CHART ───────────────────────────────────── */
+.oc{position:relative;padding-bottom:4px;}
+.oc-lines{
+  position:absolute;top:0;left:0;width:100%;
+  pointer-events:none;z-index:1;overflow:visible;
 }
-.ac:hover{background:rgba(124,255,178,.025);}
-.ac::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:1px;
-  background:linear-gradient(90deg,var(--green),transparent);
-  opacity:0;transition:opacity .3s;
+.oc-row{
+  display:flex;justify-content:center;
+  gap:clamp(8px,2vw,20px);position:relative;z-index:2;
 }
-.ac:hover::before{opacity:1;}
-.ac-n{font-size:10px;letter-spacing:.15em;color:var(--t3);margin-bottom:14px;}
-.ac-t{
-  font-family:'Bebas Neue',sans-serif;
-  font-size:clamp(24px,3vw,42px);line-height:1;margin-bottom:10px;
+.oc-row+.oc-row{margin-top:clamp(32px,4.5vw,52px);}
+.oc-dl{
+  text-align:center;font-size:9px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--t3);padding:10px 0;position:relative;z-index:2;
+  display:flex;align-items:center;justify-content:center;gap:12px;
 }
-.ac-d{font-size:13px;line-height:1.65;color:var(--t2);}
-.ac-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:16px;}
-.ac-tag{
-  font-size:9px;letter-spacing:.1em;text-transform:uppercase;
-  color:var(--green);border:1px solid rgba(124,255,178,.22);padding:3px 7px;
-}
-.ac-arr{
-  position:absolute;bottom:20px;right:20px;
-  width:28px;height:28px;border:1px solid var(--b2);border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  font-size:14px;line-height:1;color:var(--t3);
-  transition:color .2s,border-color .2s,transform .3s var(--ease-s),background .2s;
-}
-.ac:hover .ac-arr{color:var(--green);border-color:rgba(124,255,178,.4);}
-.ac.open .ac-arr{color:var(--bg);background:var(--green);border-color:var(--green);transform:rotate(45deg);}
+.oc-dl::before,.oc-dl::after{content:'';flex:1;max-width:80px;height:1px;background:rgba(124,255,178,.12);}
 
-/* ── EXPANDED DETAIL ─────────────────────────────── */
-.ac-detail{
-  max-height:0;overflow:hidden;
-  transition:max-height .55s var(--ease),opacity .4s var(--ease),margin .4s var(--ease);
-  opacity:0;margin-top:0;
+.on{
+  border:1px solid var(--b2);
+  padding:clamp(12px,1.8vw,18px) clamp(14px,2.2vw,22px);
+  position:relative;cursor:pointer;
+  transition:border-color .25s,background .25s;
+  min-width:clamp(118px,14vw,180px);flex-shrink:0;
 }
-.ac.open .ac-detail{max-height:400px;opacity:1;margin-top:20px;}
-.ac-detail-inner{
-  border-top:1px solid var(--b1);padding-top:18px;
+.on::after{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:var(--green);opacity:0;transition:opacity .25s;
 }
-.ac-detail-label{
-  font-size:9px;letter-spacing:.18em;text-transform:uppercase;
-  color:var(--t3);margin-bottom:10px;
+.on:hover::after,.on.open::after{opacity:1;}
+.on:hover{border-color:rgba(124,255,178,.3);background:rgba(124,255,178,.02);}
+.on.open{border-color:rgba(124,255,178,.4);background:rgba(124,255,178,.035);}
+
+.on-root{
+  border-color:rgba(124,255,178,.55);text-align:center;cursor:default;
+  min-width:clamp(86px,9vw,120px);
 }
-.ac-agents{display:flex;flex-direction:column;gap:8px;}
-.ac-sub{
-  display:flex;align-items:center;gap:10px;
-  font-size:12px;color:var(--t2);line-height:1.5;
+.on-root::after{opacity:1;}
+.on-root:hover{border-color:rgba(124,255,178,.55);background:transparent;}
+
+.on-lv{font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--t3);margin-bottom:6px;}
+.on-nm{font-family:'Bebas Neue',sans-serif;font-size:clamp(14px,1.7vw,20px);line-height:1.05;color:var(--t1);}
+.on-root .on-nm{font-size:clamp(20px,2.6vw,32px);color:var(--green);}
+
+.on-btn{
+  position:absolute;bottom:-11px;left:50%;transform:translateX(-50%);
+  width:22px;height:22px;border:1px solid var(--b2);border-radius:50%;
+  background:var(--bg);display:flex;align-items:center;justify-content:center;
+  font-size:12px;line-height:1;color:var(--t3);
+  transition:all .3s var(--ease-s);z-index:5;
 }
-.ac-sub::before{
-  content:'';width:4px;height:4px;border-radius:50%;
-  background:var(--green);opacity:.5;flex-shrink:0;
+.on:hover .on-btn{border-color:rgba(124,255,178,.4);color:var(--green);}
+.on.open .on-btn{background:var(--green);color:var(--bg);border-color:var(--green);transform:translateX(-50%) rotate(45deg);}
+
+.on-subs{max-height:0;overflow:hidden;opacity:0;transition:max-height .55s var(--ease),opacity .4s var(--ease);}
+.on.open .on-subs{max-height:360px;opacity:1;}
+.on-subs-in{border-top:1px solid var(--b1);margin-top:10px;padding-top:10px;}
+.on-sl{
+  font-size:8px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--t3);margin-bottom:7px;margin-top:9px;
 }
-.ac-sub strong{color:var(--t1);font-weight:700;margin-right:2px;}
+.on-sl:first-child{margin-top:0;}
+.on-sub-i{
+  font-size:10px;color:var(--t2);line-height:1.55;
+  display:flex;align-items:flex-start;gap:7px;margin-bottom:4px;
+}
+.on-sub-i::before{
+  content:'';width:3px;height:3px;border-radius:50%;
+  background:var(--green);opacity:.45;flex-shrink:0;margin-top:5px;
+}
+.on-sub-i strong{color:var(--t1);}
+
+@media(max-width:640px){
+  .oc-row{flex-wrap:wrap;}
+  .on{min-width:calc(50% - 8px);}
+}
 
 /* ── PROJECTS ────────────────────────────────────── */
 .pl{display:flex;flex-direction:column;gap:1px;border:1px solid var(--b1);background:var(--b1);}
@@ -513,144 +530,110 @@ footer{
     <h2 class="sec-t" id="sec-sys-title">SYSTEMS</h2>
     <span class="sec-s">6 Directors · 17 Agents</span>
   </div>
-  <div class="ag">
-    <div class="ac rv" tabindex="0" role="article" aria-expanded="false">
-      <div class="ac-n">01 — Meta</div>
-      <div class="ac-t">System Director</div>
-      <div class="ac-d">Orchestrates every session. Manages memory, SOP, and sync. Always in the room.</div>
-      <div class="ac-tags">
-        <span class="ac-tag">Memory</span>
-        <span class="ac-tag">Sync</span>
-        <span class="ac-tag">SOP</span>
+  <div class="oc rv">
+    <svg class="oc-lines" id="oc-lines" aria-hidden="true"></svg>
+
+    <!-- Row 0: JAMES -->
+    <div class="oc-row" id="oc-r0">
+      <div class="on on-root" id="n-james">
+        <div class="on-lv">Principal</div>
+        <div class="on-nm">JAMES</div>
       </div>
-      <div class="ac-detail" aria-hidden="true">
-        <div class="ac-detail-inner">
-          <div class="ac-detail-label">Sub-agents</div>
-          <div class="ac-agents">
-            <div class="ac-sub"><strong>Memory Agent</strong> — writes rules, feedback, preferences on the fly</div>
-            <div class="ac-sub"><strong>SOP Agent</strong> — updates skill files and agents.md when workflows change</div>
-            <div class="ac-sub"><strong>Sync Agent</strong> — runs sync.sh push at session end</div>
-            <div class="ac-sub"><strong>Orchestrator</strong> — reads state → dispatches to right Director</div>
-            <div class="ac-sub"><strong>Project Onboarding Agent</strong> — detects new ~/Projects/, builds status files</div>
-          </div>
-        </div>
-      </div>
-      <div class="ac-arr" aria-hidden="true">+</div>
     </div>
-    <div class="ac rv" tabindex="0" role="article" aria-expanded="false">
-      <div class="ac-n">02 — Planning</div>
-      <div class="ac-t">PM Director</div>
-      <div class="ac-d">Global view. Tracks priorities, blockers, and the one highest-leverage thing to do now.</div>
-      <div class="ac-tags">
-        <span class="ac-tag">Priority</span>
-        <span class="ac-tag">Blocker</span>
-        <span class="ac-tag">Roadmap</span>
-      </div>
-      <div class="ac-detail" aria-hidden="true">
-        <div class="ac-detail-inner">
-          <div class="ac-detail-label">Sub-agents</div>
-          <div class="ac-agents">
-            <div class="ac-sub"><strong>Status Agent</strong> — reads all progress files in parallel, outputs snapshot</div>
-            <div class="ac-sub"><strong>Priority Agent</strong> — ranks by leverage/income/impact, surfaces #1 action</div>
-            <div class="ac-sub"><strong>Blocker Agent</strong> — diagnoses stalled projects, gives concrete next steps</div>
-            <div class="ac-sub"><strong>Roadmap Agent</strong> — writes roadmap.md + updates dashboard.json</div>
+
+    <!-- Row 1: System Dir + PM Dir -->
+    <div class="oc-row" id="oc-r1">
+      <div class="on" id="n-sys" tabindex="0" role="button" aria-expanded="false" aria-label="System Director — expand to see sub-agents">
+        <div class="on-lv">01 · Meta Orchestrator</div>
+        <div class="on-nm">System Director</div>
+        <div class="on-subs" aria-hidden="true">
+          <div class="on-subs-in">
+            <div class="on-sl">Sub-agents</div>
+            <div class="on-sub-i"><strong>Memory Agent</strong> — writes rules &amp; feedback live</div>
+            <div class="on-sub-i"><strong>SOP Agent</strong> — updates skill files and agents.md</div>
+            <div class="on-sub-i"><strong>Sync Agent</strong> — sync.sh push at session end</div>
+            <div class="on-sub-i"><strong>Orchestrator</strong> — reads state, dispatches Director</div>
+            <div class="on-sub-i"><strong>Project Onboarding</strong> — detects ~/Projects/ changes</div>
           </div>
         </div>
+        <div class="on-btn" aria-hidden="true">+</div>
       </div>
-      <div class="ac-arr" aria-hidden="true">+</div>
+      <div class="on" id="n-pm" tabindex="0" role="button" aria-expanded="false" aria-label="PM Director — expand to see sub-agents">
+        <div class="on-lv">02 · Global View</div>
+        <div class="on-nm">PM Director</div>
+        <div class="on-subs" aria-hidden="true">
+          <div class="on-subs-in">
+            <div class="on-sl">Sub-agents</div>
+            <div class="on-sub-i"><strong>Status Agent</strong> — reads all progress files in parallel</div>
+            <div class="on-sub-i"><strong>Priority Agent</strong> — ranks by leverage / income / impact</div>
+            <div class="on-sub-i"><strong>Blocker Agent</strong> — diagnoses stalled projects</div>
+            <div class="on-sub-i"><strong>Roadmap Agent</strong> — writes roadmap.md, updates dashboard</div>
+          </div>
+        </div>
+        <div class="on-btn" aria-hidden="true">+</div>
+      </div>
     </div>
-    <div class="ac rv" tabindex="0" role="article" aria-expanded="false">
-      <div class="ac-n">03 — Video</div>
-      <div class="ac-t">Video Director</div>
-      <div class="ac-d">Full Remotion pipeline — audio normalization, Whisper VTT, scene dev, QA, 4K render. Parallel.</div>
-      <div class="ac-tags">
-        <span class="ac-tag">Remotion</span>
-        <span class="ac-tag">4K</span>
-        <span class="ac-tag">Whisper</span>
-      </div>
-      <div class="ac-detail" aria-hidden="true">
-        <div class="ac-detail-inner">
-          <div class="ac-detail-label">Sub-agents · Phase 1 parallel</div>
-          <div class="ac-agents">
-            <div class="ac-sub"><strong>Audio Agent</strong> — trim silence, normalize (-20 LUFS article / -16 LUFS vibe)</div>
-            <div class="ac-sub"><strong>Transcription Agent</strong> — Whisper → VTT, cross-ref script</div>
-            <div class="ac-sub"><strong>Scene Dev Agent</strong> — writes/edits Remotion TSX components</div>
-          </div>
-          <div class="ac-detail-label" style="margin-top:12px">Phase 2 sequential</div>
-          <div class="ac-agents">
-            <div class="ac-sub"><strong>QA Agent</strong> — alignment check → iMessage report → waits "通過"</div>
-            <div class="ac-sub"><strong>Render Agent</strong> — npx remotion render --gl=angle → out/</div>
+
+    <!-- dispatch label -->
+    <div class="oc-dl">dispatches to</div>
+
+    <!-- Row 2: Domain Directors -->
+    <div class="oc-row" id="oc-r2">
+      <div class="on" id="n-vid" tabindex="0" role="button" aria-expanded="false" aria-label="Video Director — expand to see sub-agents">
+        <div class="on-lv">03 · Video</div>
+        <div class="on-nm">Video Director</div>
+        <div class="on-subs" aria-hidden="true">
+          <div class="on-subs-in">
+            <div class="on-sl">Phase 1 · parallel</div>
+            <div class="on-sub-i"><strong>Audio Agent</strong> — trim silence, normalize LUFS</div>
+            <div class="on-sub-i"><strong>Transcription Agent</strong> — Whisper → VTT</div>
+            <div class="on-sub-i"><strong>Scene Dev Agent</strong> — Remotion TSX components</div>
+            <div class="on-sl">Phase 2 · sequential</div>
+            <div class="on-sub-i"><strong>QA Agent</strong> — alignment check → iMessage 通過</div>
+            <div class="on-sub-i"><strong>Render Agent</strong> — 4K render → out/</div>
           </div>
         </div>
+        <div class="on-btn" aria-hidden="true">+</div>
       </div>
-      <div class="ac-arr" aria-hidden="true">+</div>
-    </div>
-    <div class="ac rv" tabindex="0" role="article" aria-expanded="false">
-      <div class="ac-n">04 — Course</div>
-      <div class="ac-t">Course Director</div>
-      <div class="ac-d">n8ncourse website updates — lecture pages, daily knowledge base, GitHub Pages deploy.</div>
-      <div class="ac-tags">
-        <span class="ac-tag">n8n</span>
-        <span class="ac-tag">GitHub Pages</span>
-        <span class="ac-tag">ZH-TW</span>
-      </div>
-      <div class="ac-detail" aria-hidden="true">
-        <div class="ac-detail-inner">
-          <div class="ac-detail-label">Sub-agents</div>
-          <div class="ac-agents">
-            <div class="ac-sub"><strong>Content Agent</strong> — writes lecture{N}/index.html with design tokens, scans for forbidden words</div>
-            <div class="ac-sub"><strong>Knowledge Agent</strong> — adds daily AI knowledge to knowledge.json, maintains courses.json</div>
-            <div class="ac-sub"><strong>Deploy Agent</strong> — git push → GitHub Pages → verifies live URL</div>
+      <div class="on" id="n-crs" tabindex="0" role="button" aria-expanded="false" aria-label="Course Director — expand to see sub-agents">
+        <div class="on-lv">04 · Course</div>
+        <div class="on-nm">Course Director</div>
+        <div class="on-subs" aria-hidden="true">
+          <div class="on-subs-in">
+            <div class="on-sl">Sub-agents</div>
+            <div class="on-sub-i"><strong>Content Agent</strong> — writes lecture pages with design tokens</div>
+            <div class="on-sub-i"><strong>Knowledge Agent</strong> — maintains knowledge.json, courses.json</div>
+            <div class="on-sub-i"><strong>Deploy Agent</strong> — git push → GitHub Pages, verify</div>
           </div>
         </div>
+        <div class="on-btn" aria-hidden="true">+</div>
       </div>
-      <div class="ac-arr" aria-hidden="true">+</div>
-    </div>
-    <div class="ac rv" tabindex="0" role="article" aria-expanded="false">
-      <div class="ac-n">05 — Engineering</div>
-      <div class="ac-t">Engineering Director</div>
-      <div class="ac-d">LINE booking app — Next.js 16, Supabase SSR, Zeabur deploy. Backend + frontend + QA sub-agents.</div>
-      <div class="ac-tags">
-        <span class="ac-tag">Next.js</span>
-        <span class="ac-tag">Supabase</span>
-        <span class="ac-tag">Zeabur</span>
-      </div>
-      <div class="ac-detail" aria-hidden="true">
-        <div class="ac-detail-inner">
-          <div class="ac-detail-label">Sub-agents</div>
-          <div class="ac-agents">
-            <div class="ac-sub"><strong>Backend Agent</strong> — Supabase schema, RLS policies, pre-build blockers</div>
-            <div class="ac-sub"><strong>Frontend Agent</strong> — glassmorphism dark UI, bilingual ZH-TW/EN, role routing</div>
-            <div class="ac-sub"><strong>QA Agent</strong> — auth flow, role routing, API boundary errors</div>
-          </div>
-          <div class="ac-detail-label" style="margin-top:12px">Stack constraints</div>
-          <div class="ac-agents">
-            <div class="ac-sub">await cookies() · await createClient() · proxy.js export · never Vercel</div>
+      <div class="on" id="n-eng" tabindex="0" role="button" aria-expanded="false" aria-label="Engineering Director — expand to see sub-agents">
+        <div class="on-lv">05 · Engineering</div>
+        <div class="on-nm">Engineering Director</div>
+        <div class="on-subs" aria-hidden="true">
+          <div class="on-subs-in">
+            <div class="on-sl">Sub-agents</div>
+            <div class="on-sub-i"><strong>Backend Agent</strong> — Supabase schema, RLS, blockers</div>
+            <div class="on-sub-i"><strong>Frontend Agent</strong> — dark UI, bilingual, role routing</div>
+            <div class="on-sub-i"><strong>QA Agent</strong> — auth, role routing, API boundary</div>
           </div>
         </div>
+        <div class="on-btn" aria-hidden="true">+</div>
       </div>
-      <div class="ac-arr" aria-hidden="true">+</div>
-    </div>
-    <div class="ac rv" tabindex="0" role="article" aria-expanded="false">
-      <div class="ac-n">06 — Content</div>
-      <div class="ac-t">Content Director</div>
-      <div class="ac-d">Daily AI news → research → structured script → Video Director. Research, Script, Handoff agents.</div>
-      <div class="ac-tags">
-        <span class="ac-tag">Research</span>
-        <span class="ac-tag">Script</span>
-        <span class="ac-tag">Pipeline</span>
-      </div>
-      <div class="ac-detail" aria-hidden="true">
-        <div class="ac-detail-inner">
-          <div class="ac-detail-label">Sub-agents</div>
-          <div class="ac-agents">
-            <div class="ac-sub"><strong>Research Agent</strong> — finds highest signal-to-noise AI articles, structured summary</div>
-            <div class="ac-sub"><strong>Script Agent</strong> — ~6.5 min ZH-TW script, scene-mapped, iMessage callout markers</div>
-            <div class="ac-sub"><strong>Handoff</strong> — outputs article-YYYY-MM-DD.md → Video Director</div>
+      <div class="on" id="n-ctn" tabindex="0" role="button" aria-expanded="false" aria-label="Content Director — expand to see sub-agents">
+        <div class="on-lv">06 · Content</div>
+        <div class="on-nm">Content Director</div>
+        <div class="on-subs" aria-hidden="true">
+          <div class="on-subs-in">
+            <div class="on-sl">Sub-agents</div>
+            <div class="on-sub-i"><strong>Research Agent</strong> — finds high signal-to-noise AI articles</div>
+            <div class="on-sub-i"><strong>Script Agent</strong> — ~6.5 min ZH-TW script, scene-mapped</div>
+            <div class="on-sub-i"><strong>Handoff</strong> — article-YYYY-MM-DD.md → Video Director</div>
           </div>
         </div>
+        <div class="on-btn" aria-hidden="true">+</div>
       </div>
-      <div class="ac-arr" aria-hidden="true">+</div>
     </div>
   </div>
 </section>
@@ -764,7 +747,7 @@ document.addEventListener('mousemove',e=>{
   cr.style.left=rx+'px'; cr.style.top=ry+'px';
   requestAnimationFrame(lerpRing);
 })();
-document.querySelectorAll('a,button,.ac,.pi').forEach(el=>{
+document.querySelectorAll('a,button,.on,.pi').forEach(el=>{
   el.addEventListener('mouseenter',()=>document.body.classList.add('hov'));
   el.addEventListener('mouseleave',()=>document.body.classList.remove('hov'));
 });
@@ -907,55 +890,94 @@ new IntersectionObserver(entries=>{
   if(entries[0].isIntersecting) document.getElementById('mf').classList.add('vis');
 },{threshold:.25}).observe(document.getElementById('mf'));
 
-/* ── AGENT CARD EXPAND + TILT ─────────────────────── */
-document.querySelectorAll('.ac').forEach(card=>{
-  let raf,cx=0,cy=0,tx=0,ty=0;
+/* ── ORG CHART LINES ──────────────────────────────── */
+function drawLines(){
+  const svg=document.getElementById('oc-lines');
+  if(!svg) return;
+  const oc=svg.closest('.oc');
+  if(!oc) return;
+  const cr=oc.getBoundingClientRect();
+  const h=oc.offsetHeight;
 
-  // expand/collapse on click
-  card.addEventListener('click',()=>{
-    const isOpen=card.classList.contains('open');
-    // close all others
-    document.querySelectorAll('.ac.open').forEach(c=>{
-      c.classList.remove('open');
-      c.setAttribute('aria-expanded','false');
-      c.querySelector('.ac-detail').setAttribute('aria-hidden','true');
+  svg.innerHTML='';
+  svg.setAttribute('width',cr.width);
+  svg.setAttribute('height',h);
+  svg.setAttribute('viewBox',`0 0 ${cr.width} ${h}`);
+
+  function box(id){
+    const el=document.getElementById(id);
+    if(!el) return null;
+    const r=el.getBoundingClientRect();
+    return{
+      cx:(r.left+r.right)/2-cr.left,
+      top:r.top-cr.top,
+      bottom:r.bottom-cr.top,
+    };
+  }
+
+  function mkPath(d,dashed,delay){
+    const p=document.createElementNS('http://www.w3.org/2000/svg','path');
+    p.setAttribute('d',d);
+    p.setAttribute('fill','none');
+    p.setAttribute('stroke',dashed?'rgba(124,255,178,.2)':'rgba(124,255,178,.42)');
+    p.setAttribute('stroke-width','1');
+    if(dashed) p.setAttribute('stroke-dasharray','4 3');
+    const len=200;
+    p.style.cssText=`stroke-dasharray:${len};stroke-dashoffset:${len};transition:stroke-dashoffset 1s cubic-bezier(.16,1,.3,1) ${delay||0}s`;
+    svg.appendChild(p);
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{p.style.strokeDashoffset='0';}));
+  }
+
+  function elbow(a,b,dashed,delay){
+    if(!a||!b) return;
+    const mid=(a.bottom+b.top)/2;
+    mkPath(`M${a.cx},${a.bottom} L${a.cx},${mid} L${b.cx},${mid} L${b.cx},${b.top}`,dashed,delay);
+  }
+
+  const james=box('n-james'),sys=box('n-sys'),pm=box('n-pm');
+  const vid=box('n-vid'),crs=box('n-crs'),eng=box('n-eng'),ctn=box('n-ctn');
+
+  // JAMES → System Dir & PM Dir (solid — direct reports)
+  elbow(james,sys,false,0);
+  elbow(james,pm,false,.05);
+
+  // System Dir → Domain Directors via bus (dashed — dispatches)
+  if(sys&&vid&&crs&&eng&&ctn){
+    const busY=sys.bottom+Math.round((vid.top-sys.bottom)*.45);
+    mkPath(`M${sys.cx},${sys.bottom} L${sys.cx},${busY}`,true,.1);
+    mkPath(`M${vid.cx},${busY} L${ctn.cx},${busY}`,true,.15);
+    [vid,crs,eng,ctn].forEach((n,i)=>{
+      if(n) mkPath(`M${n.cx},${busY} L${n.cx},${n.top}`,true,.2+i*.04);
+    });
+  }
+}
+
+// redraw whenever oc container resizes (handles expand/collapse)
+const ocEl=document.querySelector('.oc');
+if(ocEl) new ResizeObserver(()=>requestAnimationFrame(drawLines)).observe(ocEl);
+addEventListener('resize',drawLines);
+document.fonts.ready.then(()=>setTimeout(drawLines,120));
+
+/* ── ORG CHART EXPAND ─────────────────────────────── */
+document.querySelectorAll('.on[tabindex]').forEach(node=>{
+  node.addEventListener('click',()=>{
+    const isOpen=node.classList.contains('open');
+    document.querySelectorAll('.on.open').forEach(n=>{
+      n.classList.remove('open');
+      n.setAttribute('aria-expanded','false');
+      n.querySelector('.on-subs').setAttribute('aria-hidden','true');
     });
     if(!isOpen){
-      card.classList.add('open');
-      card.setAttribute('aria-expanded','true');
-      card.querySelector('.ac-detail').setAttribute('aria-hidden','false');
+      node.classList.add('open');
+      node.setAttribute('aria-expanded','true');
+      node.querySelector('.on-subs').setAttribute('aria-hidden','false');
     }
+    // redraw lines mid-animation and after
+    setTimeout(drawLines,200);
+    setTimeout(drawLines,600);
   });
-
-  // 3D tilt on hover (skip when expanded on mobile)
-  card.addEventListener('mousemove',e=>{
-    if(card.classList.contains('open')) return;
-    const r=card.getBoundingClientRect();
-    tx=(e.clientX-r.left-r.width/2)/(r.width/2)*8;
-    ty=(e.clientY-r.top-r.height/2)/(r.height/2)*-8;
-  });
-  card.addEventListener('mouseenter',()=>{
-    if(card.classList.contains('open')) return;
-    cancelAnimationFrame(raf);
-    (function loop(){
-      cx+=(tx-cx)*.1; cy+=(ty-cy)*.1;
-      card.style.transform=`perspective(700px) rotateX(${cy}deg) rotateY(${cx}deg) translateZ(3px)`;
-      raf=requestAnimationFrame(loop);
-    })();
-  });
-  card.addEventListener('mouseleave',()=>{
-    cancelAnimationFrame(raf); tx=0; ty=0;
-    (function reset(){
-      cx+=(0-cx)*.12; cy+=(0-cy)*.12;
-      card.style.transform=`perspective(700px) rotateX(${cy}deg) rotateY(${cx}deg)`;
-      if(Math.abs(cx)>.05||Math.abs(cy)>.05) raf=requestAnimationFrame(reset);
-      else card.style.transform='';
-    })();
-  });
-
-  // keyboard
-  card.addEventListener('keydown',e=>{
-    if(e.key==='Enter'||e.key===' '){e.preventDefault();card.click();}
+  node.addEventListener('keydown',e=>{
+    if(e.key==='Enter'||e.key===' '){e.preventDefault();node.click();}
   });
 });
 </script>
