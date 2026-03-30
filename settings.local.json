@@ -174,7 +174,9 @@
       "Bash(ffmpeg -i /Users/jamesshih/Projects/article-video/ai-knowledge-2026-03-30/ai-knowledge-2026-03-30.wav -stream_loop -1 -i /Users/jamesshih/Projects/article-video/public/audio/course_bgmusic.wav -filter_complex \":*)",
       "Bash(mkdir -p ~/.claude/skills/frontend-design)",
       "Bash(~/.claude/skills/frontend-design/SKILL.md)",
-      "Bash(whisper public/audio/ai-knowledge-2026-03-30-processed.wav --model medium --language zh --output_format vtt --output_dir out/2026-03-30/)"
+      "Bash(whisper public/audio/ai-knowledge-2026-03-30-processed.wav --model medium --language zh --output_format vtt --output_dir out/2026-03-30/)",
+      "Bash(kill 86525)",
+      "Bash(ffmpeg -i ai-knowledge-2026-03-30/ai-knowledge-2026-03-30.mp3 -stream_loop -1 -i public/audio/course_bgmusic.wav -filter_complex \":*)"
     ]
   }
 }

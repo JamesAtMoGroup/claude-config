@@ -231,10 +231,39 @@ main{margin-left:var(--nav-w);position:relative;z-index:3;}
   color:var(--green);border:1px solid rgba(124,255,178,.22);padding:3px 7px;
 }
 .ac-arr{
-  position:absolute;bottom:20px;right:20px;font-size:14px;color:var(--t3);
-  transition:color .2s,transform .2s;
+  position:absolute;bottom:20px;right:20px;
+  width:28px;height:28px;border:1px solid var(--b2);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;line-height:1;color:var(--t3);
+  transition:color .2s,border-color .2s,transform .3s var(--ease-s),background .2s;
 }
-.ac:hover .ac-arr{color:var(--green);transform:translate(3px,-3px);}
+.ac:hover .ac-arr{color:var(--green);border-color:rgba(124,255,178,.4);}
+.ac.open .ac-arr{color:var(--bg);background:var(--green);border-color:var(--green);transform:rotate(45deg);}
+
+/* ── EXPANDED DETAIL ─────────────────────────────── */
+.ac-detail{
+  max-height:0;overflow:hidden;
+  transition:max-height .55s var(--ease),opacity .4s var(--ease),margin .4s var(--ease);
+  opacity:0;margin-top:0;
+}
+.ac.open .ac-detail{max-height:400px;opacity:1;margin-top:20px;}
+.ac-detail-inner{
+  border-top:1px solid var(--b1);padding-top:18px;
+}
+.ac-detail-label{
+  font-size:9px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--t3);margin-bottom:10px;
+}
+.ac-agents{display:flex;flex-direction:column;gap:8px;}
+.ac-sub{
+  display:flex;align-items:center;gap:10px;
+  font-size:12px;color:var(--t2);line-height:1.5;
+}
+.ac-sub::before{
+  content:'';width:4px;height:4px;border-radius:50%;
+  background:var(--green);opacity:.5;flex-shrink:0;
+}
+.ac-sub strong{color:var(--t1);font-weight:700;margin-right:2px;}
 
 /* ── PROJECTS ────────────────────────────────────── */
 .pl{display:flex;flex-direction:column;gap:1px;border:1px solid var(--b1);background:var(--b1);}
@@ -485,7 +514,7 @@ footer{
     <span class="sec-s">6 Directors · 17 Agents</span>
   </div>
   <div class="ag">
-    <div class="ac rv" tabindex="0" role="article">
+    <div class="ac rv" tabindex="0" role="article" aria-expanded="false">
       <div class="ac-n">01 — Meta</div>
       <div class="ac-t">System Director</div>
       <div class="ac-d">Orchestrates every session. Manages memory, SOP, and sync. Always in the room.</div>
@@ -494,9 +523,21 @@ footer{
         <span class="ac-tag">Sync</span>
         <span class="ac-tag">SOP</span>
       </div>
-      <div class="ac-arr" aria-hidden="true">↗</div>
+      <div class="ac-detail" aria-hidden="true">
+        <div class="ac-detail-inner">
+          <div class="ac-detail-label">Sub-agents</div>
+          <div class="ac-agents">
+            <div class="ac-sub"><strong>Memory Agent</strong> — writes rules, feedback, preferences on the fly</div>
+            <div class="ac-sub"><strong>SOP Agent</strong> — updates skill files and agents.md when workflows change</div>
+            <div class="ac-sub"><strong>Sync Agent</strong> — runs sync.sh push at session end</div>
+            <div class="ac-sub"><strong>Orchestrator</strong> — reads state → dispatches to right Director</div>
+            <div class="ac-sub"><strong>Project Onboarding Agent</strong> — detects new ~/Projects/, builds status files</div>
+          </div>
+        </div>
+      </div>
+      <div class="ac-arr" aria-hidden="true">+</div>
     </div>
-    <div class="ac rv" tabindex="0" role="article">
+    <div class="ac rv" tabindex="0" role="article" aria-expanded="false">
       <div class="ac-n">02 — Planning</div>
       <div class="ac-t">PM Director</div>
       <div class="ac-d">Global view. Tracks priorities, blockers, and the one highest-leverage thing to do now.</div>
@@ -505,9 +546,20 @@ footer{
         <span class="ac-tag">Blocker</span>
         <span class="ac-tag">Roadmap</span>
       </div>
-      <div class="ac-arr" aria-hidden="true">↗</div>
+      <div class="ac-detail" aria-hidden="true">
+        <div class="ac-detail-inner">
+          <div class="ac-detail-label">Sub-agents</div>
+          <div class="ac-agents">
+            <div class="ac-sub"><strong>Status Agent</strong> — reads all progress files in parallel, outputs snapshot</div>
+            <div class="ac-sub"><strong>Priority Agent</strong> — ranks by leverage/income/impact, surfaces #1 action</div>
+            <div class="ac-sub"><strong>Blocker Agent</strong> — diagnoses stalled projects, gives concrete next steps</div>
+            <div class="ac-sub"><strong>Roadmap Agent</strong> — writes roadmap.md + updates dashboard.json</div>
+          </div>
+        </div>
+      </div>
+      <div class="ac-arr" aria-hidden="true">+</div>
     </div>
-    <div class="ac rv" tabindex="0" role="article">
+    <div class="ac rv" tabindex="0" role="article" aria-expanded="false">
       <div class="ac-n">03 — Video</div>
       <div class="ac-t">Video Director</div>
       <div class="ac-d">Full Remotion pipeline — audio normalization, Whisper VTT, scene dev, QA, 4K render. Parallel.</div>
@@ -516,9 +568,24 @@ footer{
         <span class="ac-tag">4K</span>
         <span class="ac-tag">Whisper</span>
       </div>
-      <div class="ac-arr" aria-hidden="true">↗</div>
+      <div class="ac-detail" aria-hidden="true">
+        <div class="ac-detail-inner">
+          <div class="ac-detail-label">Sub-agents · Phase 1 parallel</div>
+          <div class="ac-agents">
+            <div class="ac-sub"><strong>Audio Agent</strong> — trim silence, normalize (-20 LUFS article / -16 LUFS vibe)</div>
+            <div class="ac-sub"><strong>Transcription Agent</strong> — Whisper → VTT, cross-ref script</div>
+            <div class="ac-sub"><strong>Scene Dev Agent</strong> — writes/edits Remotion TSX components</div>
+          </div>
+          <div class="ac-detail-label" style="margin-top:12px">Phase 2 sequential</div>
+          <div class="ac-agents">
+            <div class="ac-sub"><strong>QA Agent</strong> — alignment check → iMessage report → waits "通過"</div>
+            <div class="ac-sub"><strong>Render Agent</strong> — npx remotion render --gl=angle → out/</div>
+          </div>
+        </div>
+      </div>
+      <div class="ac-arr" aria-hidden="true">+</div>
     </div>
-    <div class="ac rv" tabindex="0" role="article">
+    <div class="ac rv" tabindex="0" role="article" aria-expanded="false">
       <div class="ac-n">04 — Course</div>
       <div class="ac-t">Course Director</div>
       <div class="ac-d">n8ncourse website updates — lecture pages, daily knowledge base, GitHub Pages deploy.</div>
@@ -527,9 +594,19 @@ footer{
         <span class="ac-tag">GitHub Pages</span>
         <span class="ac-tag">ZH-TW</span>
       </div>
-      <div class="ac-arr" aria-hidden="true">↗</div>
+      <div class="ac-detail" aria-hidden="true">
+        <div class="ac-detail-inner">
+          <div class="ac-detail-label">Sub-agents</div>
+          <div class="ac-agents">
+            <div class="ac-sub"><strong>Content Agent</strong> — writes lecture{N}/index.html with design tokens, scans for forbidden words</div>
+            <div class="ac-sub"><strong>Knowledge Agent</strong> — adds daily AI knowledge to knowledge.json, maintains courses.json</div>
+            <div class="ac-sub"><strong>Deploy Agent</strong> — git push → GitHub Pages → verifies live URL</div>
+          </div>
+        </div>
+      </div>
+      <div class="ac-arr" aria-hidden="true">+</div>
     </div>
-    <div class="ac rv" tabindex="0" role="article">
+    <div class="ac rv" tabindex="0" role="article" aria-expanded="false">
       <div class="ac-n">05 — Engineering</div>
       <div class="ac-t">Engineering Director</div>
       <div class="ac-d">LINE booking app — Next.js 16, Supabase SSR, Zeabur deploy. Backend + frontend + QA sub-agents.</div>
@@ -538,9 +615,23 @@ footer{
         <span class="ac-tag">Supabase</span>
         <span class="ac-tag">Zeabur</span>
       </div>
-      <div class="ac-arr" aria-hidden="true">↗</div>
+      <div class="ac-detail" aria-hidden="true">
+        <div class="ac-detail-inner">
+          <div class="ac-detail-label">Sub-agents</div>
+          <div class="ac-agents">
+            <div class="ac-sub"><strong>Backend Agent</strong> — Supabase schema, RLS policies, pre-build blockers</div>
+            <div class="ac-sub"><strong>Frontend Agent</strong> — glassmorphism dark UI, bilingual ZH-TW/EN, role routing</div>
+            <div class="ac-sub"><strong>QA Agent</strong> — auth flow, role routing, API boundary errors</div>
+          </div>
+          <div class="ac-detail-label" style="margin-top:12px">Stack constraints</div>
+          <div class="ac-agents">
+            <div class="ac-sub">await cookies() · await createClient() · proxy.js export · never Vercel</div>
+          </div>
+        </div>
+      </div>
+      <div class="ac-arr" aria-hidden="true">+</div>
     </div>
-    <div class="ac rv" tabindex="0" role="article">
+    <div class="ac rv" tabindex="0" role="article" aria-expanded="false">
       <div class="ac-n">06 — Content</div>
       <div class="ac-t">Content Director</div>
       <div class="ac-d">Daily AI news → research → structured script → Video Director. Research, Script, Handoff agents.</div>
@@ -549,7 +640,17 @@ footer{
         <span class="ac-tag">Script</span>
         <span class="ac-tag">Pipeline</span>
       </div>
-      <div class="ac-arr" aria-hidden="true">↗</div>
+      <div class="ac-detail" aria-hidden="true">
+        <div class="ac-detail-inner">
+          <div class="ac-detail-label">Sub-agents</div>
+          <div class="ac-agents">
+            <div class="ac-sub"><strong>Research Agent</strong> — finds highest signal-to-noise AI articles, structured summary</div>
+            <div class="ac-sub"><strong>Script Agent</strong> — ~6.5 min ZH-TW script, scene-mapped, iMessage callout markers</div>
+            <div class="ac-sub"><strong>Handoff</strong> — outputs article-YYYY-MM-DD.md → Video Director</div>
+          </div>
+        </div>
+      </div>
+      <div class="ac-arr" aria-hidden="true">+</div>
     </div>
   </div>
 </section>
@@ -806,15 +907,35 @@ new IntersectionObserver(entries=>{
   if(entries[0].isIntersecting) document.getElementById('mf').classList.add('vis');
 },{threshold:.25}).observe(document.getElementById('mf'));
 
-/* ── AGENT CARD 3D TILT ───────────────────────────── */
+/* ── AGENT CARD EXPAND + TILT ─────────────────────── */
 document.querySelectorAll('.ac').forEach(card=>{
   let raf,cx=0,cy=0,tx=0,ty=0;
+
+  // expand/collapse on click
+  card.addEventListener('click',()=>{
+    const isOpen=card.classList.contains('open');
+    // close all others
+    document.querySelectorAll('.ac.open').forEach(c=>{
+      c.classList.remove('open');
+      c.setAttribute('aria-expanded','false');
+      c.querySelector('.ac-detail').setAttribute('aria-hidden','true');
+    });
+    if(!isOpen){
+      card.classList.add('open');
+      card.setAttribute('aria-expanded','true');
+      card.querySelector('.ac-detail').setAttribute('aria-hidden','false');
+    }
+  });
+
+  // 3D tilt on hover (skip when expanded on mobile)
   card.addEventListener('mousemove',e=>{
+    if(card.classList.contains('open')) return;
     const r=card.getBoundingClientRect();
-    tx=(e.clientX-r.left-r.width/2)/(r.width/2)*9;
-    ty=(e.clientY-r.top-r.height/2)/(r.height/2)*-9;
+    tx=(e.clientX-r.left-r.width/2)/(r.width/2)*8;
+    ty=(e.clientY-r.top-r.height/2)/(r.height/2)*-8;
   });
   card.addEventListener('mouseenter',()=>{
+    if(card.classList.contains('open')) return;
     cancelAnimationFrame(raf);
     (function loop(){
       cx+=(tx-cx)*.1; cy+=(ty-cy)*.1;
@@ -831,10 +952,8 @@ document.querySelectorAll('.ac').forEach(card=>{
       else card.style.transform='';
     })();
   });
-});
 
-/* ── KEYBOARD NAV ─────────────────────────────────── */
-document.querySelectorAll('.ac[tabindex]').forEach(card=>{
+  // keyboard
   card.addEventListener('keydown',e=>{
     if(e.key==='Enter'||e.key===' '){e.preventDefault();card.click();}
   });

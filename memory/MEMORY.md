@@ -16,6 +16,7 @@
 - [Lottie AvatarOverlay 已捨棄](./feedback_no_lottie_avatar.md) — 所有影片不再使用右下角講者動畫；course-video.md 已更新
 - [iMessage callout — use article-video design](./feedback_imessage_callout_design.md) — Vibe Coding video must use article-video iMessage spec (sender/text, top-right stack); discard old label/side/yPct system
 - [Audio pipeline — no denoising](./feedback_audio_pipeline.md) — Skip denoise step; James handles audio correction himself
+- [VTT-first pipeline](./feedback_vtt_first_pipeline.md) — VTT must exist before Scene Dev; QA before render; ContentColumn needs subtitle safe zone (80*S px)
 - [Always update SOP immediately](./feedback_sop_update_rule.md) — Any workflow/adjustment/optimization mentioned → add to relevant SOP file immediately
 - [Script over tokens](./feedback_script_over_tokens.md) — Any task a script can do must never use tokens; scripts live in ~/.claude/scripts/
 
