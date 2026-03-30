@@ -147,7 +147,8 @@
       "Bash(pdftotext:*)",
       "Bash(~/.claude/scripts/imessage_send.sh \"🎬 Vibe Coding CH0-1 預覽就緒\n\nRemotion Studio: http://localhost:3001\n選 FullVideo，確認以下幀位置：\n\n▸ 17490 — 4.3 場景末尾\n▸ 17493 — MP4 #1 旅遊表單 demo 淡入\n▸ 19170 — MP4 #2 改顏色版本\n▸ 19983 — 5.1 場景恢復\n\n確認後回覆「通過」開始 render\" 2>&1)",
       "Bash(bash /Users/jamesshih/chatwoot-setup/redeploy.sh 2>&1)",
-      "Bash(~/.claude/scripts/imessage_send.sh \"🎬 Vibe Coding CH0-1 重建完成 — QA 預覽\n\nhttp://localhost:3001 → 選 FullVideo \\(28375f / 15m46s\\)\n\n✅ 全新音檔 \\(chapters/0-1\\)\n✅ AvatarOverlay 已移除\n✅ 4.3 依講稿順序插入 MP4\n\n確認以下幀位置：\n▸ 0        — 開場 Hero\n▸ 15665    — 4.3a 甲方乙方類比\n▸ 16530    — MP4 #1 旅遊表單 demo \\(56s\\)\n▸ 18207    — 4.3b 修改示範\n▸ 19290    — MP4 #2 改顏色 \\(27s\\)\n▸ 20103    — 4.3c 結語 Vibe Coding\n▸ 20343    — 5.1 Vibe 特性場景\n\n確認後回覆「通過」開始 render\" 2>&1)"
+      "Bash(~/.claude/scripts/imessage_send.sh \"🎬 Vibe Coding CH0-1 重建完成 — QA 預覽\n\nhttp://localhost:3001 → 選 FullVideo \\(28375f / 15m46s\\)\n\n✅ 全新音檔 \\(chapters/0-1\\)\n✅ AvatarOverlay 已移除\n✅ 4.3 依講稿順序插入 MP4\n\n確認以下幀位置：\n▸ 0        — 開場 Hero\n▸ 15665    — 4.3a 甲方乙方類比\n▸ 16530    — MP4 #1 旅遊表單 demo \\(56s\\)\n▸ 18207    — 4.3b 修改示範\n▸ 19290    — MP4 #2 改顏色 \\(27s\\)\n▸ 20103    — 4.3c 結語 Vibe Coding\n▸ 20343    — 5.1 Vibe 特性場景\n\n確認後回覆「通過」開始 render\" 2>&1)",
+      "Bash(grep -E \"\\\\.\\(vtt|wav\\)$\")"
     ]
   }
 }

@@ -13,7 +13,12 @@
 - [Remotion style preference](./remotion_style_preference.md) — Default to Glassmorphism + YouTube Tutorial style; no timestamp in progress bar
 - [Multi-agent requirement (all video work)](./feedback_vibe_coding_multiagent.md) — Always use Director + scoped sub-agents for ALL video work (Vibe Coding + article-video); parallelize audio/VTT/render
 - [Cross-project universal rules](./feedback_cross_project_rules.md) — Both projects share: Vibe Coding style + 4K output + iMessage notifications (S=3 article-video, S=2 Vibe Coding)
+- [iMessage callout — use article-video design](./feedback_imessage_callout_design.md) — Vibe Coding video must use article-video iMessage spec (sender/text, top-right stack); discard old label/side/yPct system
 - [Audio pipeline — no denoising](./feedback_audio_pipeline.md) — Skip denoise step; James handles audio correction himself
+- [Always update SOP immediately](./feedback_sop_update_rule.md) — Any workflow/adjustment/optimization mentioned → add to relevant SOP file immediately
+
+## Agent System
+- [Agent Organization](~/.claude/commands/agents.md) — 4 domain directors (Video / Course / Engineering / Content) + sub-agents; invocation cheatsheet
 
 ## Projects
 - [iMessage QA approval flow](./project_imessage_qa.md) — QA Agent sends report to 0981928525; waits for "通過" before render; Terminal Full Disk Access just enabled

@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>James — Studio Dashboard</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Space+Mono:wght@400;700&display=swap');
+
+  :root {
+    --bg: #000000;
+    --bg-2: #0a0a0a;
+    --bg-card: rgba(255,255,255,0.04);
+    --bg-card-hover: rgba(255,255,255,0.07);
+    --border: rgba(255,255,255,0.08);
+    --green: #7cffb2;
+    --green-dim: rgba(124,255,178,0.15);
+    --yellow: #ffd166;
+    --yellow-dim: rgba(255,209,102,0.15);
+    --red: #ff6b6b;
+    --red-dim: rgba(255,107,107,0.12);
+    --text-1: #ffffff;
+    --text-2: rgba(255,255,255,0.6);
+    --text-3: rgba(255,255,255,0.3);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text-1);
+    font-family: 'Noto Sans TC', sans-serif;
+    min-height: 100vh;
+    padding: 32px;
+    overflow-x: hidden;
+  }
+
+  /* Background orbs */
+  .orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(120px);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .orb-1 { width: 600px; height: 600px; background: rgba(124,255,178,0.05); top: -200px; right: -100px; }
+  .orb-2 { width: 400px; height: 400px; background: rgba(255,209,102,0.04); bottom: -100px; left: -100px; }
+  .orb-3 { width: 300px; height: 300px; background: rgba(124,255,178,0.03); top: 50%; left: 40%; }
+
+  .container { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; }
+
+  /* Header */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+  }
+  .logo {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    color: var(--text-3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .sync-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--text-3);
+  }
+  .sync-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* Top Priority Banner */
+  .priority-banner {
+    background: linear-gradient(135deg, rgba(124,255,178,0.08) 0%, rgba(124,255,178,0.02) 100%);
+    border: 1px solid rgba(124,255,178,0.2);
+    border-radius: 16px;
+    padding: 20px 24px;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    backdrop-filter: blur(20px);
+  }
+  .priority-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .priority-label {
+    font-size: 11px;
+    font-family: 'Space Mono', monospace;
+    color: var(--green);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .priority-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-1);
+    margin-bottom: 4px;
+  }
+  .priority-reason {
+    font-size: 13px;
+    color: var(--text-2);
+    line-height: 1.5;
+  }
+
+  /* Project Grid */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 22px;
+    backdrop-filter: blur(20px);
+    transition: background 0.2s, border-color 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .card:hover {
+    background: var(--bg-card-hover);
+    border-color: rgba(255,255,255,0.12);
+  }
+  .card.status-blocked { border-color: rgba(255,107,107,0.25); }
+  .card.status-blocked::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--red), transparent);
+  }
+  .card.status-active::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--green), transparent);
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .card-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-1);
+    letter-spacing: 0.01em;
+  }
+  .card-emoji { font-size: 18px; }
+  .status-chip {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 999px;
+  }
+  .status-chip.active { background: var(--green-dim); color: var(--green); }
+  .status-chip.blocked { background: var(--red-dim); color: var(--red); }
+
+  /* Milestones */
+  .milestones { margin-bottom: 16px; display: flex; flex-direction: column; gap: 7px; }
+  .milestone {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+  }
+  .milestone-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .milestone.done .milestone-dot { background: var(--green); }
+  .milestone.pending .milestone-dot { background: rgba(255,255,255,0.15); }
+  .milestone.in-progress .milestone-dot {
+    background: var(--yellow);
+    box-shadow: 0 0 6px rgba(255,209,102,0.5);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  .milestone.done .milestone-label { color: var(--text-2); }
+  .milestone.pending .milestone-label { color: var(--text-3); }
+  .milestone.in-progress .milestone-label { color: var(--yellow); }
+
+  /* Next Action */
+  .next-action {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+  }
+  .next-action-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--text-3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .next-action-text { font-size: 13px; color: var(--text-1); font-weight: 500; }
+
+  /* Blockers in card */
+  .card-blockers { display: flex; flex-direction: column; gap: 5px; }
+  .card-blocker {
+    font-size: 12px;
+    color: var(--red);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .card-blocker::before { content: '⚠'; font-size: 10px; }
+
+  /* Global Blockers */
+  .blockers-section {
+    background: rgba(255,107,107,0.05);
+    border: 1px solid rgba(255,107,107,0.15);
+    border-radius: 16px;
+    padding: 20px 24px;
+    backdrop-filter: blur(20px);
+  }
+  .blockers-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--red);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .blocker-list { display: flex; flex-direction: column; gap: 8px; }
+  .blocker-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    color: var(--text-2);
+  }
+  .blocker-item::before {
+    content: '';
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--red);
+    flex-shrink: 0;
+  }
+
+  /* Empty blockers */
+  .no-blockers {
+    font-size: 14px;
+    color: var(--green);
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* Error state */
+  .error-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-3);
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+  }
+
+  /* Refresh countdown */
+  .refresh-info {
+    text-align: center;
+    margin-top: 20px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--text-3);
+  }
+</style>
+</head>
+<body>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+
+<div class="container">
+  <header>
+    <div class="logo">James · Studio Dashboard</div>
+    <div class="sync-badge">
+      <div class="sync-dot"></div>
+      <span id="last-sync">載入中...</span>
+    </div>
+  </header>
+
+  <div id="app">
+    <div class="error-state">Loading...</div>
+  </div>
+
+  <div class="refresh-info" id="refresh-info"></div>
+</div>
+
+<script>
+const DATA_URL = 'https://raw.githubusercontent.com/JamesAtMoGroup/claude-config/main/dashboard/dashboard.json';
+const REFRESH_SEC = 60;
+let countdown = REFRESH_SEC;
+
+function statusChip(status) {
+  const map = { active: '運作中', blocked: '卡住了' };
+  return `<span class="status-chip ${status}">${map[status] || status}</span>`;
+}
+
+function renderMilestone(m) {
+  const cls = m.done ? 'done' : m.inProgress ? 'in-progress' : 'pending';
+  return `<div class="milestone ${cls}">
+    <div class="milestone-dot"></div>
+    <span class="milestone-label">${m.label}</span>
+  </div>`;
+}
+
+function renderCard(proj) {
+  const blockerHtml = proj.blockers.length
+    ? proj.blockers.map(b => `<div class="card-blocker">${b}</div>`).join('')
+    : '';
+
+  return `
+    <div class="card status-${proj.status}">
+      <div class="card-header">
+        <div>
+          <div class="card-name">${proj.name}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          ${statusChip(proj.status)}
+          <span class="card-emoji">${proj.emoji}</span>
+        </div>
+      </div>
+      <div class="milestones">
+        ${proj.milestones.map(renderMilestone).join('')}
+      </div>
+      <div class="next-action">
+        <div class="next-action-label">下一步</div>
+        <div class="next-action-text">${proj.nextAction}</div>
+      </div>
+      ${blockerHtml ? `<div class="card-blockers">${blockerHtml}</div>` : ''}
+    </div>`;
+}
+
+function render(data) {
+  const projects = Object.values(data.projects);
+  const syncTime = new Date(data.lastSync);
+  const timeStr = syncTime.toLocaleString('zh-TW', {
+    month: 'numeric', day: 'numeric',
+    hour: '2-digit', minute: '2-digit'
+  });
+  document.getElementById('last-sync').textContent = `上次同步 ${timeStr}`;
+
+  const blockersHtml = data.globalBlockers.length
+    ? data.globalBlockers.map(b => `<div class="blocker-item">${b}</div>`).join('')
+    : '<div class="no-blocker">✓ 目前無全局阻礙</div>';
+
+  document.getElementById('app').innerHTML = `
+    <div class="priority-banner">
+      <div class="priority-icon">🎯</div>
+      <div>
+        <div class="priority-label">最高槓桿</div>
+        <div class="priority-title">${data.topPriority.label}</div>
+        <div class="priority-reason">${data.topPriority.reason}</div>
+      </div>
+    </div>
+
+    <div class="grid">
+      ${projects.map(renderCard).join('')}
+    </div>
+
+    <div class="blockers-section">
+      <div class="blockers-title">🚧 全局 Blockers</div>
+      <div class="blocker-list">${blockersHtml}</div>
+    </div>`;
+}
+
+async function load() {
+  try {
+    const res = await fetch(DATA_URL + '?t=' + Date.now());
+    if (!res.ok) throw new Error('fetch failed');
+    const data = await res.json();
+    render(data);
+  } catch (e) {
+    // Fallback: try local relative path
+    try {
+      const res2 = await fetch('./dashboard.json?t=' + Date.now());
+      if (!res2.ok) throw new Error();
+      const data = await res2.json();
+      render(data);
+    } catch {
+      document.getElementById('last-sync').textContent = '無法連線';
+    }
+  }
+}
+
+function startCountdown() {
+  const el = document.getElementById('refresh-info');
+  setInterval(() => {
+    countdown--;
+    if (countdown <= 0) {
+      countdown = REFRESH_SEC;
+      load();
+    }
+    el.textContent = `${countdown}s 後自動更新`;
+  }, 1000);
+}
+
+load();
+startCountdown();
+</script>
+</body>
+</html>
