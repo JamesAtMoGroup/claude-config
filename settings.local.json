@@ -151,7 +151,8 @@
       "Bash(grep -E \"\\\\.\\(vtt|wav\\)$\")",
       "Bash(find ~/Projects/online-class-booking -name PROGRESS* -o -name progress*)",
       "Bash(crontab:*)",
-      "Bash(jobs -l)"
+      "Bash(jobs -l)",
+      "Bash(bash ~/chatwoot-setup/cli_deploy.sh)"
     ]
   }
 }

@@ -3,681 +3,791 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>James Studio — Agent Org Chart</title>
+<title>James Studio — Org Chart</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Space+Mono:wght@400;700&display=swap');
 
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
 :root {
-  --bg: #000;
-  --green: #7cffb2;
-  --green-dim: rgba(124,255,178,0.08);
-  --green-line: rgba(124,255,178,0.3);
-  --yellow: #ffd166;
-  --purple: #b794f4;
-  --purple-dim: rgba(183,148,244,0.08);
-  --gold: #ffd700;
-  --gold-dim: rgba(255,215,0,0.08);
-  --card: rgba(255,255,255,0.04);
-  --card-hover: rgba(255,255,255,0.09);
-  --border: rgba(255,255,255,0.08);
+  --bg:       #000;
+  --surface:  rgba(255,255,255,0.04);
+  --surface2: rgba(255,255,255,0.08);
+  --border:   rgba(255,255,255,0.08);
+  --border2:  rgba(255,255,255,0.14);
   --t1: #fff;
   --t2: rgba(255,255,255,0.55);
   --t3: rgba(255,255,255,0.28);
-  --panel-w: 360px;
+  --green:  #7cffb2;
+  --gdim:   rgba(124,255,178,0.1);
+  --gline:  rgba(124,255,178,0.25);
+  --purple: #b794f4;
+  --pdim:   rgba(183,148,244,0.1);
+  --gold:   #ffd700;
+  --qdim:   rgba(255,215,0,0.1);
+  --red:    #ff6b6b;
 }
 
-* { margin:0; padding:0; box-sizing:border-box; }
-
 html, body {
-  width: 100%; height: 100%;
+  height: 100%;
   background: var(--bg);
   color: var(--t1);
   font-family: 'Noto Sans TC', sans-serif;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
-/* ── Orbs ── */
-.orb { position:fixed; border-radius:50%; filter:blur(120px); pointer-events:none; z-index:0; }
-.orb-1 { width:600px;height:600px;background:rgba(124,255,178,0.04);top:-200px;right:-200px; }
-.orb-2 { width:400px;height:400px;background:rgba(183,148,244,0.04);bottom:-100px;left:-100px; }
+/* orbs */
+.orb { position:fixed; border-radius:50%; filter:blur(140px); pointer-events:none; z-index:0; }
+.o1 { width:700px;height:700px;background:rgba(124,255,178,0.04);top:-250px;right:-200px; }
+.o2 { width:500px;height:500px;background:rgba(183,148,244,0.04);bottom:-150px;left:-200px; }
+
+/* ── Page ── */
+.page {
+  position: relative; z-index:1;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 80px 24px 80px;
+}
 
 /* ── Header ── */
 header {
-  position: fixed; top:0; left:0; right:0; z-index:200;
-  height: 52px;
-  display: flex; align-items:center; justify-content:space-between;
+  position: fixed; top:0; left:0; right:0; z-index:300;
+  height: 52px; display:flex; align-items:center; justify-content:space-between;
   padding: 0 24px;
-  background: rgba(0,0,0,0.85);
-  backdrop-filter: blur(20px);
+  background: rgba(0,0,0,0.9); backdrop-filter:blur(20px);
   border-bottom: 1px solid var(--border);
 }
-.header-title { font-family:'Space Mono',monospace; font-size:11px; color:var(--t3); letter-spacing:.1em; text-transform:uppercase; }
-.zoom-controls { display:flex; gap:6px; align-items:center; }
-.zoom-btn {
-  width:28px; height:28px;
-  background: var(--card); border:1px solid var(--border);
-  border-radius:7px; cursor:pointer;
-  display:flex; align-items:center; justify-content:center;
-  font-family:'Space Mono',monospace; font-size:14px; color:var(--t2);
-  transition: background .15s, color .15s;
-}
-.zoom-btn:hover { background:var(--card-hover); color:var(--t1); }
-.zoom-label { font-family:'Space Mono',monospace; font-size:11px; color:var(--t3); min-width:36px; text-align:center; }
-.hint { font-size:11px; color:var(--t3); }
+.header-left { font-family:'Space Mono',monospace; font-size:11px; color:var(--t3); letter-spacing:.1em; text-transform:uppercase; }
+.header-right { font-size:11px; color:var(--t3); }
 
-/* ── Canvas (scrollable viewport) ── */
-.canvas {
-  position: fixed;
-  top: 52px; left: 0; right: 0; bottom: 0;
-  overflow: auto;
-  z-index: 1;
-  transition: right .35s cubic-bezier(.4,0,.2,1);
-}
-.canvas.panel-open { right: var(--panel-w); }
-
-/* ── Chart inner (scalable) ── */
-.chart-inner {
-  display: inline-flex;
-  flex-direction: column;
+/* ── Layer labels ── */
+.layer-label {
+  text-align: center;
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--t3);
+  margin-bottom: 16px;
+  display: flex;
   align-items: center;
-  padding: 48px 60px 80px;
-  transform-origin: top center;
-  min-width: max-content;
+  gap: 12px;
+}
+.layer-label::before, .layer-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
 }
 
-/* ── Nodes ── */
-.node {
-  display: inline-flex; flex-direction:column; align-items:flex-start;
-  background: var(--card); border:1px solid var(--border);
-  border-radius: 12px; padding: 10px 14px;
-  cursor: pointer; user-select:none;
-  transition: background .15s, border-color .15s, transform .12s, box-shadow .15s;
-  min-width: 130px; max-width: 170px;
+/* ── Connector ── */
+.connector {
+  display: flex;
+  justify-content: center;
+  margin: 0;
+}
+.connector-line {
+  width: 1px;
+  background: var(--gline);
+}
+
+/* ── Cards ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px 20px;
+  cursor: pointer;
+  transition: background .18s, border-color .18s, transform .14s, box-shadow .18s;
+  position: relative;
+  overflow: hidden;
+  user-select: none;
+}
+.card:hover {
+  background: var(--surface2);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+.card:active { transform: translateY(-1px); }
+
+/* tier glow line on top */
+.card::before {
+  content: '';
+  position: absolute; top:0; left:20%; right:20%; height:1px;
+  opacity: 0;
+  transition: opacity .2s;
+}
+.card:hover::before { opacity: 1; }
+
+.card.tier-owner {
+  background: var(--qdim);
+  border-color: rgba(255,215,0,0.2);
+  border-radius: 20px;
+  padding: 24px 28px;
+}
+.card.tier-owner::before { background: var(--gold); left:30%; right:30%; }
+.card.tier-owner:hover { border-color: rgba(255,215,0,0.45); box-shadow: 0 0 40px rgba(255,215,0,0.08); }
+
+.card.tier-meta {
+  background: var(--pdim);
+  border-color: rgba(183,148,244,0.18);
+}
+.card.tier-meta::before { background: var(--purple); }
+.card.tier-meta:hover { border-color: rgba(183,148,244,0.45); box-shadow: 0 0 30px rgba(183,148,244,0.08); }
+
+.card.tier-director {
+  background: var(--gdim);
+  border-color: rgba(124,255,178,0.16);
+}
+.card.tier-director::before { background: var(--green); }
+.card.tier-director:hover { border-color: rgba(124,255,178,0.45); box-shadow: 0 0 30px rgba(124,255,178,0.08); }
+
+/* Card internals */
+.card-emoji { font-size: 28px; margin-bottom: 10px; line-height: 1; }
+.card.tier-owner .card-emoji { font-size: 36px; }
+
+.card-badge {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px; letter-spacing: .1em; text-transform: uppercase;
+  padding: 2px 9px; border-radius: 999px;
+  display: inline-block; margin-bottom: 8px;
+}
+.badge-owner  { background: var(--qdim); color: var(--gold);   border:1px solid rgba(255,215,0,0.2); }
+.badge-meta   { background: var(--pdim); color: var(--purple); border:1px solid rgba(183,148,244,0.2); }
+.badge-director { background: var(--gdim); color: var(--green);  border:1px solid rgba(124,255,178,0.2); }
+
+.card-name {
+  font-size: 16px; font-weight: 900; color: var(--t1);
+  margin-bottom: 4px; line-height: 1.2;
+}
+.card.tier-owner .card-name { font-size: 22px; }
+
+.card-sub {
+  font-size: 12px; color: var(--t2); margin-bottom: 12px; line-height: 1.4;
+}
+
+.card-trigger {
+  font-size: 11px; color: var(--t3); line-height: 1.5;
+  padding-top: 12px; border-top: 1px solid var(--border);
+}
+.card-trigger strong { color: var(--t2); font-weight: 600; }
+
+/* Sub-agents pill row */
+.card-subs {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  padding-top: 12px; border-top: 1px solid var(--border);
+  margin-top: 4px;
+}
+.sub-pill {
+  font-size: 10px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 3px 10px;
+  color: var(--t2);
   white-space: nowrap;
 }
-.node:hover { background:var(--card-hover); transform:translateY(-2px); }
-.node.active { box-shadow:0 0 18px rgba(124,255,178,.2); }
 
-.node.owner { background:var(--gold-dim); border-color:rgba(255,215,0,.25); min-width:160px; padding:14px 18px; }
-.node.owner:hover { border-color:rgba(255,215,0,.5); }
-.node.owner.active { border-color:var(--gold); }
-
-.node.meta { background:var(--purple-dim); border-color:rgba(183,148,244,.2); }
-.node.meta:hover { border-color:rgba(183,148,244,.5); }
-.node.meta.active { border-color:var(--purple); box-shadow:0 0 18px rgba(183,148,244,.2); }
-
-.node.director { background:var(--green-dim); border-color:rgba(124,255,178,.18); }
-.node.director:hover { border-color:rgba(124,255,178,.5); }
-.node.director.active { border-color:var(--green); }
-
-.node.sub { min-width:110px; max-width:148px; padding:8px 11px; border-radius:9px; }
-
-.node-emoji { font-size:16px; margin-bottom:4px; }
-.node.owner .node-emoji { font-size:20px; }
-.node.sub .node-emoji { font-size:13px; }
-.node-name { font-size:12px; font-weight:700; color:var(--t1); line-height:1.2; }
-.node.owner .node-name { font-size:14px; }
-.node.sub .node-name { font-size:11px; }
-.node-sub { font-family:'Space Mono',monospace; font-size:9px; color:var(--t3); margin-top:2px; }
-
-/* Toggle indicator on directors */
-.node.director::after {
-  content: '▾';
-  position: absolute; bottom:6px; right:10px;
-  font-size:9px; color:var(--t3);
-  transition: transform .2s;
+/* ── Grid layouts ── */
+.owner-row {
+  display: flex; justify-content: center;
+  margin-bottom: 0;
 }
-.node.director { position:relative; }
-.node.director.expanded::after { transform: rotate(180deg); }
+.owner-row .card { width: 340px; }
 
-/* ── Lines ── */
-.v-line { width:1px; background:var(--green-line); margin:0 auto; }
-.h-line { height:1px; background:var(--green-line); }
-
-/* ── Layout helpers ── */
-.row { display:flex; align-items:flex-start; justify-content:center; }
-.col { display:flex; flex-direction:column; align-items:center; }
-
-/* Director group (node + collapsible subs) */
-.dir-group { display:flex; flex-direction:column; align-items:center; padding:0 10px; }
-
-/* Sub-agents container */
-.subs-wrap {
-  display:flex; flex-direction:column; align-items:center;
-  overflow:hidden;
-  max-height:0;
-  opacity:0;
-  transition: max-height .35s cubic-bezier(.4,0,.2,1), opacity .25s;
+.meta-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
 }
-.subs-wrap.open { max-height:600px; opacity:1; }
 
-.subs-row { display:flex; align-items:flex-start; justify-content:center; position:relative; }
-.sub-col { display:flex; flex-direction:column; align-items:center; padding:0 5px; }
-
-/* ── Detail Panel ── */
-.panel {
-  position:fixed; top:52px; right:0; bottom:0;
-  width:var(--panel-w);
-  background:rgba(8,8,8,.97);
-  border-left:1px solid var(--border);
-  backdrop-filter:blur(30px);
-  z-index:150;
-  transform:translateX(100%);
-  transition:transform .35s cubic-bezier(.4,0,.2,1);
-  overflow-y:auto;
-  padding:28px 24px 60px;
+.directors-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
 }
-.panel.open { transform:translateX(0); }
 
-.panel-close {
-  position:absolute; top:16px; right:16px;
-  width:28px; height:28px;
-  background:var(--card); border:1px solid var(--border); border-radius:7px;
-  cursor:pointer; display:flex; align-items:center; justify-content:center;
-  color:var(--t2); font-size:14px;
-  transition:background .15s;
+@media (max-width: 860px) {
+  .directors-row { grid-template-columns: repeat(2, 1fr); }
 }
-.panel-close:hover { background:var(--card-hover); color:var(--t1); }
-
-.p-emoji { font-size:28px; margin-bottom:10px; }
-.p-badge {
-  font-family:'Space Mono',monospace; font-size:9px; letter-spacing:.1em;
-  text-transform:uppercase; padding:3px 10px; border-radius:999px;
-  display:inline-block; margin-bottom:8px;
+@media (max-width: 560px) {
+  .meta-row { grid-template-columns: 1fr; }
+  .directors-row { grid-template-columns: 1fr; }
+  .owner-row .card { width: 100%; }
 }
-.p-badge.owner { background:var(--gold-dim); color:var(--gold); }
-.p-badge.meta { background:var(--purple-dim); color:var(--purple); }
-.p-badge.director { background:var(--green-dim); color:var(--green); }
-.p-badge.sub { background:var(--card); color:var(--t3); border:1px solid var(--border); }
 
-.p-name { font-size:20px; font-weight:900; margin-bottom:3px; }
-.p-subtitle { font-family:'Space Mono',monospace; font-size:11px; color:var(--t2); margin-bottom:20px; }
+/* ── Modal ── */
+.overlay {
+  position: fixed; inset: 0; z-index: 400;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(8px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+  opacity: 0; pointer-events: none;
+  transition: opacity .25s;
+}
+.overlay.open { opacity: 1; pointer-events: all; }
 
-.p-section { margin-bottom:18px; }
-.p-label { font-family:'Space Mono',monospace; font-size:9px; letter-spacing:.1em; text-transform:uppercase; color:var(--t3); margin-bottom:8px; }
+.modal {
+  background: rgba(12,12,12,0.98);
+  border: 1px solid var(--border2);
+  border-radius: 24px;
+  width: 100%; max-width: 540px;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 32px;
+  transform: translateY(16px) scale(0.97);
+  transition: transform .28s cubic-bezier(.4,0,.2,1);
+  position: relative;
+}
+.overlay.open .modal { transform: translateY(0) scale(1); }
 
-.p-trigger { background:var(--card); border:1px solid var(--border); border-radius:9px; padding:10px 12px; }
-.p-trigger .p-label { margin-bottom:4px; }
-.p-trigger-text { font-size:13px; color:var(--t1); font-weight:500; }
+.modal-close {
+  position: absolute; top: 20px; right: 20px;
+  width: 32px; height: 32px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--t2); font-size: 15px;
+  transition: background .15s, color .15s;
+}
+.modal-close:hover { background: var(--surface2); color: var(--t1); }
 
-.p-list { display:flex; flex-direction:column; gap:7px; }
-.p-item { font-size:12px; color:var(--t2); line-height:1.55; display:flex; gap:9px; align-items:flex-start; }
-.p-item::before { content:''; width:3px; height:3px; border-radius:50%; background:var(--green); flex-shrink:0; margin-top:6px; }
+.modal-back {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: 'Space Mono', monospace;
+  font-size: 10px; color: var(--t3);
+  letter-spacing: .08em; text-transform: uppercase;
+  cursor: pointer; margin-bottom: 20px;
+  border: none; background: none;
+  transition: color .15s;
+}
+.modal-back:hover { color: var(--t1); }
 
-.p-tools { display:flex; flex-wrap:wrap; gap:5px; }
-.p-tool { font-family:'Space Mono',monospace; font-size:10px; background:rgba(124,255,178,.06); border:1px solid rgba(124,255,178,.14); color:var(--green); padding:3px 9px; border-radius:5px; }
+.modal-emoji { font-size: 36px; margin-bottom: 10px; }
+.modal-badge {
+  font-family: 'Space Mono', monospace; font-size: 9px;
+  letter-spacing: .1em; text-transform: uppercase;
+  padding: 3px 12px; border-radius: 999px;
+  display: inline-block; margin-bottom: 10px;
+}
+.modal-name { font-size: 26px; font-weight: 900; margin-bottom: 4px; }
+.modal-subtitle { font-size: 13px; color: var(--t2); margin-bottom: 24px; font-family: 'Space Mono', monospace; }
 
-.p-note { font-size:11px; color:var(--t3); line-height:1.6; padding-top:14px; border-top:1px solid var(--border); margin-top:4px; }
+.modal-section { margin-bottom: 20px; }
+.modal-section-title {
+  font-family: 'Space Mono', monospace; font-size: 9px;
+  letter-spacing: .12em; text-transform: uppercase; color: var(--t3);
+  margin-bottom: 10px;
+}
+
+.trigger-box {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 12px 16px;
+}
+.trigger-text { font-size: 13px; color: var(--t1); font-weight: 600; line-height: 1.5; }
+
+.resp-list { display: flex; flex-direction: column; gap: 9px; }
+.resp-item {
+  font-size: 13px; color: var(--t2); line-height: 1.6;
+  display: flex; gap: 10px; align-items: flex-start;
+}
+.resp-item::before {
+  content: '';
+  width: 4px; height: 4px; border-radius: 50%;
+  background: var(--green); flex-shrink: 0; margin-top: 8px;
+}
+
+.tools-row { display: flex; flex-wrap: wrap; gap: 7px; }
+.tool-tag {
+  font-family: 'Space Mono', monospace; font-size: 10px;
+  background: rgba(124,255,178,0.06);
+  border: 1px solid rgba(124,255,178,0.15);
+  color: var(--green); padding: 4px 11px; border-radius: 6px;
+}
+
+.divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+/* Sub-agents inside modal */
+.sub-agents-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+@media (max-width: 480px) { .sub-agents-grid { grid-template-columns: 1fr; } }
+
+.sub-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, transform .12s;
+}
+.sub-card:hover {
+  background: var(--surface2);
+  border-color: var(--border2);
+  transform: translateY(-2px);
+}
+.sub-card-emoji { font-size: 18px; margin-bottom: 6px; }
+.sub-card-name { font-size: 12px; font-weight: 700; color: var(--t1); margin-bottom: 3px; }
+.sub-card-sub { font-size: 10px; color: var(--t3); line-height: 1.4; }
+.sub-card-arrow {
+  font-size: 10px; color: var(--t3); margin-top: 6px;
+  font-family: 'Space Mono', monospace;
+}
+
+.modal-note {
+  font-size: 12px; color: var(--t3); line-height: 1.6;
+  padding: 14px; background: rgba(255,255,255,0.02);
+  border-radius: 10px; border: 1px solid var(--border);
+  margin-top: 4px;
+}
 </style>
 </head>
 <body>
-<div class="orb orb-1"></div>
-<div class="orb orb-2"></div>
+
+<div class="orb o1"></div>
+<div class="orb o2"></div>
 
 <header>
-  <div class="header-title">James Studio · Agent Org</div>
-  <div style="display:flex;align-items:center;gap:16px">
-    <div class="hint">點節點查看詳情 · 點 Director 展開團隊</div>
-    <div class="zoom-controls">
-      <div class="zoom-btn" onclick="zoom(-0.1)">−</div>
-      <div class="zoom-label" id="zoom-label">100%</div>
-      <div class="zoom-btn" onclick="zoom(0.1)">+</div>
-      <div class="zoom-btn" onclick="fitZoom()" title="Fit">⊡</div>
-    </div>
-  </div>
+  <div class="header-left">James Studio · Agent Organization</div>
+  <div class="header-right">點任意卡片查看詳情</div>
 </header>
 
-<div class="canvas" id="canvas">
-  <div class="chart-inner" id="chart"></div>
+<!-- Overlay modal -->
+<div class="overlay" id="overlay" onclick="handleOverlayClick(event)">
+  <div class="modal" id="modal">
+    <div class="modal-close" onclick="closeModal()">✕</div>
+    <div id="modal-content"></div>
+  </div>
 </div>
 
-<div class="panel" id="panel">
-  <div class="panel-close" onclick="closePanel()">✕</div>
-  <div id="panel-body"></div>
-</div>
+<div class="page">
 
-<script>
-// ── Data ──────────────────────────────────────────────────────────────────
+  <!-- JAMES -->
+  <div class="owner-row">
+    <div class="card tier-owner" onclick="openAgent('james')">
+      <div class="card-emoji">🎯</div>
+      <div class="card-badge badge-owner">Studio Owner</div>
+      <div class="card-name">James</div>
+      <div class="card-sub">One-person studio — creator, engineer, designer, teacher</div>
+      <div class="card-trigger"><strong>原則：</strong>你只說目標，系統自己跑。</div>
+    </div>
+  </div>
 
-const A = {
-  james: {
-    name:'James', sub:'Studio Owner / CEO', emoji:'🎯', tier:'owner',
-    trigger:'你是唯一的目標設定者',
-    resp:['設定所有專案的目標與方向','最終決策者——只在真正需要判斷時介入','提供創意與品味標準（aesthetic final call）','設計 agent 系統的規則與原則'],
-    tools:[], note:'你不追蹤狀態、不管流程、不問進度。系統自己跑。'
-  },
-  systemDirector:{
-    name:'System Director', sub:'Meta Orchestrator', emoji:'🧠', tier:'meta',
-    trigger:'每次對話，全程在場',
-    resp:['對話開始：sync.sh pull → 讀 soul / personality / MEMORY','收到目標 → 判斷派給哪個 Director 執行','對話中途：監聽新規則 → 立刻觸發 Memory Agent','對話結束：memory 確認 → sync.sh push → 回報 token 用量','偵測 .new-project/ flag → 觸發 Project Onboarding Agent'],
-    tools:['sync.sh','memory/','MEMORY.md','agents.md']
-  },
-  pmDirector:{
-    name:'PM Director', sub:'Project Manager', emoji:'📋', tier:'meta',
-    trigger:'「現在最重要是什麼」、「幫我規劃」、「哪裡卡住了」',
-    resp:['平行讀所有 project 狀態 → 輸出全局快照','判斷當前最高槓桿的一件事（topPriority）','更新 dashboard.json topPriority 欄位','識別跨 project 依賴與阻礙','產出 roadmap.md 規劃文件'],
-    tools:['dashboard.json','roadmap.md','dashboard/*.json']
-  },
-  memoryAgent:{
-    name:'Memory Agent', sub:'System Director Sub', emoji:'💾', tier:'sub',
-    trigger:'學到新 rule / feedback / preference，或 James 說「記住」',
-    resp:['立刻寫對應 memory 檔（不等到對話結束）','更新 MEMORY.md index','選正確 type：user / feedback / project / reference','判斷是否有既有 memory 需要更新'],
-    tools:['memory/*.md','MEMORY.md']
-  },
-  sopAgent:{
-    name:'SOP Agent', sub:'System Director Sub', emoji:'📐', tier:'sub',
-    trigger:'工作流有調整、優化、新步驟被提到',
-    resp:['即時更新對應 skill 檔','更新 agents.md 的 SOP 描述','確保任何工作流改變都被永久記錄'],
-    tools:['~/.claude/skills/','agents.md']
-  },
-  syncAgent:{
-    name:'Sync Agent', sub:'System Director Sub', emoji:'🔄', tier:'sub',
-    trigger:'重要工作段落結束 / 對話結束',
-    resp:['執行 sync.sh push','確認 GitHub 有最新版所有 config、skills、memory、dashboard'],
-    tools:['sync.sh']
-  },
-  orchestrator:{
-    name:'Orchestrator', sub:'System Director Sub', emoji:'🎛', tier:'sub',
-    trigger:'收到 James 的目標',
-    resp:['讀對應 progress / status 檔判斷現在狀態','決定派給哪個 Domain Director','不問 James「做到哪了」——自己讀 state 判斷'],
-    tools:['progress.md files','dashboard.json']
-  },
-  onboardingAgent:{
-    name:'Project Onboarding', sub:'System Director Sub', emoji:'🆕', tier:'sub',
-    trigger:'watch-projects.sh 偵測到 ~/Projects/ 新目錄',
-    resp:['讀新 project 的 README / package.json / CLAUDE.md','判斷類型：video / course / engineering / content','指派對應 Domain Director','建 {project}-status.json','更新 dashboard.json + agents.md + memory','刪除 flag 檔'],
-    tools:['watch-projects.sh','dashboard/','memory/','agents.md']
-  },
-  videoPM:{
-    name:'Video PM', sub:'PM Director Sub', emoji:'🎬', tier:'sub',
-    trigger:'PM Director 查詢 / Domain Director 完成 milestone',
-    resp:['管理 article-video + vibe-coding 狀態','追蹤每支影片完成度、render 狀態、CH 進度','偵測 out/ 更新 → 回報 PM Director'],
-    tools:['progress.md files','out/ dirs']
-  },
-  coursePM:{
-    name:'Course PM', sub:'PM Director Sub', emoji:'📚', tier:'sub',
-    trigger:'PM Director 查詢 / Course Director deploy 完成',
-    resp:['追蹤 n8ncourse lecture 上線數','監控知識庫更新頻率','透過 gh api 查 repo 狀態'],
-    tools:['gh api n8ncourse','courses.json']
-  },
-  engineeringPM:{
-    name:'Engineering PM', sub:'PM Director Sub', emoji:'⚙️', tier:'sub',
-    trigger:'PM Director 查詢 / blocker 解除時',
-    resp:['追蹤 5 個 pre-build blockers 解決率','讀 .resolved/ 資料夾判斷完成進度','Phase 整體進度追蹤'],
-    tools:['PROGRESS.md','.resolved/']
-  },
-  contentPM:{
-    name:'Content PM', sub:'PM Director Sub', emoji:'📰', tier:'sub',
-    trigger:'PM Director 查詢 / 每日腳本完成時',
-    resp:['追蹤今日 AI 文章是否產出','確認 pipeline 有沒有斷鏈（文章→腳本→影片）'],
-    tools:['out/ dirs','article-video/progress.md']
-  },
-  videoDirector:{
-    name:'Video Director', sub:'影片製作', emoji:'🎬', tier:'director',
-    trigger:'「做今天 article-video」、「做 CH N vibe coding」',
-    resp:['讀 progress.md 自行判斷從哪繼續（不問 James）','平行啟動 Phase 1：Audio + Transcription + Scene Dev','Phase 1 完成 → 啟動 QA Agent','QA 通過 → 啟動 Render Agent','套用通用規則：4K / neon-green / iMessage callout spec'],
-    tools:['Remotion','ffmpeg','Whisper','imessage_send.sh']
-  },
-  audioAgent:{
-    name:'Audio Agent', sub:'Video Director Sub', emoji:'🎵', tier:'sub',
-    trigger:'Video Director Phase 1（平行）',
-    resp:['article-video：trim → normalize -20 LUFS, Peak -2 dBFS','vibe-coding：trim → normalize -16 LUFS（不 denoise）','輸出 processed.wav'],
-    tools:['ffmpeg']
-  },
-  transcriptionAgent:{
-    name:'Transcription Agent', sub:'Video Director Sub', emoji:'📝', tier:'sub',
-    trigger:'Video Director Phase 1（平行）',
-    resp:['Whisper 轉錄音檔 → .vtt','對照逐字講稿校正錯字、品牌名稱','輸出 scene timestamps 給 Scene Dev Agent'],
-    tools:['Whisper','VTT files']
-  },
-  sceneDevAgent:{
-    name:'Scene Dev Agent', sub:'Video Director Sub', emoji:'🖥', tier:'sub',
-    trigger:'Video Director Phase 1（平行）',
-    resp:['寫 / 改 Remotion TSX components','依 VTT timing 對齊動畫','套用 neon-green 設計規範','iMessage callout：macOS dark frosted-glass，top-right stacking'],
-    tools:['Remotion TSX','TypeScript']
-  },
-  qaAgentVideo:{
-    name:'QA Agent', sub:'Video Director Sub', emoji:'✅', tier:'sub',
-    trigger:'Phase 1 完成後',
-    resp:['檢查 callout 同步、timing、字幕準確性','發送 QA 報告到 iMessage 0981928525','等待「通過」回覆（iMessage 或對話）','確認通過 → 觸發 Render Agent'],
-    tools:['imessage_send.sh','imessage_wait_approval.sh']
-  },
-  renderAgent:{
-    name:'Render Agent', sub:'Video Director Sub', emoji:'🎞', tier:'sub',
-    trigger:'QA Agent 確認通過',
-    resp:['npx remotion render --gl=angle','article-video → out/YYYY-MM-DD/YYYY-MM-DD.mp4','vibe-coding → out/CH{N}/CH{N}-complete.mp4','完成後 dashboard 自動更新'],
-    tools:['Remotion CLI','--gl=angle']
-  },
-  assetAgent:{
-    name:'Asset Agent', sub:'Video Director Sub (vibe)', emoji:'📦', tier:'sub',
-    trigger:'vibe-coding 任務開始時',
-    resp:['確認音檔在 chapters/{N}/audio/（不是 public/audio/）','素材對應講稿 **備注** 標記','所有素材齊備才給 Scene Dev 開始'],
-    tools:['chapters/ dirs']
-  },
-  htmlAnalysisAgent:{
-    name:'HTML Analysis', sub:'Video Director Sub (vibe)', emoji:'🔍', tier:'sub',
-    trigger:'vibe-coding，Scene Dev 開始前',
-    resp:['解析 HTML slides 各段落','對應音檔時間戳','輸出 section → timestamp map 給 Scene Dev'],
-    tools:['HTML slides','audio timestamps']
-  },
-  courseDirector:{
-    name:'Course Director', sub:'n8n 課程網站', emoji:'📚', tier:'director',
-    trigger:'「n8n 課程新增 Lecture N」、「更新每日知識庫」',
-    resp:['讀 memory/n8ncourse.md → n8ncourse/CLAUDE.md','讀 courses.json 確認目前進度','派 Content / Knowledge / Deploy Agent'],
-    tools:['GitHub Pages','gh CLI','courses.json']
-  },
-  contentAgent:{
-    name:'Content Agent', sub:'Course Director Sub', emoji:'✍️', tier:'sub',
-    trigger:'Course Director：新增 Lecture',
-    resp:['寫 lecture{N}/index.html（絕不用 day{N}/）','套 design tokens：--bg:#0e0918, --accent:#ee4f27','版型：左 sidebar 272px + top bar + 3 animated orbs','掃禁詞：三週 / 昨天 / 關於講師 / 任何時間語言'],
-    tools:['HTML/CSS','CLAUDE.md design system']
-  },
-  knowledgeAgent:{
-    name:'Knowledge Agent', sub:'Course Director Sub', emoji:'🧩', tier:'sub',
-    trigger:'Course Director：更新知識庫',
-    resp:['新增每日 AI 知識條目到 knowledge.json','維護 courses.json card 資料'],
-    tools:['knowledge.json','courses.json','admin.html CMS']
-  },
-  deployAgent:{
-    name:'Deploy Agent', sub:'Course Director Sub', emoji:'🚀', tier:'sub',
-    trigger:'Content / Knowledge Agent 完成後',
-    resp:['git push → JamesAtMoGroup/n8ncourse','驗證 GitHub Pages live URL 可存取才算完成'],
-    tools:['git','gh CLI','GitHub Pages']
-  },
-  engineeringDirector:{
-    name:'Engineering Director', sub:'LINE booking app', emoji:'⚙️', tier:'director',
-    trigger:'「booking app 加功能」、「修 bug」',
-    resp:['讀 memory/online-class-booking.md → PROGRESS.md','優先處理 5 個 pre-build blockers','派 Backend / Frontend / QA Agent'],
-    tools:['Next.js 16','Supabase','Zeabur','Tailwind']
-  },
-  backendAgent:{
-    name:'Backend Agent', sub:'Engineering Director Sub', emoji:'🗄', tier:'sub',
-    trigger:'Engineering Director：後端任務',
-    resp:['Supabase schema、RLS policies、stored functions','優先：rate版本化 → subject版本化 → soft delete → session lifecycle → payout model','所有 server components：const supabase = await createClient()'],
-    tools:['Supabase','PostgreSQL','RLS']
-  },
-  frontendAgent:{
-    name:'Frontend Agent', sub:'Engineering Director Sub', emoji:'🎨', tier:'sub',
-    trigger:'Engineering Director：前端任務',
-    resp:['Glassmorphism dark CSS + Tailwind','Bilingual ZH-TW/EN via LanguageContext','Role routing：/dashboard → student/teacher/admin','client components：import { supabase } from @/lib/supabase'],
-    tools:['Next.js 16','Tailwind','Radix UI']
-  },
-  qaAgentEng:{
-    name:'QA Agent', sub:'Engineering Director Sub', emoji:'🧪', tier:'sub',
-    trigger:'Backend + Frontend 完成後',
-    resp:['測試 auth flow：signup → email confirm → login','測試 role routing 各用戶類型','確認 API 邊界錯誤處理','Zeabur 部署驗證'],
-    tools:['Zeabur','Supabase Auth']
-  },
-  contentDirector:{
-    name:'Content Director', sub:'每日 AI 文章 Pipeline', emoji:'📰', tier:'director',
-    trigger:'「今天的 AI 文章做成影片」',
-    resp:['此 Director 的輸出是 Video Director 的輸入','確保 Research → Script → Handoff 鏈完整'],
-    tools:['WebSearch','article-YYYY-MM-DD.md']
-  },
-  researchAgent:{
-    name:'Research Agent', sub:'Content Director Sub', emoji:'🔬', tier:'sub',
-    trigger:'Content Director：啟動 pipeline',
-    resp:['找當日最高訊噪比 AI 文章/研究','整理成結構化摘要（key points、quotes、context）'],
-    tools:['WebSearch','WebFetch']
-  },
-  scriptAgent:{
-    name:'Script Agent', sub:'Content Director Sub', emoji:'📄', tier:'sub',
-    trigger:'Research Agent 完成後',
-    resp:['轉成 ~6.5 分鐘 ZH-TW 腳本','分段對應 Remotion scenes（intro、3–4 sections、outro）','標記 iMessage callout 觸發點','輸出 article-YYYY-MM-DD.md'],
-    tools:[]
-  },
-  handoffAgent:{
-    name:'Handoff', sub:'Content Director Sub', emoji:'↗️', tier:'sub',
-    trigger:'Script Agent 完成後',
-    resp:['將 article-YYYY-MM-DD.md 交給 Video Director','Video Director 從這裡接手完成整個影片製作'],
-    tools:['→ Video Director']
-  },
-};
+  <!-- Connector -->
+  <div class="connector"><div class="connector-line" style="height:32px"></div></div>
 
-const TREE = {
-  james: ['systemDirector','pmDirector','videoDirector','courseDirector','engineeringDirector','contentDirector'],
-  systemDirector: ['memoryAgent','sopAgent','syncAgent','orchestrator','onboardingAgent'],
-  pmDirector: ['videoPM','coursePM','engineeringPM','contentPM'],
-  videoDirector: ['audioAgent','transcriptionAgent','sceneDevAgent','qaAgentVideo','renderAgent','assetAgent','htmlAnalysisAgent'],
-  courseDirector: ['contentAgent','knowledgeAgent','deployAgent'],
-  engineeringDirector: ['backendAgent','frontendAgent','qaAgentEng'],
-  contentDirector: ['researchAgent','scriptAgent','handoffAgent'],
-};
+  <!-- META layer -->
+  <div class="layer-label">Meta Layer</div>
+  <div class="meta-row">
+    <div class="card tier-meta" onclick="openAgent('systemDirector')">
+      <div class="card-emoji">🧠</div>
+      <div class="card-badge badge-meta">Meta Orchestrator</div>
+      <div class="card-name">System Director</div>
+      <div class="card-sub">管理系統本身：memory、SOP、sync、任務派發</div>
+      <div class="card-trigger"><strong>全程在場</strong> — 每次對話自動啟動</div>
+      <div class="card-subs">
+        <span class="sub-pill">💾 Memory</span>
+        <span class="sub-pill">📐 SOP</span>
+        <span class="sub-pill">🔄 Sync</span>
+        <span class="sub-pill">🎛 Orchestrator</span>
+        <span class="sub-pill">🆕 Onboarding</span>
+      </div>
+    </div>
+    <div class="card tier-meta" onclick="openAgent('pmDirector')">
+      <div class="card-emoji">📋</div>
+      <div class="card-badge badge-meta">Project Manager</div>
+      <div class="card-name">PM Director</div>
+      <div class="card-sub">全局規劃：優先序、狀態快照、blockers 分析</div>
+      <div class="card-trigger"><strong>按需啟動</strong> — 「現在最重要是什麼？」</div>
+      <div class="card-subs">
+        <span class="sub-pill">🎬 Video PM</span>
+        <span class="sub-pill">📚 Course PM</span>
+        <span class="sub-pill">⚙️ Engineering PM</span>
+        <span class="sub-pill">📰 Content PM</span>
+      </div>
+    </div>
+  </div>
 
-// ── Build chart ───────────────────────────────────────────────────────────
+  <!-- Connector -->
+  <div class="connector"><div class="connector-line" style="height:32px"></div></div>
 
-function nodeEl(id) {
-  const a = A[id];
-  const el = document.createElement('div');
-  el.className = `node ${a.tier}`;
-  el.id = 'n-' + id;
-  el.innerHTML = `<div class="node-emoji">${a.emoji}</div><div class="node-name">${a.name}</div><div class="node-sub">${a.sub}</div>`;
-  el.onclick = (e) => { e.stopPropagation(); handleClick(id); };
-  return el;
-}
+  <!-- Domain Directors -->
+  <div class="layer-label">Domain Directors</div>
+  <div class="directors-row">
 
-function vLine(h) {
-  const d = document.createElement('div');
-  d.className = 'v-line'; d.style.height = h + 'px';
-  return d;
-}
-
-function hLine(pct) {
-  const d = document.createElement('div');
-  d.className = 'h-line';
-  d.style.cssText = `position:absolute;top:0;left:${pct[0]};right:${pct[1]};`;
-  return d;
-}
-
-function col(...els) {
-  const d = document.createElement('div'); d.className = 'col';
-  els.forEach(e => e && d.appendChild(e)); return d;
-}
-
-function row(...els) {
-  const d = document.createElement('div'); d.className = 'row';
-  els.forEach(e => e && d.appendChild(e)); return d;
-}
-
-function buildSubsRow(ids) {
-  const wrap = document.createElement('div');
-  wrap.className = 'subs-wrap'; wrap.style.position = 'relative';
-
-  const r = document.createElement('div');
-  r.className = 'subs-row';
-
-  ids.forEach((id, i) => {
-    const sc = document.createElement('div'); sc.className = 'sub-col';
-    const drop = document.createElement('div'); drop.className = 'v-line'; drop.style.height = '14px';
-    sc.appendChild(drop); sc.appendChild(nodeEl(id));
-    r.appendChild(sc);
-  });
-
-  if (ids.length > 1) {
-    const bar = document.createElement('div');
-    bar.style.cssText = 'position:absolute;top:0;left:14px;right:14px;height:1px;background:var(--green-line);';
-    wrap.appendChild(bar);
-  }
-
-  wrap.appendChild(r);
-  return wrap;
-}
-
-function buildDirectorGroup(id) {
-  const children = TREE[id] || [];
-  const g = document.createElement('div'); g.className = 'dir-group';
-
-  const n = nodeEl(id);
-
-  if (children.length) {
-    const drop = vLine(16);
-    const subs = buildSubsRow(children);
-    subs.id = 'subs-' + id;
-
-    // Director click: toggle subs AND open panel
-    n.onclick = (e) => {
-      e.stopPropagation();
-      const isExpanded = n.classList.contains('expanded');
-      n.classList.toggle('expanded');
-      subs.classList.toggle('open');
-      openPanel(id);
-    };
-
-    g.appendChild(n); g.appendChild(drop); g.appendChild(subs);
-  } else {
-    g.appendChild(n);
-  }
-  return g;
-}
-
-function buildMetaGroup(ids) {
-  const wrap = document.createElement('div');
-  wrap.style.cssText = 'display:flex;align-items:flex-start;justify-content:center;position:relative;';
-
-  // horizontal bar between meta nodes
-  const bar = document.createElement('div');
-  bar.style.cssText = 'position:absolute;top:0;left:25%;right:25%;height:1px;background:var(--green-line);';
-  wrap.appendChild(bar);
-
-  ids.forEach(id => {
-    const children = TREE[id] || [];
-    const g = document.createElement('div');
-    g.style.cssText = 'display:flex;flex-direction:column;align-items:center;padding:0 24px;';
-
-    g.appendChild(nodeEl(id));
-
-    if (children.length) {
-      g.appendChild(vLine(16));
-      const subs = buildSubsRow(children);
-      subs.id = 'subs-' + id;
-      // meta director click: toggle subs
-      document.getElementById?.('n-' + id);
-      g.appendChild(subs);
-
-      // re-attach click after appending
-      const metaNode = g.querySelector('.node');
-      metaNode.onclick = (e) => {
-        e.stopPropagation();
-        metaNode.classList.toggle('expanded');
-        subs.classList.toggle('open');
-        openPanel(id);
-      };
-    }
-
-    wrap.appendChild(g);
-  });
-  return wrap;
-}
-
-function buildChart() {
-  const chart = document.getElementById('chart');
-  chart.innerHTML = '';
-
-  // James
-  chart.appendChild(col(nodeEl('james'), vLine(28)));
-
-  // Meta layer
-  const metaRow = buildMetaGroup(['systemDirector','pmDirector']);
-  chart.appendChild(metaRow);
-  chart.appendChild(col(vLine(28)));
-
-  // Domain label
-  const lbl = document.createElement('div');
-  lbl.style.cssText = 'font-family:"Space Mono",monospace;font-size:9px;color:var(--t3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:14px;';
-  lbl.textContent = 'Domain Directors';
-  chart.appendChild(lbl);
-
-  // Directors row
-  const dirs = ['videoDirector','courseDirector','engineeringDirector','contentDirector'];
-  const dirRow = document.createElement('div');
-  dirRow.style.cssText = 'display:flex;align-items:flex-start;justify-content:center;position:relative;';
-  const dirBar = document.createElement('div');
-  dirBar.style.cssText = 'position:absolute;top:0;left:12%;right:12%;height:1px;background:var(--green-line);';
-  dirRow.appendChild(dirBar);
-  dirs.forEach(id => dirRow.appendChild(buildDirectorGroup(id)));
-  chart.appendChild(dirRow);
-
-  // Re-attach James click (after render)
-  document.getElementById('n-james').onclick = (e) => { e.stopPropagation(); openPanel('james'); };
-
-  fitZoom();
-}
-
-// ── Zoom ─────────────────────────────────────────────────────────────────
-
-let currentScale = 1;
-
-function zoom(delta) {
-  currentScale = Math.min(1.5, Math.max(0.3, currentScale + delta));
-  applyZoom();
-}
-
-function fitZoom() {
-  const canvas = document.getElementById('canvas');
-  const chart = document.getElementById('chart');
-  // Wait for render
-  requestAnimationFrame(() => {
-    const cw = canvas.clientWidth - 48;
-    const ch = canvas.clientHeight - 48;
-    const iw = chart.scrollWidth;
-    const ih = chart.scrollHeight;
-    currentScale = Math.min(cw / iw, ch / ih, 1) * 0.92;
-    currentScale = Math.max(0.3, currentScale);
-    applyZoom();
-  });
-}
-
-function applyZoom() {
-  document.getElementById('chart').style.transform = `scale(${currentScale})`;
-  document.getElementById('zoom-label').textContent = Math.round(currentScale * 100) + '%';
-}
-
-// ── Panel ─────────────────────────────────────────────────────────────────
-
-function openPanel(id) {
-  const a = A[id];
-  document.querySelectorAll('.node').forEach(n => n.classList.remove('active'));
-  document.getElementById('n-' + id)?.classList.add('active');
-
-  const tierLabel = { owner:'Studio Owner', meta:'Meta Layer', director:'Domain Director', sub:'Sub-Agent' };
-
-  document.getElementById('panel-body').innerHTML = `
-    <div class="p-emoji">${a.emoji}</div>
-    <div class="p-badge ${a.tier}">${tierLabel[a.tier]}</div>
-    <div class="p-name">${a.name}</div>
-    <div class="p-subtitle">${a.sub}</div>
-
-    <div class="p-section">
-      <div class="p-trigger">
-        <div class="p-label">啟動條件</div>
-        <div class="p-trigger-text">${a.trigger}</div>
+    <div class="card tier-director" onclick="openAgent('videoDirector')">
+      <div class="card-emoji">🎬</div>
+      <div class="card-badge badge-director">影片製作</div>
+      <div class="card-name">Video Director</div>
+      <div class="card-sub">article-video + vibe-coding-video 全流程</div>
+      <div class="card-trigger"><strong>啟動：</strong>「做今天 article-video」、「做 CH N」</div>
+      <div class="card-subs">
+        <span class="sub-pill">🎵 Audio</span>
+        <span class="sub-pill">📝 Transcription</span>
+        <span class="sub-pill">🖥 Scene Dev</span>
+        <span class="sub-pill">✅ QA</span>
+        <span class="sub-pill">🎞 Render</span>
+        <span class="sub-pill">📦 Asset</span>
+        <span class="sub-pill">🔍 HTML Analysis</span>
       </div>
     </div>
 
-    <div class="p-section">
-      <div class="p-label">工作內容</div>
-      <div class="p-list">${a.resp.map(r=>`<div class="p-item">${r}</div>`).join('')}</div>
+    <div class="card tier-director" onclick="openAgent('courseDirector')">
+      <div class="card-emoji">📚</div>
+      <div class="card-badge badge-director">n8n 課程</div>
+      <div class="card-name">Course Director</div>
+      <div class="card-sub">n8ncourse GitHub Pages 網站維護與發布</div>
+      <div class="card-trigger"><strong>啟動：</strong>「新增 Lecture N」、「更新知識庫」</div>
+      <div class="card-subs">
+        <span class="sub-pill">✍️ Content</span>
+        <span class="sub-pill">🧩 Knowledge</span>
+        <span class="sub-pill">🚀 Deploy</span>
+      </div>
     </div>
 
-    ${a.tools.length ? `<div class="p-section"><div class="p-label">使用工具</div><div class="p-tools">${a.tools.map(t=>`<span class="p-tool">${t}</span>`).join('')}</div></div>` : ''}
-    ${a.note ? `<div class="p-note">${a.note}</div>` : ''}
+    <div class="card tier-director" onclick="openAgent('engineeringDirector')">
+      <div class="card-emoji">⚙️</div>
+      <div class="card-badge badge-director">LINE Booking App</div>
+      <div class="card-name">Engineering Director</div>
+      <div class="card-sub">online-class-booking Next.js + Supabase + Zeabur</div>
+      <div class="card-trigger"><strong>啟動：</strong>「booking app 加功能」、「修 bug」</div>
+      <div class="card-subs">
+        <span class="sub-pill">🗄 Backend</span>
+        <span class="sub-pill">🎨 Frontend</span>
+        <span class="sub-pill">🧪 QA</span>
+      </div>
+    </div>
+
+    <div class="card tier-director" onclick="openAgent('contentDirector')">
+      <div class="card-emoji">📰</div>
+      <div class="card-badge badge-director">每日 AI 文章</div>
+      <div class="card-name">Content Director</div>
+      <div class="card-sub">文章 → 腳本 → 交棒 Video Director</div>
+      <div class="card-trigger"><strong>啟動：</strong>「今天的 AI 文章做成影片」</div>
+      <div class="card-subs">
+        <span class="sub-pill">🔬 Research</span>
+        <span class="sub-pill">📄 Script</span>
+        <span class="sub-pill">↗️ Handoff</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const AGENTS = {
+  james:{
+    name:'James',subtitle:'Studio Owner / CEO',emoji:'🎯',tier:'owner',
+    trigger:'你是唯一的目標設定者，其他所有事情系統自己處理。',
+    resp:['設定所有專案的目標與方向','最終決策者 — 只在真正需要判斷時介入','提供創意與品味標準（aesthetic final call）','設計 agent 系統的規則與原則'],
+    tools:[],
+    note:'你不追蹤狀態、不管流程、不問進度。系統自己跑。',
+    children:[]
+  },
+  systemDirector:{
+    name:'System Director',subtitle:'Meta Orchestrator',emoji:'🧠',tier:'meta',
+    trigger:'每次對話，全程在場。無需手動啟動。',
+    resp:['對話開始：sync.sh pull → 讀 soul / personality / MEMORY','收到目標 → Orchestrator 判斷派給哪個 Director','對話中途：監聽新規則 → 立刻觸發 Memory Agent 寫入','對話結束：確認 memory 更新 → sync.sh push → 回報 token 用量','偵測 .new-project/ flag → 觸發 Project Onboarding Agent'],
+    tools:['sync.sh','memory/','MEMORY.md','agents.md'],
+    children:['memoryAgent','sopAgent','syncAgent','orchestrator','onboardingAgent']
+  },
+  pmDirector:{
+    name:'PM Director',subtitle:'Project Manager',emoji:'📋',tier:'meta',
+    trigger:'「現在最重要是什麼」、「幫我規劃」、「哪裡卡住了」',
+    resp:['平行讀所有 project 狀態 → 輸出全局快照','判斷當前最高槓桿的一件事（topPriority）','更新 dashboard.json topPriority 欄位','識別跨 project 依賴與阻礙','產出 roadmap.md 規劃文件'],
+    tools:['dashboard.json','roadmap.md','*-status.json'],
+    children:['videoPM','coursePM','engineeringPM','contentPM']
+  },
+
+  // System Director subs
+  memoryAgent:{
+    name:'Memory Agent',subtitle:'System Director Sub',emoji:'💾',tier:'sub',
+    trigger:'學到新 rule / feedback / preference，或 James 說「記住」',
+    resp:['立刻寫對應 memory 檔（不等到對話結束）','更新 MEMORY.md index','選正確 type：user / feedback / project / reference','判斷是否有既有 memory 需要更新而非新增'],
+    tools:['memory/*.md','MEMORY.md'],children:[]
+  },
+  sopAgent:{
+    name:'SOP Agent',subtitle:'System Director Sub',emoji:'📐',tier:'sub',
+    trigger:'工作流有調整、優化、新步驟被提到',
+    resp:['即時更新對應 skill 檔 (~/.claude/skills/)','更新 agents.md 的 SOP 描述','確保任何工作流改變都被永久記錄'],
+    tools:['~/.claude/skills/','agents.md'],children:[]
+  },
+  syncAgent:{
+    name:'Sync Agent',subtitle:'System Director Sub',emoji:'🔄',tier:'sub',
+    trigger:'重要工作段落結束 / 對話結束',
+    resp:['執行 sync.sh push','確認 GitHub 有最新版 config、skills、memory、dashboard'],
+    tools:['sync.sh'],children:[]
+  },
+  orchestrator:{
+    name:'Orchestrator',subtitle:'System Director Sub',emoji:'🎛',tier:'sub',
+    trigger:'收到 James 的目標',
+    resp:['讀對應 progress / status 檔判斷現在狀態','決定派給哪個 Domain Director','不問 James「做到哪了」— 自己讀 state 判斷'],
+    tools:['progress.md files','dashboard.json'],children:[]
+  },
+  onboardingAgent:{
+    name:'Project Onboarding',subtitle:'System Director Sub',emoji:'🆕',tier:'sub',
+    trigger:'watch-projects.sh 偵測到 ~/Projects/ 新目錄',
+    resp:['讀新 project 的 README / package.json / CLAUDE.md','判斷類型：video / course / engineering / content','指派對應 Domain Director','建 {project}-status.json','更新 dashboard.json + agents.md + memory','刪除 flag 檔'],
+    tools:['watch-projects.sh','dashboard/','memory/','agents.md'],children:[]
+  },
+
+  // PM subs
+  videoPM:{
+    name:'Video PM',subtitle:'PM Director Sub',emoji:'🎬',tier:'sub',
+    trigger:'PM Director 查詢 / Video Director 完成 milestone',
+    resp:['管理 article-video + vibe-coding 狀態','追蹤每支影片完成度、render 狀態、CH 進度','偵測 out/ 更新 → 回報 PM Director'],
+    tools:['progress.md files','out/ dirs'],children:[]
+  },
+  coursePM:{
+    name:'Course PM',subtitle:'PM Director Sub',emoji:'📚',tier:'sub',
+    trigger:'PM Director 查詢 / Course Director deploy 完成',
+    resp:['追蹤 n8ncourse lecture 上線數','監控知識庫更新頻率','透過 gh api 查 repo 狀態'],
+    tools:['gh api n8ncourse','courses.json'],children:[]
+  },
+  engineeringPM:{
+    name:'Engineering PM',subtitle:'PM Director Sub',emoji:'⚙️',tier:'sub',
+    trigger:'PM Director 查詢 / blocker 解除時',
+    resp:['追蹤 5 個 pre-build blockers 解決率','讀 .resolved/ 資料夾判斷完成進度','Phase 整體進度追蹤'],
+    tools:['PROGRESS.md','.resolved/'],children:[]
+  },
+  contentPM:{
+    name:'Content PM',subtitle:'PM Director Sub',emoji:'📰',tier:'sub',
+    trigger:'PM Director 查詢 / 每日腳本完成時',
+    resp:['追蹤今日 AI 文章是否產出','確認 pipeline 有沒有斷鏈（文章→腳本→影片）'],
+    tools:['out/ dirs','article-video/progress.md'],children:[]
+  },
+
+  // Video Director subs
+  videoDirector:{
+    name:'Video Director',subtitle:'影片製作',emoji:'🎬',tier:'director',
+    trigger:'「做今天 article-video」、「做 CH N vibe coding」',
+    resp:['讀 progress.md 自行判斷從哪繼續（不問 James）','平行啟動 Phase 1：Audio + Transcription + Scene Dev','Phase 1 完成 → 啟動 QA Agent','QA 通過（iMessage 或對話）→ 啟動 Render Agent','套用通用規則：4K / neon-green / iMessage callout spec'],
+    tools:['Remotion','ffmpeg','Whisper','imessage_send.sh'],
+    children:['audioAgent','transcriptionAgent','sceneDevAgent','qaAgentVideo','renderAgent','assetAgent','htmlAnalysisAgent']
+  },
+  audioAgent:{
+    name:'Audio Agent',subtitle:'Video Director Sub',emoji:'🎵',tier:'sub',
+    trigger:'Video Director Phase 1（平行執行）',
+    resp:['article-video：trim → normalize -20 LUFS, Peak -2 dBFS','vibe-coding：trim → normalize -16 LUFS（不 denoise）','輸出 processed.wav'],
+    tools:['ffmpeg'],children:[]
+  },
+  transcriptionAgent:{
+    name:'Transcription Agent',subtitle:'Video Director Sub',emoji:'📝',tier:'sub',
+    trigger:'Video Director Phase 1（平行執行）',
+    resp:['Whisper 轉錄音檔 → .vtt','對照逐字講稿校正錯字、品牌名稱','輸出 scene timestamps 給 Scene Dev Agent'],
+    tools:['Whisper','VTT files'],children:[]
+  },
+  sceneDevAgent:{
+    name:'Scene Dev Agent',subtitle:'Video Director Sub',emoji:'🖥',tier:'sub',
+    trigger:'Video Director Phase 1（平行執行）',
+    resp:['寫 / 改 Remotion TSX components','依 VTT timing 對齊動畫','套用 neon-green 設計規範','iMessage callout：macOS dark frosted-glass，top-right stacking'],
+    tools:['Remotion TSX','TypeScript'],children:[]
+  },
+  qaAgentVideo:{
+    name:'QA Agent',subtitle:'Video Director Sub',emoji:'✅',tier:'sub',
+    trigger:'Phase 1 全部完成後',
+    resp:['檢查 callout 同步、timing、字幕準確性','發送 QA 報告到 iMessage 0981928525','等待「通過」（iMessage 或對話）→ 觸發 Render Agent'],
+    tools:['imessage_send.sh','imessage_wait_approval.sh'],children:[]
+  },
+  renderAgent:{
+    name:'Render Agent',subtitle:'Video Director Sub',emoji:'🎞',tier:'sub',
+    trigger:'QA Agent 確認通過',
+    resp:['npx remotion render --gl=angle','article-video → out/YYYY-MM-DD/YYYY-MM-DD.mp4','vibe-coding → out/CH{N}/CH{N}-complete.mp4','完成後 dashboard 自動更新'],
+    tools:['Remotion CLI','--gl=angle'],children:[]
+  },
+  assetAgent:{
+    name:'Asset Agent',subtitle:'Video Director Sub (vibe only)',emoji:'📦',tier:'sub',
+    trigger:'vibe-coding 任務開始時',
+    resp:['確認音檔在 chapters/{N}/audio/（不是 public/audio/）','素材對應講稿 **備注** 標記','所有素材齊備才給 Scene Dev 開始'],
+    tools:['chapters/ dirs'],children:[]
+  },
+  htmlAnalysisAgent:{
+    name:'HTML Analysis',subtitle:'Video Director Sub (vibe only)',emoji:'🔍',tier:'sub',
+    trigger:'vibe-coding，Scene Dev 開始前',
+    resp:['解析 HTML slides 各段落','對應音檔時間戳','輸出 section → timestamp map 給 Scene Dev'],
+    tools:['HTML slides','audio timestamps'],children:[]
+  },
+
+  // Course subs
+  courseDirector:{
+    name:'Course Director',subtitle:'n8n 課程網站',emoji:'📚',tier:'director',
+    trigger:'「n8n 課程新增 Lecture N」、「更新每日知識庫」',
+    resp:['讀 memory/n8ncourse.md → n8ncourse/CLAUDE.md','讀 courses.json 確認目前進度','派 Content / Knowledge / Deploy Agent'],
+    tools:['GitHub Pages','gh CLI','courses.json'],
+    children:['contentAgent','knowledgeAgent','deployAgent']
+  },
+  contentAgent:{
+    name:'Content Agent',subtitle:'Course Director Sub',emoji:'✍️',tier:'sub',
+    trigger:'Course Director：新增 Lecture',
+    resp:['寫 lecture{N}/index.html（絕不用 day{N}/）','套 design tokens：--bg:#0e0918, --accent:#ee4f27','版型：左 sidebar 272px + top bar + 3 animated orbs','掃禁詞：三週 / 昨天 / 關於講師 / 任何時間語言'],
+    tools:['HTML/CSS','CLAUDE.md design system'],children:[]
+  },
+  knowledgeAgent:{
+    name:'Knowledge Agent',subtitle:'Course Director Sub',emoji:'🧩',tier:'sub',
+    trigger:'Course Director：更新知識庫',
+    resp:['新增每日 AI 知識條目到 knowledge.json','維護 courses.json card 資料'],
+    tools:['knowledge.json','courses.json','admin.html CMS'],children:[]
+  },
+  deployAgent:{
+    name:'Deploy Agent',subtitle:'Course Director Sub',emoji:'🚀',tier:'sub',
+    trigger:'Content / Knowledge Agent 完成後',
+    resp:['git push → JamesAtMoGroup/n8ncourse','驗證 GitHub Pages live URL 可存取才算完成'],
+    tools:['git','gh CLI','GitHub Pages'],children:[]
+  },
+
+  // Engineering subs
+  engineeringDirector:{
+    name:'Engineering Director',subtitle:'LINE Booking App',emoji:'⚙️',tier:'director',
+    trigger:'「booking app 加功能」、「修 bug」',
+    resp:['讀 memory/online-class-booking.md → PROGRESS.md','優先處理 5 個 pre-build blockers','派 Backend / Frontend / QA Agent'],
+    tools:['Next.js 16','Supabase','Zeabur','Tailwind'],
+    children:['backendAgent','frontendAgent','qaAgentEng']
+  },
+  backendAgent:{
+    name:'Backend Agent',subtitle:'Engineering Director Sub',emoji:'🗄',tier:'sub',
+    trigger:'Engineering Director：後端任務',
+    resp:['Supabase schema、RLS policies、stored functions','優先：rate versioning → subject versioning → soft delete → session lifecycle → payout model','所有 server components：const supabase = await createClient()'],
+    tools:['Supabase','PostgreSQL','RLS'],children:[]
+  },
+  frontendAgent:{
+    name:'Frontend Agent',subtitle:'Engineering Director Sub',emoji:'🎨',tier:'sub',
+    trigger:'Engineering Director：前端任務',
+    resp:['Glassmorphism dark CSS + Tailwind','Bilingual ZH-TW/EN via LanguageContext','Role routing：/dashboard → student / teacher / admin','client components：import { supabase } from @/lib/supabase'],
+    tools:['Next.js 16','Tailwind','Radix UI'],children:[]
+  },
+  qaAgentEng:{
+    name:'QA Agent',subtitle:'Engineering Director Sub',emoji:'🧪',tier:'sub',
+    trigger:'Backend + Frontend 完成後',
+    resp:['測試 auth flow：signup → email confirm → login','測試 role routing 各用戶類型','確認 API 邊界錯誤處理','Zeabur 部署驗證'],
+    tools:['Zeabur','Supabase Auth'],children:[]
+  },
+
+  // Content subs
+  contentDirector:{
+    name:'Content Director',subtitle:'每日 AI 文章 Pipeline',emoji:'📰',tier:'director',
+    trigger:'「今天的 AI 文章做成影片」',
+    resp:['此 Director 的輸出是 Video Director 的輸入','確保 Research → Script → Handoff 鏈完整'],
+    tools:['WebSearch','article-YYYY-MM-DD.md'],
+    children:['researchAgent','scriptAgent','handoffAgent']
+  },
+  researchAgent:{
+    name:'Research Agent',subtitle:'Content Director Sub',emoji:'🔬',tier:'sub',
+    trigger:'Content Director：啟動 pipeline',
+    resp:['找當日最高訊噪比 AI 文章/研究','整理成結構化摘要（key points、quotes、context）'],
+    tools:['WebSearch','WebFetch'],children:[]
+  },
+  scriptAgent:{
+    name:'Script Agent',subtitle:'Content Director Sub',emoji:'📄',tier:'sub',
+    trigger:'Research Agent 完成後',
+    resp:['轉成 ~6.5 分鐘 ZH-TW 腳本','分段對應 Remotion scenes（intro、3–4 sections、outro）','標記 iMessage callout 觸發點','輸出 article-YYYY-MM-DD.md'],
+    tools:[],children:[]
+  },
+  handoffAgent:{
+    name:'Handoff',subtitle:'Content Director Sub',emoji:'↗️',tier:'sub',
+    trigger:'Script Agent 完成後',
+    resp:['將 article-YYYY-MM-DD.md 交給 Video Director','Video Director 從這裡接手完成整個影片製作'],
+    tools:['→ Video Director'],children:[]
+  },
+};
+
+// ── Modal logic ────────────────────────────────────────────────────────────
+
+const TIER_LABEL = { owner:'Studio Owner', meta:'Meta Layer', director:'Domain Director', sub:'Sub-Agent' };
+const BADGE_CLASS = { owner:'badge-owner', meta:'badge-meta', director:'badge-director', sub:'' };
+
+let history = [];
+
+function openAgent(id, pushHistory=true) {
+  if (pushHistory && history.length) history.push(id);
+  else if (pushHistory) history = [id];
+
+  const a = AGENTS[id];
+  const badgeClass = BADGE_CLASS[a.tier];
+
+  let subsHtml = '';
+  if (a.children && a.children.length) {
+    subsHtml = `
+      <div class="divider"></div>
+      <div class="modal-section">
+        <div class="modal-section-title">Team (${a.children.length} agents)</div>
+        <div class="sub-agents-grid">
+          ${a.children.map(cid => {
+            const c = AGENTS[cid];
+            return `<div class="sub-card" onclick="drillInto('${cid}')">
+              <div class="sub-card-emoji">${c.emoji}</div>
+              <div class="sub-card-name">${c.name}</div>
+              <div class="sub-card-sub">${c.subtitle}</div>
+              <div class="sub-card-arrow">查看詳情 →</div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+  }
+
+  const backBtn = history.length > 1
+    ? `<button class="modal-back" onclick="goBack()">← 返回</button>`
+    : '';
+
+  document.getElementById('modal-content').innerHTML = `
+    ${backBtn}
+    <div class="modal-emoji">${a.emoji}</div>
+    <div class="modal-badge ${badgeClass}">${TIER_LABEL[a.tier]}</div>
+    <div class="modal-name">${a.name}</div>
+    <div class="modal-subtitle">${a.subtitle}</div>
+
+    <div class="modal-section">
+      <div class="trigger-box">
+        <div class="modal-section-title" style="margin-bottom:6px">啟動條件</div>
+        <div class="trigger-text">${a.trigger}</div>
+      </div>
+    </div>
+
+    <div class="modal-section">
+      <div class="modal-section-title">工作內容</div>
+      <div class="resp-list">
+        ${a.resp.map(r => `<div class="resp-item">${r}</div>`).join('')}
+      </div>
+    </div>
+
+    ${a.tools.length ? `
+    <div class="modal-section">
+      <div class="modal-section-title">使用工具</div>
+      <div class="tools-row">${a.tools.map(t=>`<span class="tool-tag">${t}</span>`).join('')}</div>
+    </div>` : ''}
+
+    ${a.note ? `<div class="modal-note">${a.note}</div>` : ''}
+    ${subsHtml}
   `;
 
-  document.getElementById('panel').classList.add('open');
-  document.getElementById('canvas').classList.add('panel-open');
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('modal').scrollTop = 0;
 }
 
-function closePanel() {
-  document.getElementById('panel').classList.remove('open');
-  document.getElementById('canvas').classList.remove('panel-open');
-  document.querySelectorAll('.node').forEach(n => n.classList.remove('active'));
+function drillInto(id) {
+  history.push(id);
+  openAgent(id, false);
 }
 
-document.getElementById('canvas').addEventListener('click', closePanel);
+function goBack() {
+  history.pop();
+  const prev = history[history.length - 1];
+  if (prev) openAgent(prev, false);
+}
 
-// ── Init ──────────────────────────────────────────────────────────────────
-buildChart();
-window.addEventListener('resize', fitZoom);
+function closeModal() {
+  document.getElementById('overlay').classList.remove('open');
+  history = [];
+}
+
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('overlay')) closeModal();
+}
+
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeModal(); });
 </script>
 </body>
 </html>
