@@ -142,7 +142,9 @@
       "Bash(sqlite3 ~/Library/Messages/chat.db \"SELECT count\\(*\\) FROM message;\")",
       "Bash(sqlite3:*)",
       "Bash(~/.claude/scripts/imessage_send.sh \"🎬 [QA Test] iMessage QA 流程測試 — 請回覆「通過」確認收到\" 2>&1)",
-      "Bash(fc-list :lang=zh)"
+      "Bash(fc-list :lang=zh)",
+      "Bash(# Preview the preview.jpg to see the content visually\ncp \"/Users/jamesshih/Projects/vibe-coding-video/chapters/0-1/章節0-1_逐字講稿.pages\" /tmp/script.pages.zip\ncd /tmp && unzip -o script.pages.zip preview.jpg -d /tmp/pages_preview/ 2>&1)",
+      "Bash(pdftotext:*)"
     ]
   }
 }
