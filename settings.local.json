@@ -152,7 +152,12 @@
       "Bash(find ~/Projects/online-class-booking -name PROGRESS* -o -name progress*)",
       "Bash(crontab:*)",
       "Bash(jobs -l)",
-      "Bash(bash ~/chatwoot-setup/cli_deploy.sh)"
+      "Bash(bash ~/chatwoot-setup/cli_deploy.sh)",
+      "Bash(sed -i '' 's/Vycoding/Vibe Coding/g' 0-1_1.1.vtt)",
+      "Bash(sed -i '' 's/VibeCoding/Vibe Coding/g' 0-1_4.1.vtt)",
+      "Bash(sed -i '' 's/AI Codein/AI Coding/g' 0-1_4.1.vtt)",
+      "Bash(sed -i '' 's/ViveCoding/Vibe Coding/g' 0-1_4.3.vtt)",
+      "Bash(sed -i '' 's/ViveCoding/Vibe Coding/g' 0-1_5.1.vtt)"
     ]
   }
 }
