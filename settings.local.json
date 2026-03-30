@@ -157,7 +157,15 @@
       "Bash(sed -i '' 's/VibeCoding/Vibe Coding/g' 0-1_4.1.vtt)",
       "Bash(sed -i '' 's/AI Codein/AI Coding/g' 0-1_4.1.vtt)",
       "Bash(sed -i '' 's/ViveCoding/Vibe Coding/g' 0-1_4.3.vtt)",
-      "Bash(sed -i '' 's/ViveCoding/Vibe Coding/g' 0-1_5.1.vtt)"
+      "Bash(sed -i '' 's/ViveCoding/Vibe Coding/g' 0-1_5.1.vtt)",
+      "Bash(opencc --version)",
+      "Bash(grep:*)",
+      "Bash(sed -i '' 's/寫城市/寫程式/g' 0-1_2.2.vtt 0-1_3.0.vtt)",
+      "Bash(sed -i '' 's/旅遊型別/旅遊類型/g' 0-1_3.2.vtt)",
+      "Bash(sed -i '' 's/指分為感覺/指「氛圍、感覺」/g' 0-1_4.2.vtt)",
+      "Bash(sed -i '' 's/比較確有的狀態/比較隨性的狀態/g' 0-1_4.2.vtt)",
+      "Bash(sed -i '' 's/靠 few 來寫誠識/靠感覺來寫程式/g' 0-1_4.2.vtt)",
+      "Bash(cd:*)"
     ]
   }
 }
