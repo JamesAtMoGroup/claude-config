@@ -6,1156 +6,874 @@
 <title>James — AI Studio</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+TC:wght@400;500;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
-/* ── TOKENS ─────────────────────────────────────────────── */
+/* ── TOKENS ── */
 :root{
-  --bg:       #020204;
-  --bg2:      #0c0c0f;
-  --bg3:      #141418;
-  --green:    #7cffb2;
-  --cyan:     #00e5ff;
-  --yellow:   #ffd166;
-  --purple:   #b794f4;
-  --gold:     #ffd700;
-  --red:      #ff6b6b;
-
-  --g-green: rgba(124,255,178,0.18);
-  --g-cyan:  rgba(0,229,255,0.1);
-  --g-purp:  rgba(183,148,244,0.15);
-  --g-gold:  rgba(255,215,0,0.12);
-
-  --s1: rgba(255,255,255,0.03);
-  --s2: rgba(255,255,255,0.06);
-  --s3: rgba(255,255,255,0.1);
-  --b1: rgba(255,255,255,0.07);
-  --b2: rgba(255,255,255,0.13);
-  --t1: #fff;
-  --t2: rgba(255,255,255,0.82);
-  --t3: rgba(255,255,255,0.55);
-
-  --r-sm: 10px; --r-md: 16px; --r-lg: 22px; --r-xl: 32px;
-  --ease-out: cubic-bezier(0.16,1,0.3,1);
-  --ease-spring: cubic-bezier(0.34,1.56,0.64,1);
+  --bg:#000;--bg2:#0a0a0a;--bg3:#111;
+  --green:#7cffb2;--cyan:#00e5ff;--yellow:#ffd166;--purple:#b794f4;--gold:#ffd700;--red:#ff6b6b;
+  --s1:rgba(255,255,255,.03);--s2:rgba(255,255,255,.06);--s3:rgba(255,255,255,.1);
+  --b1:rgba(255,255,255,.08);--b2:rgba(255,255,255,.14);
+  --t1:#fff;--t2:rgba(255,255,255,.82);--t3:rgba(255,255,255,.52);
+  --ease-out:cubic-bezier(.16,1,.3,1);--ease-spring:cubic-bezier(.34,1.56,.64,1);
 }
-
-/* ── RESET ───────────────────────────────────────────────── */
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
-html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;}
-body{
-  background:var(--bg);color:var(--t1);
-  font-family:'Inter',sans-serif;
-  overflow-x:hidden;
-  -webkit-font-smoothing:antialiased;
-}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--t1);font-family:'Inter',sans-serif;overflow-x:hidden;-webkit-font-smoothing:antialiased;cursor:none;}
+@media(hover:none){body{cursor:auto;}}
 
-/* ── BACKGROUND LAYERS ────────────────────────────────────── */
-#bg-canvas{
-  position:fixed;inset:0;z-index:0;
-  pointer-events:none;opacity:0.45;
-}
-.noise{
-  position:fixed;inset:0;z-index:1;pointer-events:none;opacity:0.035;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-size:300px 300px;
-}
-.mesh{
-  position:fixed;inset:0;z-index:0;pointer-events:none;
-  background:
-    radial-gradient(ellipse 70% 60% at 15% 25%, rgba(124,255,178,0.04) 0%, transparent 65%),
-    radial-gradient(ellipse 60% 50% at 85% 75%, rgba(183,148,244,0.03) 0%, transparent 65%),
-    radial-gradient(ellipse 50% 70% at 50% 50%, rgba(0,229,255,0.02) 0%, transparent 65%);
-  animation:mesh-drift 25s ease-in-out infinite alternate;
-}
-@keyframes mesh-drift{
-  0%{background-position:0% 0%,100% 100%,50% 50%;}
-  100%{background-position:10% 15%,90% 85%,55% 45%;}
-}
-.gridlines{
-  position:fixed;inset:0;z-index:0;pointer-events:none;
-  background-image:
-    linear-gradient(rgba(124,255,178,0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(124,255,178,0.025) 1px, transparent 1px);
-  background-size:64px 64px;
-}
-.scanline{
-  position:fixed;left:0;right:0;height:3px;z-index:2;pointer-events:none;
-  background:linear-gradient(90deg,transparent,rgba(124,255,178,0.3),transparent);
-  animation:scan 8s linear infinite;opacity:0.3;
-}
-@keyframes scan{0%{top:-3px;}100%{top:100vh;}}
+/* ── CURSOR ── */
+#c-dot,#c-ring{position:fixed;border-radius:50%;pointer-events:none;z-index:9999;top:0;left:0;mix-blend-mode:difference;}
+#c-dot{width:8px;height:8px;background:#fff;margin:-4px 0 0 -4px;transition:transform .1s,width .25s var(--ease-out),height .25s var(--ease-out),margin .25s var(--ease-out);}
+#c-ring{width:40px;height:40px;border:1.5px solid rgba(255,255,255,.6);margin:-20px 0 0 -20px;transition:width .35s var(--ease-out),height .35s var(--ease-out),margin .35s var(--ease-out),border-color .25s,opacity .25s;}
+body.cursor-hover #c-dot{width:16px;height:16px;margin:-8px 0 0 -8px;}
+body.cursor-hover #c-ring{width:60px;height:60px;margin:-30px 0 0 -30px;border-color:rgba(124,255,178,.7);}
+body.cursor-click #c-dot{transform:scale(.6);}
+@media(hover:none){#c-dot,#c-ring{display:none;}}
 
-/* ── ICON SVG ─────────────────────────────────────────────── */
-.icon{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
+/* ── PROGRESS ── */
+#prog{position:fixed;top:0;left:0;right:0;height:2px;z-index:9998;transform-origin:left;transform:scaleX(0);background:linear-gradient(90deg,var(--green),var(--cyan));pointer-events:none;}
 
-/* ── NAV ──────────────────────────────────────────────────── */
-nav{
-  position:fixed;top:16px;left:50%;transform:translateX(-50%);
-  z-index:900;
-  display:flex;align-items:center;gap:0;
-  background:rgba(10,10,14,0.75);
-  backdrop-filter:blur(24px) saturate(180%);
-  border:1px solid var(--b1);
-  border-radius:999px;
-  padding:6px 8px;
-  transition:border-color .3s, box-shadow .3s;
-}
-nav.scrolled{border-color:rgba(124,255,178,0.15);box-shadow:0 8px 40px rgba(0,0,0,0.5);}
-.nav-logo{
-  font-family:'Space Mono',monospace;font-size:13px;letter-spacing:.14em;
-  color:var(--green);padding:5px 14px;margin-right:4px;
-}
+/* ── NOISE ── */
+.noise{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.032;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23n)'/%3E%3C/svg%3E");background-size:256px;}
+
+/* ── CANVAS ── */
+#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;}
+
+/* ── NAV ── */
+nav{position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:900;display:flex;align-items:center;gap:0;background:rgba(0,0,0,.75);backdrop-filter:blur(24px) saturate(180%);border:1px solid var(--b1);border-radius:999px;padding:6px 8px;transition:border-color .4s,box-shadow .4s;}
+nav.scrolled{border-color:rgba(124,255,178,.2);box-shadow:0 8px 40px rgba(0,0,0,.6);}
+.nav-logo{font-family:'Space Mono',monospace;font-size:13px;letter-spacing:.14em;color:var(--green);padding:6px 16px;margin-right:2px;}
 .nav-links{display:flex;gap:2px;}
-.nav-links a{
-  font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.09em;
-  text-transform:uppercase;text-decoration:none;
-  color:var(--t3);padding:8px 14px;border-radius:999px;
-  transition:color .2s,background .2s;
-  display:flex;align-items:center;gap:6px;
-}
+.nav-links a{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.09em;text-transform:uppercase;text-decoration:none;color:var(--t3);padding:8px 14px;border-radius:999px;transition:color .2s,background .2s;display:flex;align-items:center;gap:6px;}
 .nav-links a:hover,.nav-links a.active{color:var(--t1);background:var(--s2);}
-.nav-status{
-  display:flex;align-items:center;gap:7px;
-  font-family:'Space Mono',monospace;font-size:11px;
-  color:var(--green);letter-spacing:.1em;
-  padding:5px 14px;margin-left:4px;
-  border-left:1px solid var(--b1);
-}
-.pulse-dot{
-  width:6px;height:6px;border-radius:50%;background:var(--green);
-  box-shadow:0 0 10px var(--green);
-  animation:pulse-dot 2s ease-in-out infinite;
-}
-@keyframes pulse-dot{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(.7);opacity:.5;}}
+.nav-dot{display:flex;align-items:center;gap:8px;font-family:'Space Mono',monospace;font-size:11px;color:var(--green);padding:6px 16px;margin-left:2px;border-left:1px solid var(--b1);}
+.pulse{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green);animation:pulse-anim 2s ease-in-out infinite;}
+@keyframes pulse-anim{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.4;transform:scale(.7);}}
 
-/* ── GRADIENT BORDER CARD ─────────────────────────────────── */
-.gc{
-  position:relative;background:var(--bg2);
-  border-radius:var(--r-lg);
-  transition:transform .3s var(--ease-out);
-  cursor:pointer;
-}
-.gc::before{
-  content:'';position:absolute;inset:0;border-radius:inherit;
-  padding:1px;
-  background:linear-gradient(135deg, rgba(124,255,178,0.35) 0%, rgba(124,255,178,0.06) 40%, transparent 70%);
-  -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
-  mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
-  -webkit-mask-composite:xor;
-  mask-composite:exclude;
-  pointer-events:none;
-}
-.gc::after{
-  content:'';position:absolute;inset:0;border-radius:inherit;
-  background:radial-gradient(ellipse 60% 40% at 50% 0%, rgba(124,255,178,0.07) 0%, transparent 70%);
-  opacity:0;transition:opacity .3s;pointer-events:none;
-}
-.gc:hover{transform:translateY(-5px);}
-.gc:hover::after{opacity:1;}
-.gc:focus-visible{outline:2px solid var(--green);outline-offset:4px;}
+/* ── HERO ── */
+#hero{min-height:100vh;display:flex;align-items:center;padding:120px 48px 80px;position:relative;overflow:hidden;}
+#hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 70% at var(--mx,50%) var(--my,40%),rgba(124,255,178,.07) 0%,transparent 65%);pointer-events:none;z-index:1;transition:background .1s;}
+.hero-inner{max-width:1200px;margin:0 auto;width:100%;display:grid;grid-template-columns:1fr 440px;gap:80px;align-items:center;position:relative;z-index:2;}
+@media(max-width:960px){.hero-inner{grid-template-columns:1fr;gap:56px;}}
 
-.gc.tier-meta::before{background:linear-gradient(135deg, rgba(183,148,244,0.35) 0%, rgba(183,148,244,0.06) 40%, transparent 70%);}
-.gc.tier-meta::after{background:radial-gradient(ellipse 60% 40% at 50% 0%, rgba(183,148,244,0.07) 0%, transparent 70%);}
+/* ── HERO LEFT ── */
+.hero-tag{display:inline-flex;align-items:center;gap:9px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--green);border:1px solid rgba(124,255,178,.2);padding:6px 18px;border-radius:999px;background:rgba(124,255,178,.05);margin-bottom:36px;}
+.hero-name{font-family:'Space Mono',monospace;font-size:clamp(80px,14vw,160px);font-weight:700;line-height:.88;letter-spacing:-.03em;margin-bottom:28px;display:block;overflow:hidden;}
+.hero-name .char{display:inline-block;opacity:0;transform:translateY(100%);clip-path:inset(0 0 100% 0);}
+.hero-name .char.space{width:.28em;}
+.hero-name .grd{background:linear-gradient(125deg,#7cffb2 0%,#00e5ff 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
 
-.gc.tier-owner::before{background:linear-gradient(135deg, rgba(255,215,0,0.35) 0%, rgba(255,215,0,0.06) 40%, transparent 70%);}
-.gc.tier-owner::after{background:radial-gradient(ellipse 60% 40% at 50% 0%, rgba(255,215,0,0.07) 0%, transparent 70%);}
-
-/* ── BADGE ────────────────────────────────────────────────── */
-.badge{
-  display:inline-flex;align-items:center;gap:5px;
-  font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;
-  padding:4px 12px;border-radius:999px;
-}
-.badge-green{background:rgba(124,255,178,0.1);color:var(--green);border:1px solid rgba(124,255,178,0.2);}
-.badge-purple{background:rgba(183,148,244,0.1);color:var(--purple);border:1px solid rgba(183,148,244,0.2);}
-.badge-gold{background:rgba(255,215,0,0.1);color:var(--gold);border:1px solid rgba(255,215,0,0.2);}
-.badge-dim{background:var(--s1);color:var(--t3);border:1px solid var(--b1);}
-
-/* ── SECTION SHARED ───────────────────────────────────────── */
-section{position:relative;z-index:2;}
-.wrap{max-width:1120px;margin:0 auto;padding:100px 24px;}
-.sec-head{
-  margin-bottom:56px;display:flex;align-items:flex-start;gap:20px;
-}
-.sec-num{
-  font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.15em;
-  color:var(--green);padding:4px 11px;border:1px solid rgba(124,255,178,0.2);
-  border-radius:var(--r-sm);background:rgba(124,255,178,0.06);white-space:nowrap;margin-top:5px;
-}
-.sec-title{font-size:clamp(28px,4vw,44px);font-weight:800;letter-spacing:-.02em;margin-bottom:8px;}
-.sec-desc{font-size:16px;color:var(--t2);line-height:1.65;}
-
-/* ── REVEAL ANIMATION ─────────────────────────────────────── */
-.reveal{opacity:0;transform:translateY(22px);transition:opacity .7s var(--ease-out),transform .7s var(--ease-out);}
-.reveal.visible{opacity:1;transform:none;}
-
-/* ── HERO ─────────────────────────────────────────────────── */
-#hero{
-  min-height:100vh;display:flex;align-items:center;
-  padding:120px 24px 80px;position:relative;overflow:hidden;
-}
-.hero-inner{
-  max-width:1120px;margin:0 auto;width:100%;
-  display:grid;grid-template-columns:1fr 420px;gap:60px;align-items:center;
-}
-@media(max-width:900px){.hero-inner{grid-template-columns:1fr;gap:48px;}}
-
-/* left col */
-.hero-tag{
-  display:inline-flex;align-items:center;gap:8px;
-  font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.18em;
-  text-transform:uppercase;color:var(--green);
-  border:1px solid rgba(124,255,178,0.2);padding:6px 16px;border-radius:999px;
-  background:rgba(124,255,178,0.05);margin-bottom:28px;
-}
-.hero-name{
-  font-family:'Space Mono',monospace;
-  font-size:clamp(72px,13vw,148px);
-  font-weight:700;line-height:.9;letter-spacing:-.03em;
-  margin-bottom:20px;position:relative;
-}
-.hero-name .grd{
-  background:linear-gradient(125deg,#7cffb2 20%,#00e5ff 80%);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-  background-clip:text;
-}
-/* glitch */
-.hero-name::before,.hero-name::after{
-  content:attr(data-text);
-  position:absolute;inset:0;
-  font-family:'Space Mono',monospace;font-size:inherit;font-weight:inherit;letter-spacing:inherit;line-height:inherit;
-}
-.hero-name::before{
-  background:linear-gradient(125deg,rgba(124,255,178,.25) 20%,rgba(0,229,255,.25) 80%);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-  animation:glitch1 5s infinite;clip-path:polygon(0 0,100% 0,100% 38%,0 38%);
-}
-.hero-name::after{
-  color:rgba(183,148,244,.18);
-  animation:glitch2 5s infinite;clip-path:polygon(0 62%,100% 62%,100% 100%,0 100%);
-}
-@keyframes glitch1{0%,90%,100%{transform:translate(0);}91%{transform:translate(-4px,2px);}93%{transform:translate(4px,-2px);}95%{transform:translate(0);}}
-@keyframes glitch2{0%,92%,100%{transform:translate(0);}93%{transform:translate(4px,2px);}96%{transform:translate(-4px,-1px);}98%{transform:translate(0);}}
-
-.hero-sub{
-  font-family:'Space Mono',monospace;font-size:clamp(14px,1.8vw,17px);
-  color:var(--t2);letter-spacing:.06em;min-height:26px;margin-bottom:48px;
-}
-.cursor{display:inline-block;width:2px;height:1em;background:var(--green);margin-left:2px;animation:blink .7s step-end infinite;vertical-align:text-bottom;}
+.hero-sub{font-family:'Space Mono',monospace;font-size:clamp(13px,1.6vw,16px);color:var(--t2);letter-spacing:.05em;margin-bottom:52px;min-height:20px;}
+#tw-cursor{display:inline-block;width:2px;height:1em;background:var(--green);margin-left:2px;animation:blink .7s step-end infinite;vertical-align:text-bottom;}
 @keyframes blink{0%,100%{opacity:1;}50%{opacity:0;}}
 
-.stats-row{display:flex;flex-wrap:wrap;gap:0;border:1px solid var(--b1);border-radius:var(--r-md);overflow:hidden;background:var(--s1);backdrop-filter:blur(20px);}
+.stats-bar{display:flex;flex-wrap:wrap;border:1px solid var(--b1);border-radius:14px;overflow:hidden;background:var(--s1);backdrop-filter:blur(16px);}
 .stat{padding:18px 28px;border-right:1px solid var(--b1);text-align:left;}
 .stat:last-child{border-right:none;}
-.stat-n{
-  display:block;font-family:'Space Mono',monospace;
-  font-size:clamp(20px,3vw,32px);font-weight:700;
-  background:linear-gradient(125deg,var(--green),var(--cyan));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-  background-clip:text;margin-bottom:4px;
-}
-.stat-l{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);font-family:'Space Mono',monospace;}
-@media(max-width:600px){.stat{padding:14px 18px;}.stats-row{flex-wrap:wrap;}.stat{width:50%;border-bottom:1px solid var(--b1);}}
+.stat-n{display:block;font-family:'Space Mono',monospace;font-size:clamp(22px,3.5vw,36px);font-weight:700;background:linear-gradient(125deg,var(--green),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:4px;min-width:2ch;}
+.stat-l{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);font-family:'Space Mono',monospace;}
+@media(max-width:560px){.stat{width:50%;border-bottom:1px solid var(--b1);}.stat:nth-child(2){border-right:none;}}
 
-/* right col: terminal */
-.terminal{
-  background:rgba(8,8,12,0.9);
-  border:1px solid rgba(124,255,178,0.2);
-  border-radius:var(--r-lg);overflow:hidden;
-  box-shadow:0 0 0 1px rgba(0,0,0,.5),0 32px 80px rgba(0,0,0,.6),0 0 80px rgba(124,255,178,0.04);
-}
-.term-bar{
-  display:flex;align-items:center;gap:8px;
-  padding:12px 18px;background:rgba(255,255,255,0.025);
-  border-bottom:1px solid rgba(255,255,255,0.06);
-}
-.term-dot{width:11px;height:11px;border-radius:50%;}
-.td-red{background:#ff5f57;}.td-yellow{background:#ffbd2e;}.td-green{background:#28c940;}
-.term-title{
-  font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.1em;
-  color:var(--t3);margin-left:8px;flex:1;
-}
-.term-badge{font-family:'Space Mono',monospace;font-size:11px;color:var(--green);letter-spacing:.1em;}
-.term-body{padding:20px 22px;min-height:200px;}
-.term-line{
-  font-family:'Space Mono',monospace;font-size:13px;
-  color:rgba(255,255,255,0.80);line-height:2.0;
-  display:flex;gap:10px;align-items:baseline;
-}
-.term-prompt{color:var(--green);flex-shrink:0;}
-.term-agent{color:var(--cyan);flex-shrink:0;}
-.term-msg{color:var(--t2);}
-.term-caret{display:inline-block;width:7px;height:13px;background:var(--green);animation:blink .8s step-end infinite;vertical-align:text-bottom;margin-left:2px;}
+/* ── TERMINAL ── */
+.terminal{background:rgba(6,6,8,.95);border:1px solid rgba(124,255,178,.18);border-radius:18px;overflow:hidden;box-shadow:0 0 0 1px rgba(0,0,0,.5),0 40px 100px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.05);}
+.term-bar{display:flex;align-items:center;gap:7px;padding:13px 18px;background:rgba(255,255,255,.025);border-bottom:1px solid rgba(255,255,255,.06);}
+.td{width:11px;height:11px;border-radius:50%;flex-shrink:0;}
+.td-r{background:#ff5f57;}.td-y{background:#ffbd2e;}.td-g{background:#28c940;}
+.term-title{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.1em;color:var(--t3);margin-left:8px;flex:1;}
+.term-live{font-family:'Space Mono',monospace;font-size:10px;color:var(--green);letter-spacing:.1em;}
+.term-body{padding:20px 22px;min-height:220px;}
+.t-line{display:flex;gap:10px;align-items:baseline;font-family:'Space Mono',monospace;font-size:12.5px;line-height:2;color:var(--t2);}
+.t-line .t-prompt{color:rgba(124,255,178,.5);flex-shrink:0;}
+.t-line .t-agent{color:var(--cyan);flex-shrink:0;}
+.t-line .t-msg{color:var(--t2);}
+.t-caret{display:inline-block;width:7px;height:13px;background:var(--green);animation:blink .9s step-end infinite;vertical-align:text-bottom;margin-left:2px;}
 
-/* corner deco */
-.corner{position:absolute;width:44px;height:44px;opacity:.3;}
-.c-tl{top:20px;left:20px;border-top:1px solid var(--green);border-left:1px solid var(--green);}
-.c-tr{top:20px;right:20px;border-top:1px solid var(--green);border-right:1px solid var(--green);}
-.c-bl{bottom:20px;left:20px;border-bottom:1px solid var(--green);border-left:1px solid var(--green);}
-.c-br{bottom:20px;right:20px;border-bottom:1px solid var(--green);border-right:1px solid var(--green);}
+/* ── MARQUEE ── */
+.marquee-wrap{position:relative;z-index:2;overflow:hidden;border-top:1px solid var(--b1);border-bottom:1px solid var(--b1);background:rgba(0,0,0,.6);backdrop-filter:blur(10px);height:48px;display:flex;align-items:center;}
+.mq-track{display:inline-flex;align-items:center;white-space:nowrap;animation:mq 55s linear infinite;}
+.mq-track:hover{animation-play-state:paused;}
+.mq-item{display:inline-flex;align-items:center;gap:10px;padding:0 36px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--t3);}
+.mq-dot{width:4px;height:4px;border-radius:50%;background:var(--green);opacity:.55;}
+.mq-sep{width:1px;height:14px;background:var(--b2);}
+@keyframes mq{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
 
-/* ── MARQUEE ──────────────────────────────────────────────── */
-.marquee-wrap{
-  position:relative;z-index:2;overflow:hidden;
-  border-top:1px solid var(--b1);border-bottom:1px solid var(--b1);
-  background:rgba(0,0,0,0.5);backdrop-filter:blur(10px);
-  padding:0;height:46px;display:flex;align-items:center;
-}
-.marquee-track{
-  display:inline-flex;align-items:center;gap:0;
-  white-space:nowrap;
-  animation:marquee-scroll 50s linear infinite;
-  will-change:transform;
-}
-.marquee-track:hover{animation-play-state:paused;}
-.m-item{
-  display:inline-flex;align-items:center;gap:10px;
-  padding:0 32px;
-  font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;
-  color:var(--t3);
-}
-.m-sep{width:1px;height:14px;background:var(--b2);}
-.m-item .m-dot{width:5px;height:5px;border-radius:50%;background:var(--green);opacity:.6;}
-@keyframes marquee-scroll{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
+/* ── SECTION ── */
+section{position:relative;z-index:2;}
+.wrap{max-width:1200px;margin:0 auto;padding:110px 48px;}
+@media(max-width:768px){.wrap{padding:80px 24px;}}
+.sec-head{display:flex;align-items:flex-start;gap:22px;margin-bottom:60px;}
+.sec-num{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.15em;color:var(--green);padding:4px 12px;border:1px solid rgba(124,255,178,.2);border-radius:8px;background:rgba(124,255,178,.06);white-space:nowrap;margin-top:6px;flex-shrink:0;}
+.sec-title{font-size:clamp(30px,4.5vw,48px);font-weight:800;letter-spacing:-.025em;margin-bottom:8px;}
+.sec-desc{font-size:16px;color:var(--t2);line-height:1.65;}
 
-/* ── ORG SECTION ─────────────────────────────────────────── */
-#org{background:rgba(0,0,0,0.3);}
-.tier-label{
-  text-align:center;
-  font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--t3);
-  margin-bottom:16px;display:flex;align-items:center;gap:14px;
-}
-.tier-label::before,.tier-label::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--b2),transparent);}
-.connector-v{display:flex;justify-content:center;margin:4px 0;}
-.connector-v-line{width:1px;height:24px;background:linear-gradient(180deg,var(--b2),transparent);}
+/* ── REVEAL ── */
+.rv{opacity:0;transform:translateY(24px);transition:opacity .8s var(--ease-out),transform .8s var(--ease-out);}
+.rv.in{opacity:1;transform:none;}
+
+/* ── ORG SECTION ── */
+#org{background:rgba(0,0,0,.4);}
+.tier-lbl{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--t3);margin-bottom:18px;display:flex;align-items:center;gap:16px;}
+.tier-lbl::before,.tier-lbl::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--b2),transparent);}
+.conn{display:flex;justify-content:center;margin:6px 0;}
+.conn-line{width:1px;height:24px;background:linear-gradient(180deg,var(--b2),transparent);}
+
+/* ── GRADIENT BORDER CARDS ── */
+.gc{position:relative;background:var(--bg2);border-radius:20px;transition:box-shadow .3s;will-change:transform;}
+.gc::before{content:'';position:absolute;inset:0;border-radius:inherit;padding:1px;background:linear-gradient(140deg,rgba(124,255,178,.35) 0%,rgba(124,255,178,.05) 45%,transparent 70%);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;}
+.gc.meta::before{background:linear-gradient(140deg,rgba(183,148,244,.35) 0%,rgba(183,148,244,.05) 45%,transparent 70%);}
+.gc.owner::before{background:linear-gradient(140deg,rgba(255,215,0,.35) 0%,rgba(255,215,0,.05) 45%,transparent 70%);}
+.gc-inner{padding:24px;position:relative;z-index:1;}
+.gc-inner.lg{padding:30px 34px;}
+
+.badge{display:inline-flex;align-items:center;gap:5px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:4px 11px;border-radius:999px;margin-bottom:12px;}
+.bg{background:rgba(124,255,178,.1);color:var(--green);border:1px solid rgba(124,255,178,.2);}
+.bm{background:rgba(183,148,244,.1);color:var(--purple);border:1px solid rgba(183,148,244,.2);}
+.bo{background:rgba(255,215,0,.1);color:var(--gold);border:1px solid rgba(255,215,0,.2);}
+.bd{background:var(--s1);color:var(--t3);border:1px solid var(--b1);}
+
+.c-icon{width:44px;height:44px;border-radius:12px;background:var(--s2);display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:14px;}
+.owner .c-icon{background:rgba(255,215,0,.1);}
+.meta .c-icon{background:rgba(183,148,244,.1);}
+.dir .c-icon{background:rgba(124,255,178,.1);}
+.c-name{font-size:16px;font-weight:700;margin-bottom:5px;}
+.c-sub{font-size:14px;color:var(--t2);line-height:1.55;margin-bottom:12px;}
+.c-trig{font-size:13px;color:var(--t3);line-height:1.6;padding-top:12px;border-top:1px solid var(--b1);}
+.c-trig strong{color:var(--t2);}
+.c-pills{display:flex;flex-wrap:wrap;gap:5px;padding-top:10px;border-top:1px solid var(--b1);margin-top:6px;}
+.pill{font-size:10px;color:var(--t3);background:var(--s1);border:1px solid var(--b1);border-radius:999px;padding:3px 10px;font-family:'Space Mono',monospace;}
 
 .owner-row{display:flex;justify-content:center;margin-bottom:4px;}
-.owner-card{
-  width:360px;padding:28px 32px;
-}
+.owner-row .gc{width:380px;}
 .meta-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:4px;}
 .dir-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
-@media(max-width:860px){.dir-row{grid-template-columns:repeat(2,1fr);}}
-@media(max-width:540px){
-  .meta-row,.dir-row{grid-template-columns:1fr;}
-  .owner-card{width:100%;}
-}
+@media(max-width:900px){.dir-row{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:540px){.meta-row,.dir-row{grid-template-columns:1fr;}.owner-row .gc{width:100%;}}
 
-.card-body{padding:22px 22px;}
-.card-agent-icon{
-  width:42px;height:42px;border-radius:12px;
-  display:flex;align-items:center;justify-content:center;
-  font-size:20px;margin-bottom:14px;background:var(--s2);
-}
-.tier-owner .card-agent-icon{background:rgba(255,215,0,0.1);}
-.tier-meta .card-agent-icon{background:rgba(183,148,244,0.1);}
-.tier-director .card-agent-icon{background:rgba(124,255,178,0.1);}
-.card-name{font-size:15px;font-weight:700;margin-bottom:4px;}
-.owner-card .card-name{font-size:18px;}
-.card-sub{font-size:14px;color:var(--t2);margin-bottom:12px;line-height:1.6;}
-.card-trigger{
-  font-size:13px;color:var(--t3);line-height:1.65;
-  padding-top:12px;border-top:1px solid var(--b1);
-}
-.card-trigger strong{color:var(--t2);}
-.card-pills{display:flex;flex-wrap:wrap;gap:5px;padding-top:10px;border-top:1px solid var(--b1);margin-top:6px;}
-.pill{font-size:11px;color:var(--t3);background:var(--s1);border:1px solid var(--b1);border-radius:999px;padding:4px 10px;font-family:'Space Mono',monospace;letter-spacing:.06em;}
+/* spotlight: siblings dim on hover */
+.org-cards.spotlight .gc{transition:opacity .3s,transform .3s,box-shadow .3s;}
+.org-cards.spotlight:hover .gc{opacity:.35;}
+.org-cards.spotlight .gc:hover{opacity:1!important;}
 
-/* ── PROJECTS SECTION ────────────────────────────────────── */
-#projects{background:rgba(0,0,0,0.5);}
-.priority-banner{
-  display:flex;align-items:flex-start;gap:16px;
-  background:linear-gradient(135deg, rgba(124,255,178,0.07) 0%, rgba(124,255,178,0.02) 100%);
-  border:1px solid rgba(124,255,178,0.18);
-  border-radius:var(--r-lg);padding:22px 26px;margin-bottom:24px;
-}
-.pb-icon{width:40px;height:40px;border-radius:12px;background:rgba(124,255,178,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;}
-.pb-label{font-family:'Space Mono',monospace;font-size:11px;color:var(--green);letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px;}
-.pb-title{font-size:16px;font-weight:700;margin-bottom:4px;}
-.pb-reason{font-size:14px;color:var(--t2);line-height:1.65;}
+/* ── PROJECTS ── */
+#projects{background:rgba(0,0,0,.55);}
+.top-p{display:flex;align-items:flex-start;gap:18px;background:linear-gradient(135deg,rgba(124,255,178,.07),rgba(124,255,178,.02));border:1px solid rgba(124,255,178,.18);border-radius:18px;padding:22px 26px;margin-bottom:24px;}
+.tp-ico{width:42px;height:42px;border-radius:12px;background:rgba(124,255,178,.1);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.tp-lbl{font-family:'Space Mono',monospace;font-size:11px;color:var(--green);letter-spacing:.12em;text-transform:uppercase;margin-bottom:5px;}
+.tp-ttl{font-size:16px;font-weight:700;margin-bottom:3px;}
+.tp-rsn{font-size:14px;color:var(--t2);line-height:1.65;}
 
-.proj-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;}
-@media(max-width:700px){.proj-grid{grid-template-columns:1fr;}}
+.pg{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;}
+@media(max-width:700px){.pg{grid-template-columns:1fr;}}
 
-.pcard{
-  position:relative;background:var(--bg2);border-radius:var(--r-lg);
-  padding:22px;overflow:hidden;cursor:default;
-  transition:transform .3s var(--ease-out);
-}
-.pcard::before{
-  content:'';position:absolute;inset:0;border-radius:inherit;
-  padding:1px;
-  background:linear-gradient(135deg, rgba(124,255,178,0.25) 0%, rgba(124,255,178,0.04) 40%, transparent 70%);
-  -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
-  mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
-  -webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;
-}
-.pcard.blocked::before{background:linear-gradient(135deg, rgba(255,107,107,0.3) 0%, rgba(255,107,107,0.04) 40%, transparent 70%);}
-.pcard:hover{transform:translateY(-3px);}
+.pc{position:relative;background:var(--bg2);border-radius:18px;padding:22px;overflow:hidden;}
+.pc::before{content:'';position:absolute;inset:0;border-radius:inherit;padding:1px;background:linear-gradient(140deg,rgba(124,255,178,.22) 0%,rgba(124,255,178,.03) 40%,transparent 70%);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;}
+.pc.blocked::before{background:linear-gradient(140deg,rgba(255,107,107,.3) 0%,rgba(255,107,107,.04) 40%,transparent 70%);}
 
-.pcard-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;}
-.pcard-icon{font-size:22px;margin-bottom:6px;}
-.pcard-name{font-size:16px;font-weight:700;}
-.pstatus{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:5px 12px;border-radius:999px;display:flex;align-items:center;gap:6px;}
-.pstatus.active{background:rgba(124,255,178,0.1);color:var(--green);}
-.pstatus.blocked{background:rgba(255,107,107,0.1);color:var(--red);}
-.pstatus-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
-.pstatus.active .pstatus-dot{background:var(--green);animation:pulse-dot 1.5s infinite;}
-.pstatus.blocked .pstatus-dot{background:var(--red);}
+.pc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;}
+.pc-name{font-size:16px;font-weight:700;margin-top:4px;}
+.pst{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:5px 12px;border-radius:999px;display:flex;align-items:center;gap:6px;}
+.pst.active{background:rgba(124,255,178,.1);color:var(--green);}
+.pst.blocked{background:rgba(255,107,107,.1);color:var(--red);}
+.pst-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+.pst.active .pst-dot{background:var(--green);animation:pulse-anim 1.5s infinite;}
+.pst.blocked .pst-dot{background:var(--red);}
 
-.milestones{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
-.ms{display:flex;align-items:center;gap:10px;font-size:14px;}
+.mss{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+.ms{display:flex;align-items:center;gap:10px;font-size:13px;}
 .ms-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
 .ms.done .ms-dot{background:var(--green);}
 .ms.pending .ms-dot{background:rgba(255,255,255,.12);}
-.ms.inprog .ms-dot{background:var(--yellow);box-shadow:0 0 6px rgba(255,209,102,.6);animation:pulse-dot 1.5s infinite;}
+.ms.inprog .ms-dot{background:var(--yellow);box-shadow:0 0 6px rgba(255,209,102,.6);animation:pulse-anim 1.5s infinite;}
 .ms.done .ms-lbl{color:var(--t3);}
 .ms.pending .ms-lbl{color:var(--t3);}
 .ms.inprog .ms-lbl{color:var(--yellow);}
 
-.next-action{background:var(--s1);border:1px solid var(--b1);border-radius:10px;padding:10px 14px;margin-bottom:10px;}
-.na-lbl{font-family:'Space Mono',monospace;font-size:11px;color:var(--t3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px;}
-.na-txt{font-size:14px;font-weight:600;}
-.blocker-list{display:flex;flex-direction:column;gap:5px;}
-.blocker{font-size:13px;color:var(--red);display:flex;align-items:center;gap:8px;}
-.blocker-icon{flex-shrink:0;opacity:.7;}
-.sync-note{text-align:center;margin-top:24px;font-family:'Space Mono',monospace;font-size:12px;color:var(--t3);letter-spacing:.08em;}
+.next-a{background:var(--s1);border:1px solid var(--b1);border-radius:10px;padding:11px 14px;margin-bottom:10px;}
+.na-l{font-family:'Space Mono',monospace;font-size:10px;color:var(--t3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px;}
+.na-t{font-size:14px;font-weight:600;}
+.blk-list{display:flex;flex-direction:column;gap:5px;}
+.blk{font-size:12px;color:var(--red);display:flex;align-items:center;gap:7px;}
+.sync-n{text-align:center;margin-top:24px;font-family:'Space Mono',monospace;font-size:11px;color:var(--t3);letter-spacing:.08em;}
 
-/* ── WORKS SECTION ────────────────────────────────────────── */
-.works-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
-@media(max-width:860px){.works-grid{grid-template-columns:repeat(2,1fr);}}
-@media(max-width:540px){.works-grid{grid-template-columns:1fr;}}
+/* ── WORKS ── */
+.wg{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+@media(max-width:900px){.wg{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:540px){.wg{grid-template-columns:1fr;}}
 
-.wcard{
-  display:flex;flex-direction:column;
-  padding:26px;background:var(--bg2);
-  border-radius:var(--r-lg);
-  position:relative;overflow:hidden;
-  transition:transform .3s var(--ease-out);
-  text-decoration:none;color:inherit;
-}
-.wcard::before{
-  content:'';position:absolute;inset:0;border-radius:inherit;padding:1px;
-  background:linear-gradient(135deg, rgba(124,255,178,0.3) 0%, rgba(124,255,178,0.05) 45%, transparent 70%);
-  -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
-  mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
-  -webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;
-}
-.wcard::after{
-  content:'';position:absolute;inset:0;border-radius:inherit;
-  background:radial-gradient(ellipse 60% 40% at 50% 0%, rgba(124,255,178,0.08) 0%, transparent 70%);
-  opacity:0;transition:opacity .3s;pointer-events:none;
-}
-.wcard:hover{transform:translateY(-6px);}
-.wcard:hover::after{opacity:1;}
-.wcard:focus-visible{outline:2px solid var(--green);outline-offset:4px;}
+.wc{display:flex;flex-direction:column;padding:28px;background:var(--bg2);border-radius:20px;position:relative;overflow:hidden;text-decoration:none;color:inherit;transition:transform .4s var(--ease-out),box-shadow .4s;}
+.wc::before{content:'';position:absolute;inset:0;border-radius:inherit;padding:1px;background:linear-gradient(140deg,rgba(124,255,178,.3) 0%,rgba(124,255,178,.04) 45%,transparent 70%);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;}
+/* Shimmer on hover */
+.wc::after{content:'';position:absolute;top:-50%;left:-75%;width:50%;height:200%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.04),transparent);transform:skewX(-15deg);opacity:0;transition:opacity .1s;}
+.wc:hover::after{opacity:1;animation:shimmer .65s ease forwards;}
+@keyframes shimmer{0%{left:-75%;}100%{left:125%;}}
 
-.w-type{
-  font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;
-  color:var(--green);margin-bottom:16px;
-  display:flex;align-items:center;gap:8px;
-}
-.w-type::before{content:'';flex:1;max-width:20px;height:1px;background:rgba(124,255,178,0.3);}
-.w-icon{
-  width:48px;height:48px;border-radius:14px;
-  background:rgba(124,255,178,0.08);border:1px solid rgba(124,255,178,0.15);
-  display:flex;align-items:center;justify-content:center;
-  font-size:22px;margin-bottom:16px;
-}
+.w-type{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--green);margin-bottom:16px;display:flex;align-items:center;gap:9px;}
+.w-type::before{content:'';width:18px;height:1px;background:rgba(124,255,178,.4);}
+.w-ico{width:50px;height:50px;border-radius:14px;background:rgba(124,255,178,.08);border:1px solid rgba(124,255,178,.14);display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:18px;}
 .w-name{font-size:18px;font-weight:700;margin-bottom:10px;}
-.w-desc{font-size:15px;color:var(--t2);line-height:1.7;margin-bottom:18px;flex:1;}
+.w-desc{font-size:14px;color:var(--t2);line-height:1.7;margin-bottom:18px;flex:1;}
 .w-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:20px;}
-.w-tag{font-family:'Space Mono',monospace;font-size:11px;color:var(--t3);background:var(--s1);border:1px solid var(--b1);border-radius:999px;padding:4px 11px;}
-.w-cta{
-  display:inline-flex;align-items:center;gap:8px;
-  font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;
-  color:var(--green);background:rgba(124,255,178,0.07);
-  border:1px solid rgba(124,255,178,0.2);border-radius:var(--r-sm);
-  padding:10px 16px;align-self:flex-start;
-  transition:background .2s,border-color .2s,gap .2s;cursor:pointer;
-}
-.wcard:hover .w-cta{background:rgba(124,255,178,0.13);border-color:rgba(124,255,178,0.4);gap:11px;}
+.w-tag{font-family:'Space Mono',monospace;font-size:10px;color:var(--t3);background:var(--s1);border:1px solid var(--b1);border-radius:999px;padding:4px 10px;}
+.w-cta{display:inline-flex;align-items:center;gap:9px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--green);background:rgba(124,255,178,.07);border:1px solid rgba(124,255,178,.2);border-radius:10px;padding:10px 18px;align-self:flex-start;transition:background .2s,border-color .2s,gap .25s var(--ease-spring);}
+.wc:hover .w-cta{background:rgba(124,255,178,.13);border-color:rgba(124,255,178,.45);gap:14px;}
+.w-arrow{font-size:14px;transition:transform .25s var(--ease-spring);}
+.wc:hover .w-arrow{transform:translate(3px,-3px);}
 
-/* ── FOOTER ───────────────────────────────────────────────── */
-footer{
-  position:relative;z-index:2;
-  border-top:1px solid var(--b1);
-  padding:60px 24px;text-align:center;
-}
-.ft-eyebrow{font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--t3);margin-bottom:16px;}
-.ft-main{
-  font-size:clamp(28px,5vw,52px);font-weight:800;letter-spacing:-.02em;
-  margin-bottom:12px;
-}
-.ft-sub{font-size:14px;color:var(--t3);font-family:'Space Mono',monospace;letter-spacing:.06em;}
-.ft-green{
-  background:linear-gradient(125deg,var(--green),var(--cyan));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-}
+/* ── FOOTER ── */
+footer{position:relative;z-index:2;border-top:1px solid var(--b1);padding:80px 48px;text-align:center;}
+.ft-eye{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--t3);margin-bottom:20px;}
+.ft-main{font-size:clamp(32px,6vw,64px);font-weight:800;letter-spacing:-.025em;line-height:1.15;margin-bottom:14px;}
+.ft-grd{background:linear-gradient(125deg,var(--green),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.ft-sub{font-family:'Space Mono',monospace;font-size:13px;color:var(--t3);letter-spacing:.06em;}
 
-/* ── MODAL ────────────────────────────────────────────────── */
-.overlay{
-  position:fixed;inset:0;z-index:950;
-  background:rgba(0,0,0,0.8);backdrop-filter:blur(12px);
-  display:flex;align-items:center;justify-content:center;padding:24px;
-  opacity:0;pointer-events:none;transition:opacity .25s;
-}
+/* ── MODAL ── */
+.overlay{position:fixed;inset:0;z-index:950;background:rgba(0,0,0,.82);backdrop-filter:blur(14px);display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;pointer-events:none;transition:opacity .28s;}
 .overlay.open{opacity:1;pointer-events:all;}
-.modal{
-  background:#0c0c10;
-  border:1px solid var(--b2);border-radius:var(--r-xl);
-  width:100%;max-width:520px;max-height:86vh;overflow-y:auto;
-  padding:32px;position:relative;
-  transform:translateY(18px) scale(.97);
-  transition:transform .3s var(--ease-out);
-  box-shadow:0 32px 80px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.04);
-}
+.modal{background:#0a0a0c;border:1px solid var(--b2);border-radius:24px;width:100%;max-width:520px;max-height:86vh;overflow-y:auto;padding:34px;position:relative;transform:translateY(20px) scale(.97);transition:transform .32s var(--ease-out);box-shadow:0 40px 100px rgba(0,0,0,.8);}
 .overlay.open .modal{transform:none;}
-.modal-close{
-  position:absolute;top:20px;right:20px;width:34px;height:34px;
-  background:var(--s1);border:1px solid var(--b1);border-radius:9px;
-  cursor:pointer;display:flex;align-items:center;justify-content:center;
-  color:var(--t2);font-size:14px;transition:background .15s,color .15s;
-}
-.modal-close:hover{background:var(--s2);color:var(--t1);}
-.modal-close:focus-visible{outline:2px solid var(--green);outline-offset:2px;}
-.m-back{
-  display:inline-flex;align-items:center;gap:6px;
-  font-family:'Space Mono',monospace;font-size:10px;color:var(--t3);
-  letter-spacing:.08em;text-transform:uppercase;
-  cursor:pointer;margin-bottom:20px;border:none;background:none;padding:0;
-  transition:color .15s;
-}
+.m-close{position:absolute;top:20px;right:20px;width:34px;height:34px;background:var(--s1);border:1px solid var(--b1);border-radius:9px;cursor:none;display:flex;align-items:center;justify-content:center;color:var(--t2);font-size:14px;transition:background .15s;}
+.m-close:hover{background:var(--s2);color:var(--t1);}
+.m-back{display:inline-flex;align-items:center;gap:6px;font-family:'Space Mono',monospace;font-size:10px;color:var(--t3);letter-spacing:.08em;text-transform:uppercase;cursor:none;margin-bottom:20px;border:none;background:none;padding:0;transition:color .15s;}
 .m-back:hover{color:var(--t1);}
-.m-back:focus-visible{outline:2px solid var(--green);outline-offset:2px;}
-.m-avatar{
-  width:52px;height:52px;border-radius:16px;font-size:24px;
-  display:flex;align-items:center;justify-content:center;
-  margin-bottom:14px;background:var(--s2);
-}
+.m-avatar{width:52px;height:52px;border-radius:16px;background:var(--s2);display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:14px;}
 .m-name{font-size:24px;font-weight:800;margin-bottom:4px;}
-.m-subtitle{font-family:'Space Mono',monospace;font-size:13px;color:var(--t3);margin-bottom:22px;letter-spacing:.06em;}
-.m-sec-title{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--t3);margin-bottom:10px;}
-.trigger-box{background:var(--s1);border:1px solid var(--b1);border-radius:12px;padding:16px 18px;margin-bottom:18px;}
-.trigger-txt{font-size:15px;font-weight:600;line-height:1.65;}
-.resp-list{display:flex;flex-direction:column;gap:10px;margin-bottom:18px;}
-.resp-item{font-size:15px;color:var(--t2);line-height:1.65;display:flex;gap:10px;align-items:flex-start;}
-.resp-item::before{content:'';width:4px;height:4px;border-radius:50%;background:var(--green);flex-shrink:0;margin-top:10px;}
-.tools-row{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:18px;}
-.tool-tag{font-family:'Space Mono',monospace;font-size:12px;background:rgba(124,255,178,0.06);border:1px solid rgba(124,255,178,0.15);color:var(--green);padding:6px 13px;border-radius:7px;}
+.m-subtitle{font-family:'Space Mono',monospace;font-size:12px;color:var(--t3);margin-bottom:24px;letter-spacing:.06em;}
+.m-sl{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--t3);margin-bottom:10px;}
+.trig-box{background:var(--s1);border:1px solid var(--b1);border-radius:12px;padding:16px 18px;margin-bottom:20px;}
+.trig-txt{font-size:15px;font-weight:600;line-height:1.65;}
+.r-list{display:flex;flex-direction:column;gap:10px;margin-bottom:20px;}
+.r-item{font-size:14px;color:var(--t2);line-height:1.65;display:flex;gap:11px;align-items:flex-start;}
+.r-item::before{content:'';width:4px;height:4px;border-radius:50%;background:var(--green);flex-shrink:0;margin-top:10px;}
+.tools-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px;}
+.t-tag{font-family:'Space Mono',monospace;font-size:11px;background:rgba(124,255,178,.06);border:1px solid rgba(124,255,178,.15);color:var(--green);padding:5px 12px;border-radius:7px;}
 .m-note{font-size:14px;color:var(--t3);line-height:1.7;padding:14px 16px;background:var(--s1);border-radius:10px;border:1px solid var(--b1);margin-bottom:18px;}
 .divider{height:1px;background:var(--b1);margin:20px 0;}
 .sub-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
 @media(max-width:440px){.sub-grid{grid-template-columns:1fr;}}
-.sub-card{background:var(--s1);border:1px solid var(--b1);border-radius:12px;padding:14px;cursor:pointer;transition:background .15s,transform .15s;}
-.sub-card:hover{background:var(--s2);transform:translateY(-2px);}
-.sub-card:focus-visible{outline:2px solid var(--green);outline-offset:2px;}
-.sub-card-emoji{font-size:18px;margin-bottom:6px;}
-.sub-card-name{font-size:14px;font-weight:700;margin-bottom:3px;}
-.sub-card-sub{font-size:12px;color:var(--t3);line-height:1.5;}
-.sub-card-arrow{font-size:12px;color:var(--green);margin-top:6px;font-family:'Space Mono',monospace;}
+.sub-c{background:var(--s1);border:1px solid var(--b1);border-radius:12px;padding:14px;cursor:none;transition:background .15s,transform .2s var(--ease-out);}
+.sub-c:hover{background:var(--s2);transform:translateY(-2px);}
+.sc-ico{font-size:18px;margin-bottom:6px;}
+.sc-name{font-size:13px;font-weight:700;margin-bottom:2px;}
+.sc-sub{font-size:11px;color:var(--t3);line-height:1.45;}
+.sc-arr{font-size:11px;color:var(--green);margin-top:6px;font-family:'Space Mono',monospace;}
 
-/* ── REDUCED MOTION ───────────────────────────────────────── */
+/* ── REDUCED MOTION ── */
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important;}
-  .reveal{opacity:1;transform:none;}
-  .marquee-track{animation:none;}
+  .rv{opacity:1;transform:none;}
+  .mq-track{animation:none;}
+  .hero-name .char{opacity:1;transform:none;clip-path:none;}
 }
 </style>
 </head>
 <body>
 
-<!-- SVG Icon Symbols -->
+<!-- Cursor -->
+<div id="c-dot" aria-hidden="true"></div>
+<div id="c-ring" aria-hidden="true"></div>
+
+<!-- Progress -->
+<div id="prog" aria-hidden="true"></div>
+
+<!-- Noise -->
+<div class="noise" aria-hidden="true"></div>
+<canvas id="bg-canvas" aria-hidden="true"></canvas>
+
+<!-- SVG Icons -->
 <svg style="display:none" aria-hidden="true">
   <symbol id="ic-ext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><path d="M7 7h10v10"/></symbol>
-  <symbol id="ic-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
-  <symbol id="ic-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
-  <symbol id="ic-org" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="6" height="4" rx="1"/><rect x="16" y="3" width="6" height="4" rx="1"/><rect x="9" y="17" width="6" height="4" rx="1"/><path d="M5 7v4h14V7"/><path d="M12 11v6"/></symbol>
-  <symbol id="ic-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></symbol>
-  <symbol id="ic-box" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></symbol>
   <symbol id="ic-warn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></symbol>
 </svg>
 
-<!-- Background -->
-<canvas id="bg-canvas" aria-hidden="true"></canvas>
-<div class="noise" aria-hidden="true"></div>
-<div class="mesh" aria-hidden="true"></div>
-<div class="gridlines" aria-hidden="true"></div>
-<div class="scanline" aria-hidden="true"></div>
-
 <!-- NAV -->
-<nav role="navigation" aria-label="Main navigation">
-  <div class="nav-logo" aria-label="James Studio">J.</div>
-  <div class="nav-links" role="list">
-    <a href="#hero" role="listitem">
-      <svg class="icon" width="12" height="12" aria-hidden="true"><use href="#ic-home"/></svg>Home
-    </a>
-    <a href="#org" role="listitem">
-      <svg class="icon" width="12" height="12" aria-hidden="true"><use href="#ic-org"/></svg>Org
-    </a>
-    <a href="#projects" role="listitem">
-      <svg class="icon" width="12" height="12" aria-hidden="true"><use href="#ic-grid"/></svg>Projects
-    </a>
-    <a href="#works" role="listitem">
-      <svg class="icon" width="12" height="12" aria-hidden="true"><use href="#ic-box"/></svg>Works
-    </a>
+<nav id="nav" role="navigation" aria-label="Main">
+  <div class="nav-logo">J.</div>
+  <div class="nav-links">
+    <a href="#hero">Home</a>
+    <a href="#org">Org</a>
+    <a href="#projects">Projects</a>
+    <a href="#works">Works</a>
   </div>
-  <div class="nav-status" aria-live="polite" aria-label="System status: online">
-    <div class="pulse-dot" aria-hidden="true"></div>
-    ONLINE
-  </div>
+  <div class="nav-dot"><div class="pulse" aria-hidden="true"></div>LIVE</div>
 </nav>
 
 <!-- MODAL -->
-<div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="modal-name" onclick="handleOverlayClick(event)">
+<div class="overlay" id="overlay" role="dialog" aria-modal="true" onclick="handleOvClick(event)">
   <div class="modal" id="modal">
-    <button class="modal-close" onclick="closeModal()" aria-label="Close">✕</button>
+    <button class="m-close" onclick="closeModal()" aria-label="Close">✕</button>
     <div id="modal-body"></div>
   </div>
 </div>
 
-<!-- ══════ HERO ══════ -->
+<!-- ══ HERO ══ -->
 <section id="hero" aria-label="Hero">
-  <div class="corner c-tl" aria-hidden="true"></div>
-  <div class="corner c-tr" aria-hidden="true"></div>
-  <div class="corner c-bl" aria-hidden="true"></div>
-  <div class="corner c-br" aria-hidden="true"></div>
-
   <div class="hero-inner">
-    <!-- left -->
     <div>
-      <div class="hero-tag" aria-label="AI-Powered One-Person Studio">
-        <div class="pulse-dot" aria-hidden="true"></div>
-        AI-POWERED ONE-PERSON STUDIO
-      </div>
-      <h1 class="hero-name" data-text="JAMES" aria-label="James">JAM<span class="grd">ES</span></h1>
-      <p class="hero-sub" aria-live="polite"><span id="tw"></span><span class="cursor" aria-hidden="true"></span></p>
-      <div class="stats-row reveal" role="list" aria-label="Studio statistics">
-        <div class="stat" role="listitem"><span class="stat-n" data-target="4">0</span><span class="stat-l">Projects</span></div>
-        <div class="stat" role="listitem"><span class="stat-n" data-target="17">0</span><span class="stat-l">AI Agents</span></div>
-        <div class="stat" role="listitem"><span class="stat-n" data-target="6">0</span><span class="stat-l">Directors</span></div>
+      <div class="hero-tag"><div class="pulse" aria-hidden="true"></div>AI-POWERED ONE-PERSON STUDIO</div>
+      <h1 class="hero-name" id="hero-name" aria-label="James" data-text="JAMES"></h1>
+      <p class="hero-sub" aria-live="polite"><span id="tw"></span><span id="tw-cursor" aria-hidden="true"></span></p>
+      <div class="stats-bar rv" role="list">
+        <div class="stat" role="listitem"><span class="stat-n" id="s1" data-target="4">0</span><span class="stat-l">Projects</span></div>
+        <div class="stat" role="listitem"><span class="stat-n" id="s2" data-target="17">0</span><span class="stat-l">AI Agents</span></div>
+        <div class="stat" role="listitem"><span class="stat-n" id="s3" data-target="6">0</span><span class="stat-l">Directors</span></div>
         <div class="stat" role="listitem"><span class="stat-n">4K</span><span class="stat-l">Video</span></div>
       </div>
     </div>
-
-    <!-- right: terminal -->
-    <div class="terminal reveal" style="transition-delay:.15s" role="region" aria-label="Live system terminal">
+    <div class="terminal rv" style="transition-delay:.18s" role="region" aria-label="System terminal">
       <div class="term-bar">
-        <div class="term-dot td-red" aria-hidden="true"></div>
-        <div class="term-dot td-yellow" aria-hidden="true"></div>
-        <div class="term-dot td-green" aria-hidden="true"></div>
-        <span class="term-title">studio.terminal — bash</span>
-        <span class="term-badge" aria-live="polite" id="term-badge">● LIVE</span>
+        <div class="td td-r"></div><div class="td td-y"></div><div class="td td-g"></div>
+        <span class="term-title">studio.terminal</span>
+        <span class="term-live">● LIVE</span>
       </div>
-      <div class="term-body" id="term-body" aria-live="polite" aria-label="Agent activity log">
-        <div class="term-line"><span class="term-prompt">$</span><span class="term-agent">system</span><span class="term-msg">initializing...</span></div>
-      </div>
+      <div class="term-body" id="term-body" aria-live="polite"></div>
     </div>
   </div>
 </section>
 
 <!-- MARQUEE -->
-<div class="marquee-wrap" aria-hidden="true" role="presentation">
-  <div class="marquee-track" id="marquee-track"></div>
+<div class="marquee-wrap" aria-hidden="true">
+  <div class="mq-track" id="mq-track"></div>
 </div>
 
-<!-- ══════ ORG CHART ══════ -->
-<section id="org" aria-labelledby="org-title">
+<!-- ══ ORG ══ -->
+<section id="org" aria-labelledby="org-ttl">
   <div class="wrap">
-    <div class="sec-head reveal">
-      <div class="sec-num" aria-hidden="true">01</div>
-      <div>
-        <h2 class="sec-title" id="org-title">Agent Organization</h2>
-        <p class="sec-desc">一人公司如何用 AI agents 平行運作所有業務 — 點擊任意節點查看詳情</p>
-      </div>
+    <div class="sec-head rv">
+      <div class="sec-num">01</div>
+      <div><h2 class="sec-title" id="org-ttl">Agent Organization</h2><p class="sec-desc">一人公司如何用 AI agents 平行運作所有業務 — 點擊節點查看詳情</p></div>
     </div>
 
-    <!-- James -->
-    <div class="owner-row">
-      <div class="gc tier-owner owner-card card-body reveal" onclick="openAgent('james')" tabindex="0" role="button" aria-label="James — Studio Owner">
-        <div class="card-agent-icon">🎯</div>
-        <div class="badge badge-gold" style="margin-bottom:10px">Studio Owner</div>
-        <div class="card-name">James</div>
-        <div class="card-sub">Creator · Engineer · Designer · Teacher</div>
-        <div class="card-trigger"><strong>原則：</strong>只說目標，系統自己跑。</div>
-      </div>
-    </div>
-
-    <div class="connector-v"><div class="connector-v-line"></div></div>
-    <div class="tier-label reveal">Meta Layer</div>
-
-    <div class="meta-row">
-      <div class="gc tier-meta card-body reveal" onclick="openAgent('systemDirector')" tabindex="0" role="button" aria-label="System Director">
-        <div class="card-agent-icon">🧠</div>
-        <div class="badge badge-purple" style="margin-bottom:10px">Meta Orchestrator</div>
-        <div class="card-name">System Director</div>
-        <div class="card-sub">管理系統本身：memory、SOP、sync、任務派發</div>
-        <div class="card-trigger"><strong>全程在場</strong> — 每次對話自動啟動</div>
-        <div class="card-pills">
-          <span class="pill">💾 Memory</span><span class="pill">📐 SOP</span>
-          <span class="pill">🔄 Sync</span><span class="pill">🎛 Orchestrator</span><span class="pill">🆕 Onboarding</span>
+    <div class="org-cards">
+      <!-- Owner -->
+      <div class="owner-row">
+        <div class="gc owner rv" onclick="openAgent('james')" tabindex="0" role="button" aria-label="James - Studio Owner">
+          <div class="gc-inner lg">
+            <div class="c-icon">🎯</div>
+            <div class="badge bo">Studio Owner</div>
+            <div class="c-name" style="font-size:20px">James</div>
+            <div class="c-sub">Creator · Engineer · Designer · Teacher</div>
+            <div class="c-trig"><strong>原則：</strong>只說目標，系統自己跑。</div>
+          </div>
         </div>
       </div>
-      <div class="gc tier-meta card-body reveal" style="transition-delay:.08s" onclick="openAgent('pmDirector')" tabindex="0" role="button" aria-label="PM Director">
-        <div class="card-agent-icon">📋</div>
-        <div class="badge badge-purple" style="margin-bottom:10px">Project Manager</div>
-        <div class="card-name">PM Director</div>
-        <div class="card-sub">全局規劃：優先序、狀態快照、blockers 分析</div>
-        <div class="card-trigger"><strong>按需啟動</strong> — 「現在最重要是什麼？」</div>
-        <div class="card-pills">
-          <span class="pill">🎬 Video PM</span><span class="pill">📚 Course PM</span>
-          <span class="pill">⚙️ Eng PM</span><span class="pill">📰 Content PM</span>
+      <div class="conn"><div class="conn-line"></div></div>
+      <div class="tier-lbl rv">Meta Layer</div>
+      <!-- Meta -->
+      <div class="meta-row">
+        <div class="gc meta rv" onclick="openAgent('systemDirector')" tabindex="0" role="button" aria-label="System Director">
+          <div class="gc-inner">
+            <div class="c-icon">🧠</div><div class="badge bm">Meta Orchestrator</div>
+            <div class="c-name">System Director</div>
+            <div class="c-sub">管理系統本身：memory、SOP、sync、任務派發</div>
+            <div class="c-trig"><strong>全程在場</strong> — 每次對話自動啟動</div>
+            <div class="c-pills"><span class="pill">💾 Memory</span><span class="pill">📐 SOP</span><span class="pill">🔄 Sync</span><span class="pill">🎛 Orchestrator</span><span class="pill">🆕 Onboarding</span></div>
+          </div>
+        </div>
+        <div class="gc meta rv" style="transition-delay:.08s" onclick="openAgent('pmDirector')" tabindex="0" role="button" aria-label="PM Director">
+          <div class="gc-inner">
+            <div class="c-icon">📋</div><div class="badge bm">Project Manager</div>
+            <div class="c-name">PM Director</div>
+            <div class="c-sub">全局規劃：優先序、狀態快照、blockers 分析</div>
+            <div class="c-trig"><strong>按需啟動</strong> — 「現在最重要是什麼？」</div>
+            <div class="c-pills"><span class="pill">🎬 Video PM</span><span class="pill">📚 Course PM</span><span class="pill">⚙️ Eng PM</span><span class="pill">📰 Content PM</span></div>
+          </div>
         </div>
       </div>
-    </div>
-
-    <div class="connector-v"><div class="connector-v-line"></div></div>
-    <div class="tier-label reveal">Domain Directors</div>
-
-    <div class="dir-row">
-      <div class="gc tier-director card-body reveal" onclick="openAgent('videoDirector')" tabindex="0" role="button" aria-label="Video Director">
-        <div class="card-agent-icon">🎬</div>
-        <div class="badge badge-green" style="margin-bottom:10px">影片製作</div>
-        <div class="card-name">Video Director</div>
-        <div class="card-sub">article-video + vibe-coding 全流程</div>
-        <div class="card-trigger"><strong>啟動：</strong>「做今天 article-video」</div>
-        <div class="card-pills">
-          <span class="pill">Audio</span><span class="pill">VTT</span>
-          <span class="pill">Scene Dev</span><span class="pill">QA</span><span class="pill">Render</span>
+      <div class="conn"><div class="conn-line"></div></div>
+      <div class="tier-lbl rv">Domain Directors</div>
+      <!-- Directors -->
+      <div class="dir-row">
+        <div class="gc dir rv" onclick="openAgent('videoDirector')" tabindex="0" role="button" aria-label="Video Director">
+          <div class="gc-inner">
+            <div class="c-icon">🎬</div><div class="badge bg">影片製作</div>
+            <div class="c-name">Video Director</div>
+            <div class="c-sub">article-video + vibe-coding 全流程</div>
+            <div class="c-trig"><strong>啟動：</strong>「做今天 article-video」</div>
+            <div class="c-pills"><span class="pill">Audio</span><span class="pill">VTT</span><span class="pill">Scene Dev</span><span class="pill">QA</span><span class="pill">Render</span></div>
+          </div>
         </div>
-      </div>
-      <div class="gc tier-director card-body reveal" style="transition-delay:.06s" onclick="openAgent('courseDirector')" tabindex="0" role="button" aria-label="Course Director">
-        <div class="card-agent-icon">📚</div>
-        <div class="badge badge-green" style="margin-bottom:10px">n8n 課程</div>
-        <div class="card-name">Course Director</div>
-        <div class="card-sub">n8ncourse GitHub Pages 維護與發布</div>
-        <div class="card-trigger"><strong>啟動：</strong>「新增 Lecture N」</div>
-        <div class="card-pills">
-          <span class="pill">Content</span><span class="pill">Knowledge</span><span class="pill">Deploy</span>
+        <div class="gc dir rv" style="transition-delay:.06s" onclick="openAgent('courseDirector')" tabindex="0" role="button" aria-label="Course Director">
+          <div class="gc-inner">
+            <div class="c-icon">📚</div><div class="badge bg">n8n 課程</div>
+            <div class="c-name">Course Director</div>
+            <div class="c-sub">n8ncourse GitHub Pages 維護與發布</div>
+            <div class="c-trig"><strong>啟動：</strong>「新增 Lecture N」</div>
+            <div class="c-pills"><span class="pill">Content</span><span class="pill">Knowledge</span><span class="pill">Deploy</span></div>
+          </div>
         </div>
-      </div>
-      <div class="gc tier-director card-body reveal" style="transition-delay:.12s" onclick="openAgent('engineeringDirector')" tabindex="0" role="button" aria-label="Engineering Director">
-        <div class="card-agent-icon">⚙️</div>
-        <div class="badge badge-green" style="margin-bottom:10px">Booking App</div>
-        <div class="card-name">Engineering Director</div>
-        <div class="card-sub">Next.js + Supabase + Zeabur</div>
-        <div class="card-trigger"><strong>啟動：</strong>「booking app 加功能」</div>
-        <div class="card-pills">
-          <span class="pill">Backend</span><span class="pill">Frontend</span><span class="pill">QA</span>
+        <div class="gc dir rv" style="transition-delay:.12s" onclick="openAgent('engineeringDirector')" tabindex="0" role="button" aria-label="Engineering Director">
+          <div class="gc-inner">
+            <div class="c-icon">⚙️</div><div class="badge bg">Booking App</div>
+            <div class="c-name">Engineering Director</div>
+            <div class="c-sub">Next.js + Supabase + Zeabur</div>
+            <div class="c-trig"><strong>啟動：</strong>「booking app 加功能」</div>
+            <div class="c-pills"><span class="pill">Backend</span><span class="pill">Frontend</span><span class="pill">QA</span></div>
+          </div>
         </div>
-      </div>
-      <div class="gc tier-director card-body reveal" style="transition-delay:.18s" onclick="openAgent('contentDirector')" tabindex="0" role="button" aria-label="Content Director">
-        <div class="card-agent-icon">📰</div>
-        <div class="badge badge-green" style="margin-bottom:10px">每日 AI 文章</div>
-        <div class="card-name">Content Director</div>
-        <div class="card-sub">文章 → 腳本 → 交棒 Video Director</div>
-        <div class="card-trigger"><strong>啟動：</strong>「今天 AI 文章做成影片」</div>
-        <div class="card-pills">
-          <span class="pill">Research</span><span class="pill">Script</span><span class="pill">Handoff</span>
+        <div class="gc dir rv" style="transition-delay:.18s" onclick="openAgent('contentDirector')" tabindex="0" role="button" aria-label="Content Director">
+          <div class="gc-inner">
+            <div class="c-icon">📰</div><div class="badge bg">每日 AI 文章</div>
+            <div class="c-name">Content Director</div>
+            <div class="c-sub">文章 → 腳本 → 交棒 Video Director</div>
+            <div class="c-trig"><strong>啟動：</strong>「今天 AI 文章做成影片」</div>
+            <div class="c-pills"><span class="pill">Research</span><span class="pill">Script</span><span class="pill">Handoff</span></div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ══════ LIVE PROJECTS ══════ -->
-<section id="projects" aria-labelledby="proj-title">
+<!-- ══ PROJECTS ══ -->
+<section id="projects" aria-labelledby="proj-ttl">
   <div class="wrap">
-    <div class="sec-head reveal">
-      <div class="sec-num" aria-hidden="true">02</div>
-      <div>
-        <h2 class="sec-title" id="proj-title">Live Projects</h2>
-        <p class="sec-desc">即時專案狀態 — 每小時自動更新，零 token</p>
-      </div>
+    <div class="sec-head rv">
+      <div class="sec-num">02</div>
+      <div><h2 class="sec-title" id="proj-ttl">Live Projects</h2><p class="sec-desc">即時專案狀態 — 每小時自動更新，零 token</p></div>
     </div>
-    <div id="projects-content" role="region" aria-live="polite" aria-label="Project status">
-      <div style="text-align:center;padding:48px;font-family:'Space Mono',monospace;font-size:12px;color:var(--t3)">
-        Loading...
-      </div>
-    </div>
+    <div id="projects-content" aria-live="polite"></div>
   </div>
 </section>
 
-<!-- ══════ PORTFOLIO ══════ -->
-<section id="works" aria-labelledby="works-title">
+<!-- ══ WORKS ══ -->
+<section id="works" aria-labelledby="works-ttl">
   <div class="wrap">
-    <div class="sec-head reveal">
-      <div class="sec-num" aria-hidden="true">03</div>
-      <div>
-        <h2 class="sec-title" id="works-title">Portfolio</h2>
-        <p class="sec-desc">公開作品 — 點擊直接瀏覽</p>
-      </div>
+    <div class="sec-head rv">
+      <div class="sec-num">03</div>
+      <div><h2 class="sec-title" id="works-ttl">Portfolio</h2><p class="sec-desc">公開作品 — 點擊直接瀏覽</p></div>
     </div>
-    <div class="works-grid">
-
-      <a class="wcard reveal" href="https://jamesatmogroup.github.io/n8ncourse/" target="_blank" rel="noopener" aria-label="n8n 自動化課程網站 — opens in new tab">
-        <div class="w-type">Online Course</div>
-        <div class="w-icon" aria-hidden="true">📚</div>
+    <div class="wg">
+      <a class="wc rv" href="https://jamesatmogroup.github.io/n8ncourse/" target="_blank" rel="noopener" aria-label="n8n 自動化課程網站">
+        <div class="w-type">Online Course</div><div class="w-ico">📚</div>
         <div class="w-name">n8n 自動化課程網站</div>
         <p class="w-desc">n8n 工作流自動化線上課程平台。完整課程內容、互動知識庫、逐講義設計，全站 GitHub Pages 部署。</p>
-        <div class="w-tags">
-          <span class="w-tag">HTML/CSS</span><span class="w-tag">GitHub Pages</span><span class="w-tag">ZH-TW</span><span class="w-tag">n8n</span>
-        </div>
-        <div class="w-cta" aria-hidden="true">
-          View Live
-          <svg width="13" height="13"><use href="#ic-ext"/></svg>
-        </div>
+        <div class="w-tags"><span class="w-tag">HTML/CSS</span><span class="w-tag">GitHub Pages</span><span class="w-tag">n8n</span></div>
+        <div class="w-cta">View Live <span class="w-arrow">↗</span></div>
       </a>
-
-      <a class="wcard reveal" style="transition-delay:.07s" href="https://learning-online-booking.zeabur.app" target="_blank" rel="noopener" aria-label="LINE LIFF 預約系統 — opens in new tab">
-        <div class="w-type">Web App</div>
-        <div class="w-icon" aria-hidden="true">📅</div>
+      <a class="wc rv" style="transition-delay:.07s" href="https://learning-online-booking.zeabur.app" target="_blank" rel="noopener" aria-label="LINE LIFF 預約系統">
+        <div class="w-type">Web App</div><div class="w-ico">📅</div>
         <div class="w-name">LINE LIFF 預約系統</div>
-        <p class="w-desc">一對一家教課程預約平台。三角色路由（學生/教師/管理員），雙語 ZH-TW/EN，Supabase 即時資料庫，Zeabur 部署。</p>
-        <div class="w-tags">
-          <span class="w-tag">Next.js 16</span><span class="w-tag">Supabase</span><span class="w-tag">Tailwind</span><span class="w-tag">Zeabur</span>
-        </div>
-        <div class="w-cta" aria-hidden="true">
-          View Live
-          <svg width="13" height="13"><use href="#ic-ext"/></svg>
-        </div>
+        <p class="w-desc">一對一家教課程預約平台。三角色路由（學生/教師/管理員），雙語 ZH-TW/EN，Supabase 即時資料庫。</p>
+        <div class="w-tags"><span class="w-tag">Next.js 16</span><span class="w-tag">Supabase</span><span class="w-tag">Zeabur</span></div>
+        <div class="w-cta">View Live <span class="w-arrow">↗</span></div>
       </a>
-
-      <a class="wcard reveal" style="transition-delay:.14s" href="https://jamesatmogroup.github.io/claude-config/dashboard/" target="_blank" rel="noopener" aria-label="AI Studio 即時儀表板 — opens in new tab">
-        <div class="w-type">Dashboard</div>
-        <div class="w-icon" aria-hidden="true">📊</div>
+      <a class="wc rv" style="transition-delay:.14s" href="https://jamesatmogroup.github.io/claude-config/dashboard/" target="_blank" rel="noopener" aria-label="AI Studio 即時儀表板">
+        <div class="w-type">Dashboard</div><div class="w-ico">📊</div>
         <div class="w-name">AI Studio 即時儀表板</div>
-        <p class="w-desc">零 token 即時專案狀態追蹤。Python 腳本 + cron 每小時自動更新，GitHub Pages 部署，Glassmorphism 深色設計。</p>
-        <div class="w-tags">
-          <span class="w-tag">Vanilla JS</span><span class="w-tag">Python</span><span class="w-tag">GitHub Pages</span><span class="w-tag">Cron</span>
-        </div>
-        <div class="w-cta" aria-hidden="true">
-          View Live
-          <svg width="13" height="13"><use href="#ic-ext"/></svg>
-        </div>
+        <p class="w-desc">零 token 即時專案狀態追蹤。Python 腳本 + cron 每小時自動更新，GitHub Pages 部署。</p>
+        <div class="w-tags"><span class="w-tag">Vanilla JS</span><span class="w-tag">Python</span><span class="w-tag">Cron</span></div>
+        <div class="w-cta">View Live <span class="w-arrow">↗</span></div>
       </a>
-
-      <a class="wcard reveal" style="transition-delay:.21s" href="https://jamesatmogroup.github.io/claude-config/dashboard/org.html" target="_blank" rel="noopener" aria-label="AI Agent 組織架構圖 — opens in new tab">
-        <div class="w-type">Interactive UI</div>
-        <div class="w-icon" aria-hidden="true">🗂</div>
+      <a class="wc rv" style="transition-delay:.21s" href="https://jamesatmogroup.github.io/claude-config/dashboard/org.html" target="_blank" rel="noopener" aria-label="AI Agent 組織架構圖">
+        <div class="w-type">Interactive UI</div><div class="w-ico">🗂</div>
         <div class="w-name">AI Agent 組織架構圖</div>
-        <p class="w-desc">完整一人工作室 AI agent 層級視覺化。可點擊每個節點查看 sub-agent、職責與工具，drill-down modal 導航。</p>
-        <div class="w-tags">
-          <span class="w-tag">Vanilla JS</span><span class="w-tag">CSS Grid</span><span class="w-tag">Glassmorphism</span>
-        </div>
-        <div class="w-cta" aria-hidden="true">
-          View Live
-          <svg width="13" height="13"><use href="#ic-ext"/></svg>
-        </div>
+        <p class="w-desc">完整一人工作室 AI agent 層級視覺化。Drill-down modal 導航，查看每個 agent 職責與工具。</p>
+        <div class="w-tags"><span class="w-tag">Vanilla JS</span><span class="w-tag">CSS Grid</span><span class="w-tag">Glassmorphism</span></div>
+        <div class="w-cta">View Live <span class="w-arrow">↗</span></div>
       </a>
-
-      <a class="wcard reveal" style="transition-delay:.28s" href="https://jamesatmogroup.github.io/claude-config/dashboard/studio.html" target="_blank" rel="noopener" aria-label="AI 一人工作室履歷 — opens in new tab">
-        <div class="w-type">Studio Page</div>
-        <div class="w-icon" aria-hidden="true">🚀</div>
+      <a class="wc rv" style="transition-delay:.28s" href="https://jamesatmogroup.github.io/claude-config/dashboard/studio.html" target="_blank" rel="noopener" aria-label="AI 一人工作室履歷">
+        <div class="w-type">Studio Page</div><div class="w-ico">🚀</div>
         <div class="w-name">AI 一人工作室履歷</div>
-        <p class="w-desc">你正在看的這頁。Canvas 粒子動畫、glitch hero、打字機效果、即時專案數據整合，完整展示 AI-powered 一人公司架構。</p>
-        <div class="w-tags">
-          <span class="w-tag">Canvas API</span><span class="w-tag">Vanilla JS</span><span class="w-tag">GitHub Pages</span>
-        </div>
-        <div class="w-cta" aria-hidden="true">
-          Share Link
-          <svg width="13" height="13"><use href="#ic-ext"/></svg>
-        </div>
+        <p class="w-desc">你正在看的這頁。Canvas 網絡粒子、3D card tilt、custom cursor、clip-path 文字動畫。</p>
+        <div class="w-tags"><span class="w-tag">Canvas API</span><span class="w-tag">Web Animations</span><span class="w-tag">3D CSS</span></div>
+        <div class="w-cta">Share Link <span class="w-arrow">↗</span></div>
       </a>
-
     </div>
   </div>
 </section>
 
 <!-- FOOTER -->
 <footer>
-  <p class="ft-eyebrow">JAMES · AI-POWERED ONE-PERSON STUDIO</p>
-  <p class="ft-main">Built by <span class="ft-green">Systems</span>,<br>Driven by <span class="ft-green">Goals</span>.</p>
-  <p class="ft-sub" style="margin-top:16px">17 agents · 4 projects · updated hourly · zero tokens</p>
+  <p class="ft-eye">JAMES · AI-POWERED ONE-PERSON STUDIO · 2026</p>
+  <p class="ft-main">Built by <span class="ft-grd">Systems</span>,<br>Driven by <span class="ft-grd">Goals</span>.</p>
+  <p class="ft-sub" style="margin-top:18px">17 agents · 4 projects · updated hourly · zero tokens</p>
 </footer>
 
 <script>
 'use strict';
 
-// ── Canvas particles ─────────────────────────────────────
-const canvas = document.getElementById('bg-canvas');
-const ctx = canvas.getContext('2d');
-let W, H, pts = [];
+// ─── FEATURE DETECT ──────────────────────────────────────────
+const hasHover = window.matchMedia('(hover:hover)').matches;
+const reducedMotion = window.matchMedia('(prefers-reduced-motion:reduce)').matches;
 
-function resize() { W = canvas.width = innerWidth; H = canvas.height = innerHeight; }
-resize(); addEventListener('resize', resize);
+// ─── CANVAS: network constellation ───────────────────────────
+(function(){
+  const cv = document.getElementById('bg-canvas');
+  const cx = cv.getContext('2d');
+  let W, H, pts = [];
+  let mx = -9999, my = -9999;
 
-function initPts() {
-  pts = [];
-  const n = Math.floor(W * H / 22000);
-  for (let i = 0; i < n; i++) pts.push({
-    x: Math.random()*W, y: Math.random()*H,
-    r: Math.random()*1.4+0.3,
-    vx: (Math.random()-.5)*.25, vy: (Math.random()-.5)*.25,
-    a: Math.random()*.4+.08
-  });
-}
-initPts(); addEventListener('resize', initPts);
+  function resize(){ W = cv.width = innerWidth; H = cv.height = innerHeight; }
+  resize(); addEventListener('resize', resize);
+  addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; }, {passive:true});
 
-(function drawLoop() {
-  ctx.clearRect(0,0,W,H);
-  pts.forEach(p => {
-    ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-    ctx.fillStyle = `rgba(124,255,178,${p.a})`; ctx.fill();
-    p.x = (p.x + p.vx + W) % W;
-    p.y = (p.y + p.vy + H) % H;
-  });
-  requestAnimationFrame(drawLoop);
+  function init(){
+    pts = [];
+    const n = Math.min(Math.floor(W * H / 16000), 60);
+    for(let i=0;i<n;i++) pts.push({
+      x:Math.random()*W, y:Math.random()*H,
+      vx:(Math.random()-.5)*.4, vy:(Math.random()-.5)*.4,
+      r:Math.random()*1.5+.5, a:Math.random()*.5+.1
+    });
+  }
+  init(); addEventListener('resize', init);
+
+  function draw(){
+    cx.clearRect(0,0,W,H);
+    const LINK = 130;
+    for(let i=0;i<pts.length;i++){
+      const p = pts[i];
+      // mouse repulsion
+      const dx = p.x - mx, dy = p.y - my;
+      const d = Math.sqrt(dx*dx+dy*dy);
+      if(d < 90 && d > 0){ const f = (90-d)/90*1.8; p.x += dx/d*f; p.y += dy/d*f; }
+      // connections
+      for(let j=i+1;j<pts.length;j++){
+        const q = pts[j];
+        const dd = Math.sqrt((p.x-q.x)**2+(p.y-q.y)**2);
+        if(dd < LINK){
+          cx.beginPath(); cx.moveTo(p.x,p.y); cx.lineTo(q.x,q.y);
+          cx.strokeStyle = `rgba(124,255,178,${.09*(1-dd/LINK)})`;
+          cx.lineWidth = .7; cx.stroke();
+        }
+      }
+      // node
+      cx.beginPath(); cx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      cx.fillStyle=`rgba(124,255,178,${p.a})`; cx.fill();
+      p.x += p.vx; p.y += p.vy;
+      if(p.x<0||p.x>W) p.vx*=-1;
+      if(p.y<0||p.y>H) p.vy*=-1;
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
 })();
 
-// ── Nav active + scrolled ────────────────────────────────
-const nav = document.querySelector('nav');
-const sections = document.querySelectorAll('section[id]');
-const navLinks = document.querySelectorAll('.nav-links a');
+// ─── CUSTOM CURSOR ────────────────────────────────────────────
+if(hasHover && !reducedMotion){
+  const dot = document.getElementById('c-dot');
+  const ring = document.getElementById('c-ring');
+  let tx=0,ty=0,rx=0,ry=0;
+  addEventListener('mousemove', e=>{ tx=e.clientX; ty=e.clientY; });
+  addEventListener('mousedown', ()=>document.body.classList.add('cursor-click'));
+  addEventListener('mouseup', ()=>document.body.classList.remove('cursor-click'));
 
-addEventListener('scroll', () => {
-  nav.classList.toggle('scrolled', scrollY > 40);
-  let cur = '';
-  sections.forEach(s => { if (scrollY >= s.offsetTop - 100) cur = s.id; });
-  navLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#'+cur));
-}, { passive:true });
+  (function cursorLoop(){
+    rx += (tx-rx)*0.11; ry += (ty-ry)*0.11;
+    dot.style.transform = `translate(${tx}px,${ty}px)`;
+    ring.style.transform = `translate(${rx}px,${ry}px)`;
+    requestAnimationFrame(cursorLoop);
+  })();
 
-// ── Typewriter ───────────────────────────────────────────
-const phrases = [
-  'Building Systems That Run Without Me',
-  'Creator · Engineer · Designer · Teacher',
-  '高價值 · 最低成本 · 最大結果',
-  'One Person. Infinite Leverage.',
-  'AI Automation Is a Life Skill',
-];
-let pi=0, ci=0, del=false;
-const twEl = document.getElementById('tw');
-function typewrite() {
-  const p = phrases[pi];
-  if (!del) { twEl.textContent = p.slice(0,++ci); if(ci===p.length){del=true;setTimeout(typewrite,2400);return;} }
-  else { twEl.textContent = p.slice(0,--ci); if(ci===0){del=false;pi=(pi+1)%phrases.length;} }
-  setTimeout(typewrite, del?28:54);
+  document.querySelectorAll('a,button,[role="button"],[tabindex]').forEach(el=>{
+    el.addEventListener('mouseenter',()=>document.body.classList.add('cursor-hover'));
+    el.addEventListener('mouseleave',()=>document.body.classList.remove('cursor-hover'));
+  });
 }
-typewrite();
 
-// ── Counter animation ─────────────────────────────────────
-document.querySelectorAll('.stat-n[data-target]').forEach(el => {
-  const t = parseInt(el.dataset.target);
-  let c = 0;
-  const step = () => { c = Math.min(c + Math.ceil(t/30), t); el.textContent = c; if(c<t) requestAnimationFrame(step); };
-  setTimeout(step, 700);
-});
+// ─── SCROLL PROGRESS ─────────────────────────────────────────
+const prog = document.getElementById('prog');
+addEventListener('scroll',()=>{
+  const p = scrollY/(document.body.scrollHeight-innerHeight);
+  prog.style.transform=`scaleX(${p})`;
+},{passive:true});
 
-// ── Terminal widget ────────────────────────────────────────
-const TERM_MSGS = [
-  { agent:'system-director', msg:'Reading soul.md → personality.md → MEMORY.md' },
-  { agent:'memory-agent',    msg:'feedback_audio_pipeline.md written ✓' },
-  { agent:'orchestrator',    msg:'Routing article-video → Video Director' },
-  { agent:'video-director',  msg:'Phase 1 spawned: Audio + VTT + SceneDev' },
-  { agent:'sync-agent',      msg:'Pushing to JamesAtMoGroup/claude-config... ✓' },
-  { agent:'pm-director',     msg:'topPriority updated → dashboard.json' },
-  { agent:'qa-agent',        msg:'iMessage report sent → awaiting 通過' },
-  { agent:'course-director', msg:'Lecture 04 deployed → GitHub Pages live ✓' },
-  { agent:'backend-agent',   msg:'RLS policy applied: sessions table ✓' },
-  { agent:'render-agent',    msg:'npx remotion render --gl=angle... 4K done' },
-];
-const MAX_TERM_LINES = 5;
-let termLines = [];
-let termIdx = 0;
+// ─── NAV SCROLL + ACTIVE ─────────────────────────────────────
+const nav = document.getElementById('nav');
+const secs = document.querySelectorAll('section[id]');
+const navAs = document.querySelectorAll('.nav-links a');
+addEventListener('scroll',()=>{
+  nav.classList.toggle('scrolled', scrollY>60);
+  let cur='';
+  secs.forEach(s=>{ if(scrollY>=s.offsetTop-120) cur=s.id; });
+  navAs.forEach(a=>a.classList.toggle('active', a.getAttribute('href')==='#'+cur));
+},{passive:true});
 
-function addTermLine() {
-  const msg = TERM_MSGS[termIdx % TERM_MSGS.length];
-  termIdx++;
-  termLines.push(msg);
-  if (termLines.length > MAX_TERM_LINES) termLines.shift();
-  const body = document.getElementById('term-body');
-  body.innerHTML = termLines.map((l, i) => {
-    const isLast = i === termLines.length - 1;
-    return `<div class="term-line">
-      <span class="term-prompt">$</span>
-      <span class="term-agent">${l.agent}</span>
-      <span class="term-msg">${l.msg}${isLast ? '<span class="term-caret" aria-hidden="true"></span>' : ''}</span>
-    </div>`;
+// ─── HERO MOUSE GLOW ─────────────────────────────────────────
+const heroEl = document.getElementById('hero');
+if(hasHover){
+  heroEl.addEventListener('mousemove', e=>{
+    const r = heroEl.getBoundingClientRect();
+    heroEl.style.setProperty('--mx', ((e.clientX-r.left)/r.width*100)+'%');
+    heroEl.style.setProperty('--my', ((e.clientY-r.top)/r.height*100)+'%');
+  });
+}
+
+// ─── HERO TEXT SPLIT + ANIMATE ───────────────────────────────
+(function(){
+  const el = document.getElementById('hero-name');
+  const text = el.dataset.text || 'JAMES';
+  el.innerHTML = [...text].map((ch,i)=>{
+    const isLast = i >= text.length - 2; // last 2 = gradient
+    const cls = isLast ? 'char grd' : 'char';
+    return `<span class="${cls}" style="--i:${i}">${ch}</span>`;
   }).join('');
-  setTimeout(addTermLine, 2800 + Math.random()*800);
+
+  if(reducedMotion){ el.querySelectorAll('.char').forEach(c=>{ c.style.opacity=1; c.style.transform='none'; c.style.clipPath='none'; }); return; }
+
+  document.fonts.ready.then(()=>{
+    el.querySelectorAll('.char').forEach((ch,i)=>{
+      ch.animate([
+        {opacity:0, transform:'translateY(60%) skewY(8deg)', clipPath:'inset(0 0 100% 0)'},
+        {opacity:1, transform:'none', clipPath:'inset(0 0 0% 0)'}
+      ],{duration:750, delay:80+i*80, easing:'cubic-bezier(.16,1,.3,1)', fill:'forwards'});
+    });
+  });
+})();
+
+// ─── TYPEWRITER ───────────────────────────────────────────────
+(function(){
+  const phrases=['Building Systems That Run Without Me','Creator · Engineer · Designer · Teacher','高價值 · 最低成本 · 最大結果','One Person. Infinite Leverage.','AI Automation Is a Life Skill'];
+  let pi=0,ci=0,del=false;
+  const tw=document.getElementById('tw');
+  function loop(){
+    const p=phrases[pi];
+    del ? tw.textContent=p.slice(0,--ci) : tw.textContent=p.slice(0,++ci);
+    if(!del && ci===p.length){ del=true; setTimeout(loop,2600); return; }
+    if(del && ci===0){ del=false; pi=(pi+1)%phrases.length; }
+    setTimeout(loop, del?26:52);
+  }
+  loop();
+})();
+
+// ─── STAT SCRAMBLE ────────────────────────────────────────────
+function scramble(el, target){
+  const CHARS='0123456789';
+  const dur=1400, start=performance.now();
+  function frame(now){
+    const t=Math.min((now-start)/dur,1);
+    const ease=1-Math.pow(1-t,3);
+    el.textContent = t<.65 ? CHARS[Math.floor(Math.random()*CHARS.length)] : Math.round(ease*target);
+    if(t<1) requestAnimationFrame(frame); else el.textContent=target;
+  }
+  requestAnimationFrame(frame);
 }
-setTimeout(addTermLine, 1200);
 
-// ── Marquee ────────────────────────────────────────────────
-const MARQUEE_ITEMS = [
-  'REMOTION','NEXT.JS 16','SUPABASE','WHISPER AI','N8N AUTOMATION',
-  'TAILWIND CSS','ZEABUR','GITHUB PAGES','CLAUDE AI','4K VIDEO',
-  'TYPESCRIPT','PYTHON','GLASSMORPHISM','LINE LIFF','17 AGENTS'
-];
-const track = document.getElementById('marquee-track');
-const doubled = [...MARQUEE_ITEMS, ...MARQUEE_ITEMS];
-track.innerHTML = doubled.map(item =>
-  `<span class="m-item"><span class="m-dot"></span>${item}</span><span class="m-sep"></span>`
-).join('');
+// ─── SCROLL REVEAL ────────────────────────────────────────────
+const rvObs = new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(!e.isIntersecting) return;
+    e.target.classList.add('in');
+    // trigger scramble for stats
+    e.target.querySelectorAll('.stat-n[data-target]').forEach(s=>scramble(s,+s.dataset.target));
+    rvObs.unobserve(e.target);
+  });
+},{threshold:.08});
+document.querySelectorAll('.rv').forEach(el=>rvObs.observe(el));
 
-// ── Scroll reveal ──────────────────────────────────────────
-const revealObserver = new IntersectionObserver(entries => {
-  entries.forEach(e => { if(e.isIntersecting) { e.target.classList.add('visible'); revealObserver.unobserve(e.target); } });
-}, { threshold: 0.08 });
-document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+// stats bar itself
+const statsBar = document.querySelector('.stats-bar');
+if(statsBar){
+  const so = new IntersectionObserver(entries=>{
+    entries.forEach(e=>{ if(!e.isIntersecting) return;
+      document.querySelectorAll('.stat-n[data-target]').forEach(s=>scramble(s,+s.dataset.target));
+      so.disconnect();
+    });
+  },{threshold:.5});
+  so.observe(statsBar);
+}
 
-// ── Load projects ──────────────────────────────────────────
-const DATA_URL = 'https://raw.githubusercontent.com/JamesAtMoGroup/claude-config/main/dashboard/dashboard.json';
+// ─── TERMINAL ────────────────────────────────────────────────
+(function(){
+  const MSGS=[
+    {agent:'system-director', msg:'soul.md → personality.md → MEMORY.md ✓'},
+    {agent:'memory-agent',    msg:'feedback_audio_pipeline.md written'},
+    {agent:'orchestrator',   msg:'Routing task → 🎬 Video Director'},
+    {agent:'video-director', msg:'Phase 1: Audio + VTT + SceneDev spawned'},
+    {agent:'sync-agent',     msg:'Pushed to JamesAtMoGroup/claude-config ✓'},
+    {agent:'pm-director',    msg:'topPriority → dashboard.json updated'},
+    {agent:'qa-agent',       msg:'iMessage sent → awaiting 通過'},
+    {agent:'course-director',msg:'Lecture 04 → GitHub Pages live ✓'},
+    {agent:'backend-agent',  msg:'RLS policy: sessions table applied ✓'},
+    {agent:'render-agent',   msg:'remotion render --gl=angle → 4K done ✓'},
+  ];
+  const body=document.getElementById('term-body');
+  const MAX=5; let buf=[],idx=0;
+  function add(){
+    buf.push(MSGS[idx++%MSGS.length]);
+    if(buf.length>MAX) buf.shift();
+    body.innerHTML=buf.map((l,i)=>{
+      const last=i===buf.length-1;
+      return `<div class="t-line"><span class="t-prompt">$</span><span class="t-agent">${l.agent}</span><span class="t-msg">${l.msg}${last?'<span class="t-caret" aria-hidden="true"></span>':''}</span></div>`;
+    }).join('');
+    setTimeout(add, 2600+Math.random()*700);
+  }
+  setTimeout(add,1000);
+})();
 
-async function loadProjects() {
-  try {
-    const r = await fetch(DATA_URL + '?t=' + Date.now());
-    if (!r.ok) throw 0;
-    renderProjects(await r.json());
-  } catch {
-    try {
-      const r2 = await fetch('./dashboard.json?t=' + Date.now());
-      if (!r2.ok) throw 0;
-      renderProjects(await r2.json());
-    } catch {
-      document.getElementById('projects-content').innerHTML =
-        `<div style="text-align:center;padding:48px;font-family:'Space Mono',monospace;font-size:12px;color:var(--t3)">Unable to load live data</div>`;
-    }
+// ─── MARQUEE ─────────────────────────────────────────────────
+(function(){
+  const ITEMS=['REMOTION','NEXT.JS 16','SUPABASE','WHISPER AI','N8N','TAILWIND CSS','ZEABUR','GITHUB PAGES','CLAUDE AI','4K VIDEO','TYPESCRIPT','PYTHON','GLASSMORPHISM','LINE LIFF','17 AGENTS'];
+  const track=document.getElementById('mq-track');
+  const doubled=[...ITEMS,...ITEMS];
+  track.innerHTML=doubled.map(s=>`<span class="mq-item"><span class="mq-dot"></span>${s}</span><span class="mq-sep"></span>`).join('');
+})();
+
+// ─── 3D TILT ─────────────────────────────────────────────────
+if(hasHover && !reducedMotion){
+  document.querySelectorAll('.gc').forEach(card=>{
+    let raf, cx=0,cy=0, tx2=0,ty2=0;
+    card.addEventListener('mouseenter',()=>{
+      function animate(){
+        cx+=(tx2-cx)*.1; cy+=(ty2-cy)*.1;
+        card.style.transform=`perspective(800px) rotateX(${cx}deg) rotateY(${cy}deg) scale(1.03)`;
+        card.style.boxShadow=`0 ${20+cx}px ${60+Math.abs(cy)*3}px rgba(0,0,0,.55)`;
+        raf=requestAnimationFrame(animate);
+      }
+      animate();
+    });
+    card.addEventListener('mousemove',e=>{
+      const r=card.getBoundingClientRect();
+      ty2=((e.clientX-r.left)/r.width-.5)*16;
+      tx2=((e.clientY-r.top)/r.height-.5)*-16;
+    });
+    card.addEventListener('mouseleave',()=>{
+      cancelAnimationFrame(raf);
+      tx2=0; ty2=0;
+      function reset(){
+        cx+=(0-cx)*.14; cy+=(0-cy)*.14;
+        card.style.transform=`perspective(800px) rotateX(${cx}deg) rotateY(${cy}deg)`;
+        card.style.boxShadow='';
+        if(Math.abs(cx)>.05||Math.abs(cy)>.05) requestAnimationFrame(reset);
+        else card.style.transform='';
+      }
+      requestAnimationFrame(reset);
+    });
+  });
+}
+
+// ─── SPOTLIGHT on org cards ───────────────────────────────────
+if(hasHover){
+  const orgCards=document.querySelector('.org-cards');
+  if(orgCards){
+    orgCards.classList.add('spotlight');
+    orgCards.addEventListener('mouseleave',()=>{
+      orgCards.querySelectorAll('.gc').forEach(c=>c.style.opacity='');
+    });
   }
 }
 
-function renderProjects(data) {
-  const projs = Object.values(data.projects);
-  const syncTime = new Date(data.lastSync).toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
+// ─── MAGNETIC BUTTONS ─────────────────────────────────────────
+if(hasHover && !reducedMotion){
+  document.querySelectorAll('.w-cta,.nav-dot').forEach(el=>{
+    el.style.transition='transform .5s cubic-bezier(.16,1,.3,1)';
+    el.addEventListener('mousemove',e=>{
+      const r=el.getBoundingClientRect();
+      const dx=(e.clientX-r.left-r.width/2)*.35;
+      const dy=(e.clientY-r.top-r.height/2)*.35;
+      el.style.transform=`translate(${dx}px,${dy}px)`;
+    });
+    el.addEventListener('mouseleave',()=>{ el.style.transform=''; });
+  });
+}
 
-  const cards = projs.map(p => {
-    const msHtml = p.milestones.slice(-5).map(m => {
-      const cls = m.done ? 'done' : m.inProgress ? 'inprog' : 'pending';
+// ─── LOAD PROJECTS ────────────────────────────────────────────
+const DATA='https://raw.githubusercontent.com/JamesAtMoGroup/claude-config/main/dashboard/dashboard.json';
+async function loadProjects(){
+  try{
+    const r=await fetch(DATA+'?t='+Date.now());
+    if(!r.ok) throw 0;
+    renderProjects(await r.json());
+  }catch{
+    try{
+      const r2=await fetch('./dashboard.json?t='+Date.now());
+      if(!r2.ok) throw 0;
+      renderProjects(await r2.json());
+    }catch{
+      document.getElementById('projects-content').innerHTML='<div style="text-align:center;padding:48px;font-family:\'Space Mono\',monospace;font-size:12px;color:var(--t3)">Unable to load live data</div>';
+    }
+  }
+}
+function renderProjects(data){
+  const projs=Object.values(data.projects);
+  const ts=new Date(data.lastSync).toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  const cards=projs.map(p=>{
+    const ms=p.milestones.slice(-5).map(m=>{
+      const cls=m.done?'done':m.inProgress?'inprog':'pending';
       return `<div class="ms ${cls}"><div class="ms-dot" aria-hidden="true"></div><span class="ms-lbl">${m.label}</span></div>`;
     }).join('');
-    const blkHtml = p.blockers.length
-      ? `<div class="blocker-list">${p.blockers.slice(0,3).map(b=>`<div class="blocker"><svg class="blocker-icon" width="11" height="11" aria-hidden="true"><use href="#ic-warn"/></svg>${b}</div>`).join('')}</div>`
-      : '';
-    return `
-      <div class="pcard ${p.status}" aria-label="${p.name} — ${p.status === 'active' ? '運作中' : '卡住了'}">
-        <div class="pcard-top">
-          <div>
-            <div class="pcard-icon" aria-hidden="true">${p.emoji}</div>
-            <div class="pcard-name">${p.name}</div>
-          </div>
-          <div class="pstatus ${p.status}" role="status">
-            <div class="pstatus-dot" aria-hidden="true"></div>
-            ${p.status === 'active' ? '運作中' : '卡住了'}
-          </div>
-        </div>
-        <div class="milestones" aria-label="Milestones">${msHtml}</div>
-        <div class="next-action">
-          <div class="na-lbl">下一步</div>
-          <div class="na-txt">${p.nextAction}</div>
-        </div>
-        ${blkHtml}
-      </div>`;
+    const blk=p.blockers.length?`<div class="blk-list">${p.blockers.slice(0,3).map(b=>`<div class="blk"><svg width="11" height="11" aria-hidden="true"><use href="#ic-warn"/></svg>${b}</div>`).join('')}</div>`:'';
+    return `<div class="pc ${p.status}">
+      <div class="pc-top"><div><div style="font-size:22px;margin-bottom:4px">${p.emoji}</div><div class="pc-name">${p.name}</div></div>
+      <div class="pst ${p.status}"><div class="pst-dot"></div>${p.status==='active'?'運作中':'卡住了'}</div></div>
+      <div class="mss">${ms}</div>
+      <div class="next-a"><div class="na-l">下一步</div><div class="na-t">${p.nextAction}</div></div>
+      ${blk}</div>`;
   }).join('');
-
-  document.getElementById('projects-content').innerHTML = `
-    <div class="priority-banner reveal">
-      <div class="pb-icon" aria-hidden="true">🎯</div>
-      <div>
-        <div class="pb-label">最高槓桿</div>
-        <div class="pb-title">${data.topPriority.label}</div>
-        <div class="pb-reason">${data.topPriority.reason}</div>
-      </div>
-    </div>
-    <div class="proj-grid">${cards}</div>
-    <div class="sync-note" aria-live="polite">↺ 上次同步 ${syncTime} · 每小時自動更新</div>
-  `;
-  document.querySelectorAll('#projects-content .reveal').forEach(el => revealObserver.observe(el));
+  document.getElementById('projects-content').innerHTML=`
+    <div class="top-p rv"><div class="tp-ico">🎯</div><div><div class="tp-lbl">最高槓桿</div><div class="tp-ttl">${data.topPriority.label}</div><div class="tp-rsn">${data.topPriority.reason}</div></div></div>
+    <div class="pg">${cards}</div>
+    <div class="sync-n">↺ 上次同步 ${ts} · 每小時自動更新</div>`;
+  document.querySelectorAll('#projects-content .rv').forEach(el=>rvObs.observe(el));
 }
-loadProjects();
-setInterval(loadProjects, 60000);
+loadProjects(); setInterval(loadProjects,60000);
 
-// ── Agent data ─────────────────────────────────────────────
-const AGENTS = {
+// ─── AGENT DATA ───────────────────────────────────────────────
+const AG={
   james:{name:'James',subtitle:'Studio Owner / CEO',emoji:'🎯',tier:'owner',trigger:'你是唯一的目標設定者，其他所有事情系統自己處理。',resp:['設定所有專案的目標與方向','最終決策者 — 只在真正需要判斷時介入','提供創意與品味標準（aesthetic final call）','設計 agent 系統的規則與原則'],tools:[],note:'你不追蹤狀態、不管流程、不問進度。系統自己跑。',children:[]},
-  systemDirector:{name:'System Director',subtitle:'Meta Orchestrator',emoji:'🧠',tier:'meta',trigger:'每次對話，全程在場。無需手動啟動。',resp:['對話開始：sync.sh pull → 讀 soul / personality / MEMORY','收到目標 → Orchestrator 判斷派給哪個 Director','對話中途：監聽新規則 → 立刻觸發 Memory Agent 寫入','對話結束：確認 memory 更新 → sync.sh push → 回報 token 用量','偵測 .new-project/ flag → 觸發 Project Onboarding Agent'],tools:['sync.sh','memory/','MEMORY.md','agents.md'],children:['memoryAgent','sopAgent','syncAgent','orchestrator','onboardingAgent']},
+  systemDirector:{name:'System Director',subtitle:'Meta Orchestrator',emoji:'🧠',tier:'meta',trigger:'每次對話，全程在場。無需手動啟動。',resp:['對話開始：sync.sh pull → 讀 soul / personality / MEMORY','收到目標 → Orchestrator 判斷派給哪個 Director','對話中途：監聽新規則 → 立刻觸發 Memory Agent 寫入','對話結束：確認 memory 更新 → sync.sh push → 回報 token','偵測 .new-project/ flag → 觸發 Project Onboarding Agent'],tools:['sync.sh','memory/','MEMORY.md','agents.md'],children:['memoryAgent','sopAgent','syncAgent','orchestrator','onboardingAgent']},
   pmDirector:{name:'PM Director',subtitle:'Project Manager',emoji:'📋',tier:'meta',trigger:'「現在最重要是什麼」、「幫我規劃」、「哪裡卡住了」',resp:['平行讀所有 project 狀態 → 輸出全局快照','判斷當前最高槓桿的一件事','更新 dashboard.json topPriority 欄位','識別跨 project 依賴與阻礙','產出 roadmap.md 規劃文件'],tools:['dashboard.json','roadmap.md','*-status.json'],children:['videoPM','coursePM','engineeringPM','contentPM']},
-  memoryAgent:{name:'Memory Agent',subtitle:'System Director Sub',emoji:'💾',tier:'sub',trigger:'學到新 rule / feedback，或 James 說「記住」',resp:['立刻寫對應 memory 檔（不等到對話結束）','更新 MEMORY.md index','選正確 type：user / feedback / project / reference'],tools:['memory/*.md','MEMORY.md'],children:[]},
-  sopAgent:{name:'SOP Agent',subtitle:'System Director Sub',emoji:'📐',tier:'sub',trigger:'工作流有調整、優化、新步驟被提到',resp:['即時更新對應 skill 檔','更新 agents.md 的 SOP 描述','確保任何工作流改變都被永久記錄'],tools:['~/.claude/skills/','agents.md'],children:[]},
-  syncAgent:{name:'Sync Agent',subtitle:'System Director Sub',emoji:'🔄',tier:'sub',trigger:'重要工作段落結束 / 對話結束',resp:['執行 sync.sh push','確認 GitHub 有最新版 config、skills、memory、dashboard'],tools:['sync.sh'],children:[]},
-  orchestrator:{name:'Orchestrator',subtitle:'System Director Sub',emoji:'🎛',tier:'sub',trigger:'收到 James 的目標',resp:['讀對應 progress / status 檔判斷現在狀態','決定派給哪個 Domain Director','不問 James「做到哪了」— 自己讀 state 判斷'],tools:['progress.md files','dashboard.json'],children:[]},
-  onboardingAgent:{name:'Project Onboarding',subtitle:'System Director Sub',emoji:'🆕',tier:'sub',trigger:'watch-projects.sh 偵測到 ~/Projects/ 新目錄',resp:['讀 README / package.json / CLAUDE.md','判斷類型：video / course / engineering / content','指派 Domain Director + 建 status.json + 更新 memory'],tools:['watch-projects.sh','dashboard/','memory/'],children:[]},
-  videoPM:{name:'Video PM',subtitle:'PM Director Sub',emoji:'🎬',tier:'sub',trigger:'PM Director 查詢 / Video Director 完成 milestone',resp:['管理 article-video + vibe-coding 狀態','追蹤每支影片完成度、render 狀態','偵測 out/ 更新 → 回報 PM Director'],tools:['progress.md','out/ dirs'],children:[]},
-  coursePM:{name:'Course PM',subtitle:'PM Director Sub',emoji:'📚',tier:'sub',trigger:'PM Director 查詢 / deploy 完成',resp:['追蹤 n8ncourse lecture 上線數','監控知識庫更新頻率'],tools:['gh api','courses.json'],children:[]},
-  engineeringPM:{name:'Engineering PM',subtitle:'PM Director Sub',emoji:'⚙️',tier:'sub',trigger:'PM Director 查詢 / blocker 解除',resp:['追蹤 5 個 pre-build blockers 解決率','讀 .resolved/ 資料夾判斷完成進度'],tools:['PROGRESS.md','.resolved/'],children:[]},
-  contentPM:{name:'Content PM',subtitle:'PM Director Sub',emoji:'📰',tier:'sub',trigger:'PM Director 查詢 / 每日腳本完成',resp:['追蹤今日 AI 文章是否產出','確認 pipeline 完整'],tools:['out/ dirs'],children:[]},
-  videoDirector:{name:'Video Director',subtitle:'影片製作',emoji:'🎬',tier:'director',trigger:'「做今天 article-video」、「做 CH N vibe coding」',resp:['讀 progress.md 自行判斷從哪繼續','平行啟動 Phase 1：Audio + Transcription + Scene Dev','QA 通過（iMessage 或對話）→ 啟動 Render Agent','套用：4K / neon-green / iMessage callout spec'],tools:['Remotion','ffmpeg','Whisper','imessage_send.sh'],children:['audioAgent','transcriptionAgent','sceneDevAgent','qaAgentVideo','renderAgent','assetAgent','htmlAnalysisAgent']},
-  audioAgent:{name:'Audio Agent',subtitle:'Video Director Sub',emoji:'🎵',tier:'sub',trigger:'Phase 1（平行）',resp:['article-video：-20 LUFS, Peak -2 dBFS','vibe-coding：-16 LUFS（不 denoise）'],tools:['ffmpeg'],children:[]},
-  transcriptionAgent:{name:'Transcription Agent',subtitle:'Video Director Sub',emoji:'📝',tier:'sub',trigger:'Phase 1（平行）',resp:['Whisper → .vtt','對照講稿校正','輸出 timestamps 給 Scene Dev'],tools:['Whisper'],children:[]},
-  sceneDevAgent:{name:'Scene Dev Agent',subtitle:'Video Director Sub',emoji:'🖥',tier:'sub',trigger:'Phase 1（平行）',resp:['寫 Remotion TSX components','依 VTT timing 對齊動畫','iMessage callout：top-right stacking'],tools:['Remotion TSX','TypeScript'],children:[]},
-  qaAgentVideo:{name:'QA Agent',subtitle:'Video Director Sub',emoji:'✅',tier:'sub',trigger:'Phase 1 完成後',resp:['檢查 callout 同步、timing、字幕','發送 QA 報告到 iMessage 0981928525','等「通過」→ 觸發 Render Agent'],tools:['imessage_send.sh','imessage_wait_approval.sh'],children:[]},
-  renderAgent:{name:'Render Agent',subtitle:'Video Director Sub',emoji:'🎞',tier:'sub',trigger:'QA 通過',resp:['npx remotion render --gl=angle','out/YYYY-MM-DD/ 或 out/CH{N}/','完成後 dashboard 自動更新'],tools:['Remotion CLI'],children:[]},
-  assetAgent:{name:'Asset Agent',subtitle:'vibe-coding only',emoji:'📦',tier:'sub',trigger:'vibe-coding 開始',resp:['確認音檔在 chapters/{N}/audio/','素材對應講稿 **備注** 標記'],tools:['chapters/ dirs'],children:[]},
-  htmlAnalysisAgent:{name:'HTML Analysis',subtitle:'vibe-coding only',emoji:'🔍',tier:'sub',trigger:'Scene Dev 開始前',resp:['解析 HTML slides','對應音檔時間戳','輸出 map 給 Scene Dev'],tools:['HTML slides'],children:[]},
-  courseDirector:{name:'Course Director',subtitle:'n8n 課程網站',emoji:'📚',tier:'director',trigger:'「新增 Lecture N」、「更新知識庫」',resp:['讀 n8ncourse/CLAUDE.md','讀 courses.json 確認進度','派 Content / Knowledge / Deploy Agent'],tools:['GitHub Pages','gh CLI'],children:['contentAgent','knowledgeAgent','deployAgent']},
-  contentAgent:{name:'Content Agent',subtitle:'Course Director Sub',emoji:'✍️',tier:'sub',trigger:'新增 Lecture',resp:['寫 lecture{N}/index.html','套 design tokens：--bg:#0e0918','掃禁詞：三週/昨天/關於講師'],tools:['HTML/CSS'],children:[]},
+  memoryAgent:{name:'Memory Agent',subtitle:'System Director Sub',emoji:'💾',tier:'sub',trigger:'學到新 rule / feedback，或 James 說「記住」',resp:['立刻寫對應 memory 檔','更新 MEMORY.md index','選正確 type：user / feedback / project / reference'],tools:['memory/*.md','MEMORY.md'],children:[]},
+  sopAgent:{name:'SOP Agent',subtitle:'System Director Sub',emoji:'📐',tier:'sub',trigger:'工作流有調整、優化、新步驟',resp:['即時更新對應 skill 檔','更新 agents.md 的 SOP','確保任何工作流改變都被永久記錄'],tools:['~/.claude/skills/','agents.md'],children:[]},
+  syncAgent:{name:'Sync Agent',subtitle:'System Director Sub',emoji:'🔄',tier:'sub',trigger:'重要工作段落結束 / 對話結束',resp:['執行 sync.sh push','確認 GitHub 有最新版'],tools:['sync.sh'],children:[]},
+  orchestrator:{name:'Orchestrator',subtitle:'System Director Sub',emoji:'🎛',tier:'sub',trigger:'收到 James 的目標',resp:['讀對應 progress / status 判斷狀態','決定派給哪個 Director','不問 James — 自己讀 state'],tools:['progress.md','dashboard.json'],children:[]},
+  onboardingAgent:{name:'Project Onboarding',subtitle:'System Director Sub',emoji:'🆕',tier:'sub',trigger:'watch-projects.sh 偵測到 ~/Projects/ 新目錄',resp:['讀 README / package.json / CLAUDE.md','判斷類型：video / course / engineering / content','指派 Director + 建 status.json + 更新 memory'],tools:['watch-projects.sh','dashboard/','memory/'],children:[]},
+  videoPM:{name:'Video PM',subtitle:'PM Director Sub',emoji:'🎬',tier:'sub',trigger:'PM Director 查詢',resp:['追蹤 article-video + vibe-coding 狀態','偵測 out/ 更新'],tools:['progress.md','out/'],children:[]},
+  coursePM:{name:'Course PM',subtitle:'PM Director Sub',emoji:'📚',tier:'sub',trigger:'PM Director 查詢',resp:['追蹤 lecture 上線數','監控知識庫更新'],tools:['gh api','courses.json'],children:[]},
+  engineeringPM:{name:'Engineering PM',subtitle:'PM Director Sub',emoji:'⚙️',tier:'sub',trigger:'PM Director 查詢',resp:['追蹤 5 個 pre-build blockers','讀 .resolved/'],tools:['PROGRESS.md','.resolved/'],children:[]},
+  contentPM:{name:'Content PM',subtitle:'PM Director Sub',emoji:'📰',tier:'sub',trigger:'PM Director 查詢',resp:['追蹤今日 AI 文章','確認 pipeline 完整'],tools:['out/'],children:[]},
+  videoDirector:{name:'Video Director',subtitle:'影片製作',emoji:'🎬',tier:'director',trigger:'「做今天 article-video」、「做 CH N vibe coding」',resp:['讀 progress.md 自行判斷從哪繼續','平行啟動 Phase 1','QA 通過 → 啟動 Render','套用：4K / neon-green / iMessage callout'],tools:['Remotion','ffmpeg','Whisper','imessage_send.sh'],children:['audioAgent','transcriptionAgent','sceneDevAgent','qaAgentVideo','renderAgent','assetAgent','htmlAnalysisAgent']},
+  audioAgent:{name:'Audio Agent',subtitle:'Video Director Sub',emoji:'🎵',tier:'sub',trigger:'Phase 1（平行）',resp:['article: -20 LUFS Peak -2 dBFS','vibe: -16 LUFS（不 denoise）'],tools:['ffmpeg'],children:[]},
+  transcriptionAgent:{name:'Transcription Agent',subtitle:'Video Director Sub',emoji:'📝',tier:'sub',trigger:'Phase 1（平行）',resp:['Whisper → .vtt','對照講稿校正'],tools:['Whisper'],children:[]},
+  sceneDevAgent:{name:'Scene Dev Agent',subtitle:'Video Director Sub',emoji:'🖥',tier:'sub',trigger:'Phase 1（平行）',resp:['寫 Remotion TSX components','iMessage callout：top-right stacking'],tools:['Remotion TSX','TypeScript'],children:[]},
+  qaAgentVideo:{name:'QA Agent',subtitle:'Video Director Sub',emoji:'✅',tier:'sub',trigger:'Phase 1 完成後',resp:['檢查 callout / timing / 字幕','發送報告到 iMessage','等「通過」→ 觸發 Render'],tools:['imessage_send.sh','imessage_wait_approval.sh'],children:[]},
+  renderAgent:{name:'Render Agent',subtitle:'Video Director Sub',emoji:'🎞',tier:'sub',trigger:'QA 通過',resp:['npx remotion render --gl=angle','out/YYYY-MM-DD/ 或 out/CH{N}/'],tools:['Remotion CLI'],children:[]},
+  assetAgent:{name:'Asset Agent',subtitle:'vibe-coding only',emoji:'📦',tier:'sub',trigger:'vibe-coding 開始',resp:['確認音檔在 chapters/{N}/audio/'],tools:['chapters/'],children:[]},
+  htmlAnalysisAgent:{name:'HTML Analysis',subtitle:'vibe-coding only',emoji:'🔍',tier:'sub',trigger:'Scene Dev 開始前',resp:['解析 HTML slides','對應音檔時間戳'],tools:['HTML slides'],children:[]},
+  courseDirector:{name:'Course Director',subtitle:'n8n 課程網站',emoji:'📚',tier:'director',trigger:'「新增 Lecture N」、「更新知識庫」',resp:['讀 n8ncourse/CLAUDE.md','讀 courses.json','派 Content / Knowledge / Deploy'],tools:['GitHub Pages','gh CLI'],children:['contentAgent','knowledgeAgent','deployAgent']},
+  contentAgent:{name:'Content Agent',subtitle:'Course Director Sub',emoji:'✍️',tier:'sub',trigger:'新增 Lecture',resp:['寫 lecture{N}/index.html','套 design tokens','掃禁詞'],tools:['HTML/CSS'],children:[]},
   knowledgeAgent:{name:'Knowledge Agent',subtitle:'Course Director Sub',emoji:'🧩',tier:'sub',trigger:'更新知識庫',resp:['新增條目到 knowledge.json','維護 courses.json'],tools:['knowledge.json'],children:[]},
-  deployAgent:{name:'Deploy Agent',subtitle:'Course Director Sub',emoji:'🚀',tier:'sub',trigger:'Content/Knowledge 完成後',resp:['git push → n8ncourse','驗證 GitHub Pages live URL'],tools:['git','GitHub Pages'],children:[]},
-  engineeringDirector:{name:'Engineering Director',subtitle:'LINE Booking App',emoji:'⚙️',tier:'director',trigger:'「booking app 加功能」、「修 bug」',resp:['讀 PROGRESS.md','優先 5 個 pre-build blockers','派 Backend / Frontend / QA'],tools:['Next.js 16','Supabase','Zeabur'],children:['backendAgent','frontendAgent','qaAgentEng']},
-  backendAgent:{name:'Backend Agent',subtitle:'Engineering Director Sub',emoji:'🗄',tier:'sub',trigger:'後端任務',resp:['Supabase schema、RLS','優先：rate/subject versioning → soft delete → session lifecycle → payout','const supabase = await createClient()'],tools:['Supabase','PostgreSQL'],children:[]},
-  frontendAgent:{name:'Frontend Agent',subtitle:'Engineering Director Sub',emoji:'🎨',tier:'sub',trigger:'前端任務',resp:['Glassmorphism dark + Tailwind','ZH-TW/EN bilingual','Role routing：student/teacher/admin'],tools:['Next.js 16','Tailwind'],children:[]},
-  qaAgentEng:{name:'QA Agent',subtitle:'Engineering Director Sub',emoji:'🧪',tier:'sub',trigger:'Backend + Frontend 完成後',resp:['auth flow 測試','role routing 測試','Zeabur 部署驗證'],tools:['Zeabur','Supabase Auth'],children:[]},
-  contentDirector:{name:'Content Director',subtitle:'每日 AI 文章 Pipeline',emoji:'📰',tier:'director',trigger:'「今天的 AI 文章做成影片」',resp:['Research → Script → Handoff 鏈','輸出交給 Video Director'],tools:['WebSearch'],children:['researchAgent','scriptAgent','handoffAgent']},
-  researchAgent:{name:'Research Agent',subtitle:'Content Director Sub',emoji:'🔬',tier:'sub',trigger:'啟動 pipeline',resp:['找當日最高訊噪比 AI 文章','整理結構化摘要'],tools:['WebSearch','WebFetch'],children:[]},
-  scriptAgent:{name:'Script Agent',subtitle:'Content Director Sub',emoji:'📄',tier:'sub',trigger:'Research 完成後',resp:['~6.5 分鐘 ZH-TW 腳本','分段對應 Remotion scenes','輸出 article-YYYY-MM-DD.md'],tools:[],children:[]},
-  handoffAgent:{name:'Handoff',subtitle:'Content Director Sub',emoji:'↗️',tier:'sub',trigger:'Script 完成後',resp:['交 article-YYYY-MM-DD.md 給 Video Director'],tools:['→ Video Director'],children:[]}
+  deployAgent:{name:'Deploy Agent',subtitle:'Course Director Sub',emoji:'🚀',tier:'sub',trigger:'完成後',resp:['git push → n8ncourse','驗證 GitHub Pages'],tools:['git','GitHub Pages'],children:[]},
+  engineeringDirector:{name:'Engineering Director',subtitle:'LINE Booking App',emoji:'⚙️',tier:'director',trigger:'「booking app 加功能」、「修 bug」',resp:['讀 PROGRESS.md','優先 5 個 pre-build blockers'],tools:['Next.js 16','Supabase','Zeabur'],children:['backendAgent','frontendAgent','qaAgentEng']},
+  backendAgent:{name:'Backend Agent',subtitle:'Engineering Sub',emoji:'🗄',tier:'sub',trigger:'後端任務',resp:['Supabase schema、RLS','await createClient()'],tools:['Supabase','PostgreSQL'],children:[]},
+  frontendAgent:{name:'Frontend Agent',subtitle:'Engineering Sub',emoji:'🎨',tier:'sub',trigger:'前端任務',resp:['Glassmorphism dark + Tailwind','ZH-TW/EN bilingual'],tools:['Next.js 16','Tailwind'],children:[]},
+  qaAgentEng:{name:'QA Agent',subtitle:'Engineering Sub',emoji:'🧪',tier:'sub',trigger:'完成後',resp:['auth flow 測試','Zeabur 部署驗證'],tools:['Zeabur','Supabase Auth'],children:[]},
+  contentDirector:{name:'Content Director',subtitle:'每日 AI 文章',emoji:'📰',tier:'director',trigger:'「今天的 AI 文章做成影片」',resp:['Research → Script → Handoff'],tools:['WebSearch'],children:['researchAgent','scriptAgent','handoffAgent']},
+  researchAgent:{name:'Research Agent',subtitle:'Content Sub',emoji:'🔬',tier:'sub',trigger:'啟動',resp:['找當日最高訊噪比 AI 文章','整理摘要'],tools:['WebSearch','WebFetch'],children:[]},
+  scriptAgent:{name:'Script Agent',subtitle:'Content Sub',emoji:'📄',tier:'sub',trigger:'Research 後',resp:['~6.5 分鐘 ZH-TW 腳本','輸出 article-YYYY-MM-DD.md'],tools:[],children:[]},
+  handoffAgent:{name:'Handoff',subtitle:'Content Sub',emoji:'↗️',tier:'sub',trigger:'Script 後',resp:['交 article-YYYY-MM-DD.md 給 Video Director'],tools:['→ Video Director'],children:[]}
 };
+const TL={owner:'Studio Owner',meta:'Meta Layer',director:'Domain Director',sub:'Sub-Agent'};
+const BC={owner:'bo',meta:'bm',director:'bg',sub:'bd'};
+const AI={owner:'rgba(255,215,0,.1)',meta:'rgba(183,148,244,.1)',director:'rgba(124,255,178,.1)',sub:'rgba(255,255,255,.05)'};
 
-const TIER_LABEL = {owner:'Studio Owner',meta:'Meta Layer',director:'Domain Director',sub:'Sub-Agent'};
-const BADGE_CLS  = {owner:'badge-gold',meta:'badge-purple',director:'badge-green',sub:'badge-dim'};
-const BADGE_BG   = {owner:'rgba(255,215,0,0.1)',meta:'rgba(183,148,244,0.1)',director:'rgba(124,255,178,0.1)',sub:'var(--s2)'};
-
-let hist = [];
-
-function openAgent(id, push=true) {
-  if (push) hist = [id];
-  const a = AGENTS[id];
-  const back = hist.length > 1 ? `<button class="m-back" onclick="goBack()">← Back</button>` : '';
-  const subsHtml = a.children && a.children.length ? `
-    <div class="divider"></div>
-    <div style="margin-bottom:10px">
-      <div class="m-sec-title">Team (${a.children.length} agents)</div>
-      <div class="sub-grid">
-        ${a.children.map(c => {
-          const ag = AGENTS[c];
-          return `<div class="sub-card" onclick="drillInto('${c}')" tabindex="0" role="button" aria-label="${ag.name}" onkeydown="if(event.key==='Enter')drillInto('${c}')">
-            <div class="sub-card-emoji" aria-hidden="true">${ag.emoji}</div>
-            <div class="sub-card-name">${ag.name}</div>
-            <div class="sub-card-sub">${ag.subtitle}</div>
-            <div class="sub-card-arrow">View detail →</div>
-          </div>`;
-        }).join('')}
-      </div>
-    </div>` : '';
-
-  document.getElementById('modal-body').innerHTML = `
-    ${back}
-    <div class="m-avatar" style="background:${BADGE_BG[a.tier]}" aria-hidden="true">${a.emoji}</div>
-    <div class="badge ${BADGE_CLS[a.tier]}" style="margin-bottom:12px">${TIER_LABEL[a.tier]}</div>
-    <div class="m-name" id="modal-name">${a.name}</div>
+let hist=[];
+function openAgent(id,push=true){
+  if(push) hist=[id];
+  const a=AG[id];
+  if(!a) return;
+  const back=hist.length>1?`<button class="m-back" onclick="goBack()">← Back</button>`:'';
+  const subs=a.children&&a.children.length?`<div class="divider"></div><div class="m-sl" style="margin-bottom:12px">Team (${a.children.length})</div><div class="sub-grid">${a.children.map(c=>{const ag=AG[c];return`<div class="sub-c" onclick="drillInto('${c}')" tabindex="0" role="button"><div class="sc-ico">${ag.emoji}</div><div class="sc-name">${ag.name}</div><div class="sc-sub">${ag.subtitle}</div><div class="sc-arr">查看詳情 →</div></div>`;}).join('')}</div>`:'';
+  document.getElementById('modal-body').innerHTML=`${back}
+    <div class="m-avatar" style="background:${AI[a.tier]}">${a.emoji}</div>
+    <div class="badge ${BC[a.tier]}" style="margin-bottom:12px">${TL[a.tier]}</div>
+    <div class="m-name">${a.name}</div>
     <div class="m-subtitle">${a.subtitle}</div>
-    <div class="trigger-box">
-      <div class="m-sec-title" style="margin-bottom:6px">啟動條件</div>
-      <div class="trigger-txt">${a.trigger}</div>
-    </div>
-    <div class="m-sec-title">工作內容</div>
-    <div class="resp-list">${a.resp.map(r => `<div class="resp-item">${r}</div>`).join('')}</div>
-    ${a.tools.length ? `<div class="m-sec-title">使用工具</div><div class="tools-row">${a.tools.map(t=>`<span class="tool-tag">${t}</span>`).join('')}</div>` : ''}
-    ${a.note ? `<div class="m-note">${a.note}</div>` : ''}
-    ${subsHtml}
-  `;
+    <div class="trig-box"><div class="m-sl" style="margin-bottom:6px">啟動條件</div><div class="trig-txt">${a.trigger}</div></div>
+    <div class="m-sl">工作內容</div><div class="r-list">${a.resp.map(r=>`<div class="r-item">${r}</div>`).join('')}</div>
+    ${a.tools.length?`<div class="m-sl">使用工具</div><div class="tools-row">${a.tools.map(t=>`<span class="t-tag">${t}</span>`).join('')}</div>`:''}
+    ${a.note?`<div class="m-note">${a.note}</div>`:''}${subs}`;
   document.getElementById('overlay').classList.add('open');
-  document.getElementById('modal').scrollTop = 0;
-  document.querySelector('.modal-close').focus();
+  document.getElementById('modal').scrollTop=0;
 }
-function drillInto(id) { hist.push(id); openAgent(id, false); }
-function goBack() { hist.pop(); if (hist.length) openAgent(hist[hist.length-1], false); }
-function closeModal() { document.getElementById('overlay').classList.remove('open'); hist = []; }
-function handleOverlayClick(e) { if (e.target === document.getElementById('overlay')) closeModal(); }
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
-
-// Keyboard open for org cards
-document.querySelectorAll('.gc[tabindex]').forEach(el => {
-  el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); el.click(); } });
+function drillInto(id){hist.push(id);openAgent(id,false);}
+function goBack(){hist.pop();if(hist.length)openAgent(hist[hist.length-1],false);}
+function closeModal(){document.getElementById('overlay').classList.remove('open');hist=[];}
+function handleOvClick(e){if(e.target===document.getElementById('overlay'))closeModal();}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+document.querySelectorAll('[role="button"][tabindex]').forEach(el=>{
+  el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();el.click();}});
 });
 </script>
 </body>

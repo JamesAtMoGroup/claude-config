@@ -165,7 +165,9 @@
       "Bash(sed -i '' 's/指分為感覺/指「氛圍、感覺」/g' 0-1_4.2.vtt)",
       "Bash(sed -i '' 's/比較確有的狀態/比較隨性的狀態/g' 0-1_4.2.vtt)",
       "Bash(sed -i '' 's/靠 few 來寫誠識/靠感覺來寫程式/g' 0-1_4.2.vtt)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Bash(textutil -convert txt -stdout /Users/jamesshih/Projects/vibe-coding-video/chapters/0-1/章節0-1_逐字講稿.pages)",
+      "Bash(osascript:*)"
     ]
   }
 }
