@@ -16,6 +16,7 @@
 - [iMessage callout — use article-video design](./feedback_imessage_callout_design.md) — Vibe Coding video must use article-video iMessage spec (sender/text, top-right stack); discard old label/side/yPct system
 - [Audio pipeline — no denoising](./feedback_audio_pipeline.md) — Skip denoise step; James handles audio correction himself
 - [Always update SOP immediately](./feedback_sop_update_rule.md) — Any workflow/adjustment/optimization mentioned → add to relevant SOP file immediately
+- [Script over tokens](./feedback_script_over_tokens.md) — Any task a script can do must never use tokens; scripts live in ~/.claude/scripts/
 
 ## Agent System
 - [Agent Organization](~/.claude/commands/agents.md) — 4 domain directors (Video / Course / Engineering / Content) + sub-agents; invocation cheatsheet

@@ -266,10 +266,11 @@ James 說目標
 
 ## Universal Rules (ALL Agents)
 
-1. **James 只說目標** — 狀態由 Agent 自己讀 progress 檔管理
-2. **新規則立刻寫** — 不等到對話結束，Memory Agent 即時處理
-3. **永不 expose** API keys、`.env`、Supabase service keys
-4. **永不建議** Vercel、Firebase、Zapier、WhatsApp
-5. **深色優先** — 任何 UI 預設深色
-6. **有 skill 檔就讀** — 不猜，不跳過
-7. **結束前 sync** — `sync.sh push` 是 System Director 的最後一步
+1. **Script 優先，token 最後** — 能用 script 完成的事絕對不用 token。狀態讀取、檔案解析、git 操作、dashboard 更新、格式轉換：全部 script。只有判斷、創作、語意理解才動用 Claude。
+2. **James 只說目標** — 狀態由 Agent 自己讀 progress 檔管理
+3. **新規則立刻寫** — 不等到對話結束，Memory Agent 即時處理
+4. **永不 expose** API keys、`.env`、Supabase service keys
+5. **永不建議** Vercel、Firebase、Zapier、WhatsApp
+6. **深色優先** — 任何 UI 預設深色
+7. **有 skill 檔就讀** — 不猜，不跳過
+8. **結束前 sync** — `sync.sh push` 是 System Director 的最後一步
