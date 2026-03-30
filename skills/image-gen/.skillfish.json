@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "name": "image-gen",
+  "owner": "maxgent-ai",
+  "repo": "maxgent-plugin",
+  "path": "skills/image-gen",
+  "branch": "main",
+  "sha": "9779baaa75d26d5338f6cb364a811f64ad8ab54a",
+  "source": "manual"
+}

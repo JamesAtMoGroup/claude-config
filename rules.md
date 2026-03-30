@@ -37,7 +37,7 @@ This copies all local `~/.claude/` files (skills, commands, memory, settings, ru
 | Task type | Read this — nothing else |
 |-----------|--------------------------|
 | Remotion / video | `~/.claude/commands/remotion-video.md` |
-| Vibe Coding course video | `~/Downloads/Vibe Coding 剪輯/course-video.md` + `~/Projects/vibe-coding-video/progress.md` |
+| Vibe Coding course video | `~/Downloads/Vibe Coding 剪輯/course-video.md` + `~/Projects/vibe-coding-video/progress.md` | 素材：`~/Projects/vibe-coding-video/chapters/{章節}/` |
 | n8n course | `memory/n8ncourse.md` |
 | LINE booking app | `~/Projects/line-liff-booking/README.md` |
 | Design / UI | `~/.claude/skills/ui-ux-pro-max/SKILL.md` |

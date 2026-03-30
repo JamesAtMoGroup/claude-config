@@ -1,22 +1,31 @@
 ---
-name: vibe-coding multi-agent requirement
-description: Always use multi-agent teams with distinct roles when editing Vibe Coding videos
+name: multi-agent requirement for all video work
+description: Always use multi-agent teams for ANY video work (Vibe Coding AND article-video) — never single-agent
 type: feedback
 ---
 
-Always use a multi-agent team when working on any Vibe Coding video task — never do it as a single agent.
+Always use a multi-agent team when working on any video task — never do it as a single agent. Applies to both Vibe Coding and article-video projects.
 
-**Why:** James explicitly requires this workflow for the Vibe Coding project. Each agent should own a specific, scoped job so work is parallelized and quality-checked at each handoff.
+**Why:** James explicitly requires parallelized multi-agent workflow for all video work. Jobs like audio processing, VTT correction, and rendering should run in parallel agents, not sequentially in one agent.
 
-**How to apply:** Before touching any Vibe Coding video work, spin up a Director agent first. Director reads `course-video.md` + `progress.md`, then assigns scoped sub-agents. Minimum team structure:
+**How to apply:** Spin up independent agents for independent jobs. Examples of tasks that can run in parallel:
+- Audio processing (ffmpeg chain) ↔ Reading/analyzing source files
+- VTT transcription ↔ Scene planning
+- Multiple scene components written simultaneously by separate agents
+- Render can start while another agent does QA on the source files
+
+Minimum team structure for article-video:
 
 | Role | Job |
 |------|-----|
-| Director | Reads skill + progress, assigns tasks, reviews outputs, makes final decisions |
-| Asset & Transcription Agent | Confirms files exist, runs Whisper VTT, copies audio |
-| VTT Correction Agent | Compares VTT against 逐字講稿.docx, fixes errors |
-| HTML Analysis & Scene Planning Agent | Reads HTML, maps sections to audio, builds timing plan |
-| Scene Development Agent | Writes Remotion TSX components |
-| Integration & Render Agent | Assembles Root.tsx, runs render, outputs MP4 |
+| Director | Assigns tasks, reviews outputs, makes final calls |
+| Audio Agent | ffmpeg processing, denoise, EQ, mix with BG music |
+| Transcription Agent | Whisper VTT, cross-reference with article MD, corrections |
+| Scene Dev Agent | Writes/edits Remotion TSX components, timing sync |
+| Render Agent | Runs render, monitors output, copies to out/ folder |
 
-Sub-agents can be merged when tasks are small, but Director must always be separate.
+For Vibe Coding add:
+| Asset Agent | Confirms files, copies audio, checks folder structure |
+| HTML Analysis Agent | Maps HTML sections to audio timestamps |
+
+Sub-agents can be merged when tasks are small, but never collapse everything into one agent.

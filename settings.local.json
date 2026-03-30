@@ -117,7 +117,31 @@
       "Bash(find /Users/jamesshih/Projects/vibe-coding-video -name *.vtt)",
       "Bash(chmod +x /Users/jamesshih/Projects/vibe-coding-video/scripts/6_merge_vtt.sh)",
       "Bash(bash /Users/jamesshih/Projects/vibe-coding-video/scripts/6_merge_vtt.sh)",
-      "Bash(bash /Users/jamesshih/.claude/scripts/sync.sh push)"
+      "Bash(bash /Users/jamesshih/.claude/scripts/sync.sh push)",
+      "Bash(cat \"/Users/jamesshih/Downloads/0-2/\\(N\\)ch0-2.html\")",
+      "Bash(ffmpeg -i /Users/jamesshih/article-video/ai-knowledge-2026-03-27.wav -af \"highpass=f=80,       afftdn=nf=-25:nr=8:nt=w,       arnndn=m=/usr/local/share/rnnoise-models/bd.rnnn 2>/dev/null || true\" -t 3 /tmp/test-dereverb.wav -y)",
+      "Bash(ffmpeg -i \"/Users/jamesshih/Downloads/0-1 音檔/0-1_1.1.wav\" -af loudnorm=print_format=json -f null -)",
+      "Bash(zeabur --version)",
+      "Bash(zeabur:*)",
+      "Bash(chmod:*)",
+      "Bash(ffmpeg -i \"/Users/jamesshih/Downloads/0-1 音檔/0-1_4.3.wav\" -af \"astats=metadata=1:reset=1,ametadata=print:file=-\" -f null -)",
+      "Bash(bash ~/chatwoot-setup/deploy.sh 2>&1)",
+      "Bash(ffmpeg -i /Users/jamesshih/article-video/ai-knowledge-2026-03-27/ai-knowledge-2026-03-27.wav -i /Users/jamesshih/article-video/public/audio/course_bgmusic.wav -filter_complex \":*)",
+      "Bash(wc:*)",
+      "Bash(ffmpeg -i /Users/jamesshih/article-video/ai-knowledge-2026-03-27/ai-knowledge-2026-03-27.wav -stream_loop -1 -i /Users/jamesshih/article-video/public/audio/course_bgmusic.wav -filter_complex \":*)",
+      "Bash(mkdir -p ~/.claude/skills/kling-ai)",
+      "Bash(cp /Users/jamesshih/article-video/skills/kling-ai/SKILL.md ~/.claude/skills/kling-ai/SKILL.md)",
+      "Bash(mkdir -p ~/.claude/skills/kling-ai/references)",
+      "Bash(cp /Users/jamesshih/Downloads/github/kling-ai-prompt-generator/skills/kling-ai/SKILL.md ~/.claude/skills/kling-ai/SKILL.md)",
+      "Bash(cp /Users/jamesshih/Downloads/github/kling-ai-prompt-generator/skills/kling-ai/references/prompt-templates.md ~/.claude/skills/kling-ai/references/prompt-templates.md)",
+      "Bash(npx skillfish:*)",
+      "Bash(pip install:*)",
+      "Bash(playwright install:*)",
+      "Bash(for ch:*)",
+      "Bash(do mkdir:*)",
+      "Bash(sqlite3 ~/Library/Messages/chat.db \"SELECT count\\(*\\) FROM message;\")",
+      "Bash(sqlite3:*)",
+      "Bash(~/.claude/scripts/imessage_send.sh \"🎬 [QA Test] iMessage QA 流程測試 — 請回覆「通過」確認收到\" 2>&1)"
     ]
   }
 }

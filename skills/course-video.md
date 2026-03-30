@@ -37,6 +37,7 @@
 | 幀數計算 | `3_calc_frames.sh <chapter>` | ⑥ |
 | Remotion render | `4_render.sh <composition> <chapter>` | ⑦ 最後 |
 | VTT 合併 | `6_merge_vtt.sh` | ⑧ render 完後立即執行 |
+| HTML 講義同步 | 比對 TSX 更新 HTML，複製到 `out/CH{chapter}/` | ⑨ VTT 合併後 |
 
 **重要**：每次有新音檔，必須依序跑完 ①②③ 再 render。
 
@@ -51,11 +52,27 @@ out/
   CH{chapter}/
     CH{chapter}-complete.mp4   — 完整影片
     CH{chapter}-subtitles.vtt  — 合併完整字幕
+    ch{chapter}.html           — 同步更新的 HTML 講義
 ```
 
 - `4_render.sh` 輸出路徑：`out/CH{chapter}/CH{chapter}-complete.mp4`
 - `6_merge_vtt.sh` 同步產生：`out/CH{chapter}/CH{chapter}-subtitles.vtt`
 - VTT 以每個 segment 的累計幀數（÷30 = 秒數）為 offset 合併，時間戳格式為 `HH:MM:SS.mmm`
+
+### HTML 講義同步規則（強制）
+
+> **影片 render 完成後，必須同步更新 HTML 講義，並將更新後的 HTML 存入輸出資料夾。**
+
+步驟：
+1. 讀取來源 HTML（`~/Downloads/{chapter}/(N)ch{chapter}.html`）
+2. 比對 TSX 場景的最終文字內容 vs HTML 中對應的段落
+3. 更新差異部分（文字精簡、句子刪除等在製作過程中的調整）
+4. 複製更新後的 HTML 到 `out/CH{chapter}/ch{chapter}.html`
+
+注意：
+- HTML 保留 web 排版樣式（字型大小、CSS）不需改成影片的大尺寸
+- HTML 的 emoji 可以保留（僅影片不可用 emoji）
+- 只更新**文字內容**，不動 HTML 結構與樣式
 
 ---
 
