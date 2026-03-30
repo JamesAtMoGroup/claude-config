@@ -1,879 +1,843 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>James — AI Studio</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <style>
-/* ── TOKENS ── */
+/* ── TOKENS ──────────────────────────────────────── */
 :root{
-  --bg:#000;--bg2:#0a0a0a;--bg3:#111;
-  --green:#7cffb2;--cyan:#00e5ff;--yellow:#ffd166;--purple:#b794f4;--gold:#ffd700;--red:#ff6b6b;
-  --s1:rgba(255,255,255,.03);--s2:rgba(255,255,255,.06);--s3:rgba(255,255,255,.1);
-  --b1:rgba(255,255,255,.08);--b2:rgba(255,255,255,.14);
-  --t1:#fff;--t2:rgba(255,255,255,.82);--t3:rgba(255,255,255,.52);
-  --ease-out:cubic-bezier(.16,1,.3,1);--ease-spring:cubic-bezier(.34,1.56,.64,1);
+  --bg:#020202; --bg2:#0a0a0a; --paper:#f0f0eb;
+  --green:#7cffb2; --acid:#b4ff3a; --orange:#ff4500;
+  --b1:rgba(255,255,255,.06); --b2:rgba(255,255,255,.11);
+  --t1:#f0f0eb; --t2:rgba(240,240,235,.65); --t3:rgba(240,240,235,.32);
+  --nav-w:64px;
+  --ease:cubic-bezier(.16,1,.3,1);
+  --ease-s:cubic-bezier(.34,1.56,.64,1);
 }
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
 html{scroll-behavior:smooth;}
-body{background:var(--bg);color:var(--t1);font-family:'Inter',sans-serif;overflow-x:hidden;-webkit-font-smoothing:antialiased;cursor:none;}
+body{
+  background:var(--bg); color:var(--t1);
+  font-family:'Courier Prime',monospace;
+  overflow-x:hidden; -webkit-font-smoothing:antialiased; cursor:none;
+}
 @media(hover:none){body{cursor:auto;}}
 
-/* ── CURSOR ── */
-#c-dot,#c-ring{position:fixed;border-radius:50%;pointer-events:none;z-index:9999;top:0;left:0;mix-blend-mode:difference;}
-#c-dot{width:8px;height:8px;background:#fff;margin:-4px 0 0 -4px;transition:transform .1s,width .25s var(--ease-out),height .25s var(--ease-out),margin .25s var(--ease-out);}
-#c-ring{width:40px;height:40px;border:1.5px solid rgba(255,255,255,.6);margin:-20px 0 0 -20px;transition:width .35s var(--ease-out),height .35s var(--ease-out),margin .35s var(--ease-out),border-color .25s,opacity .25s;}
-body.cursor-hover #c-dot{width:16px;height:16px;margin:-8px 0 0 -8px;}
-body.cursor-hover #c-ring{width:60px;height:60px;margin:-30px 0 0 -30px;border-color:rgba(124,255,178,.7);}
-body.cursor-click #c-dot{transform:scale(.6);}
-@media(hover:none){#c-dot,#c-ring{display:none;}}
+/* ── CURSOR ──────────────────────────────────────── */
+#cd{
+  position:fixed; width:10px; height:10px; border-radius:50%;
+  background:var(--green); pointer-events:none; z-index:9999;
+  transform:translate(-50%,-50%); mix-blend-mode:screen;
+  transition:width .2s var(--ease),height .2s var(--ease);
+}
+#cr{
+  position:fixed; width:36px; height:36px; border-radius:50%;
+  border:1px solid rgba(240,240,235,.28); pointer-events:none; z-index:9998;
+  transform:translate(-50%,-50%);
+  transition:width .4s var(--ease),height .4s var(--ease),border-color .3s;
+}
+body.hov #cd{width:5px;height:5px;}
+body.hov #cr{width:52px;height:52px;border-color:rgba(124,255,178,.5);}
+body.clk #cd{transform:translate(-50%,-50%) scale(.6);}
+@media(hover:none){#cd,#cr{display:none;}}
 
-/* ── PROGRESS ── */
-#prog{position:fixed;top:0;left:0;right:0;height:2px;z-index:9998;transform-origin:left;transform:scaleX(0);background:linear-gradient(90deg,var(--green),var(--cyan));pointer-events:none;}
+/* ── SCROLL BAR ──────────────────────────────────── */
+#prog{
+  position:fixed;top:0;left:0;right:0;height:2px;z-index:9997;
+  transform-origin:left;transform:scaleX(0);
+  background:var(--green);pointer-events:none;
+}
 
-/* ── NOISE ── */
-.noise{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.032;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23n)'/%3E%3C/svg%3E");background-size:256px;}
+/* ── SPOTLIGHT ───────────────────────────────────── */
+#spt{
+  position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:radial-gradient(circle 320px at var(--sx,50%) var(--sy,50%),
+    rgba(124,255,178,.065) 0%, transparent 70%);
+}
 
-/* ── CANVAS ── */
-#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;}
+/* ── NOISE ───────────────────────────────────────── */
+.noise{
+  position:fixed;inset:0;z-index:2;pointer-events:none;opacity:.03;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:256px;
+}
 
-/* ── NAV ── */
-nav{position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:900;display:flex;align-items:center;gap:0;background:rgba(0,0,0,.75);backdrop-filter:blur(24px) saturate(180%);border:1px solid var(--b1);border-radius:999px;padding:6px 8px;transition:border-color .4s,box-shadow .4s;}
-nav.scrolled{border-color:rgba(124,255,178,.2);box-shadow:0 8px 40px rgba(0,0,0,.6);}
-.nav-logo{font-family:'Space Mono',monospace;font-size:13px;letter-spacing:.14em;color:var(--green);padding:6px 16px;margin-right:2px;}
-.nav-links{display:flex;gap:2px;}
-.nav-links a{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.09em;text-transform:uppercase;text-decoration:none;color:var(--t3);padding:8px 14px;border-radius:999px;transition:color .2s,background .2s;display:flex;align-items:center;gap:6px;}
-.nav-links a:hover,.nav-links a.active{color:var(--t1);background:var(--s2);}
-.nav-dot{display:flex;align-items:center;gap:8px;font-family:'Space Mono',monospace;font-size:11px;color:var(--green);padding:6px 16px;margin-left:2px;border-left:1px solid var(--b1);}
-.pulse{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green);animation:pulse-anim 2s ease-in-out infinite;}
-@keyframes pulse-anim{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.4;transform:scale(.7);}}
+/* ── TILE BG ─────────────────────────────────────── */
+#tile{position:fixed;inset:0;z-index:0;pointer-events:none;}
 
-/* ── HERO ── */
-#hero{min-height:100vh;display:flex;align-items:center;padding:120px 48px 80px;position:relative;overflow:hidden;}
-#hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 70% at var(--mx,50%) var(--my,40%),rgba(124,255,178,.07) 0%,transparent 65%);pointer-events:none;z-index:1;transition:background .1s;}
-.hero-inner{max-width:1200px;margin:0 auto;width:100%;display:grid;grid-template-columns:1fr 440px;gap:80px;align-items:center;position:relative;z-index:2;}
-@media(max-width:960px){.hero-inner{grid-template-columns:1fr;gap:56px;}}
+/* ── LEFT NAV ────────────────────────────────────── */
+#snav{
+  position:fixed;left:0;top:0;bottom:0;width:var(--nav-w);z-index:800;
+  border-right:1px solid var(--b1);
+  background:rgba(2,2,2,.92);backdrop-filter:blur(20px);
+  display:flex;flex-direction:column;align-items:center;
+  justify-content:space-between;padding:28px 0;
+}
+.sn-logo{
+  font-family:'Bebas Neue',sans-serif;font-size:12px;
+  letter-spacing:.45em;color:var(--green);
+  writing-mode:vertical-rl;transform:rotate(180deg);
+}
+.sn-links{
+  display:flex;flex-direction:column;align-items:center;gap:28px;
+}
+.sn-links a{
+  font-size:9px;letter-spacing:.18em;text-transform:uppercase;
+  text-decoration:none;color:var(--t3);
+  writing-mode:vertical-rl;transform:rotate(180deg);
+  transition:color .2s;padding:4px;
+}
+.sn-links a:hover,.sn-links a.on{color:var(--green);}
+.sn-yr{
+  font-size:9px;letter-spacing:.12em;color:var(--t3);
+  writing-mode:vertical-rl;transform:rotate(180deg);
+}
 
-/* ── HERO LEFT ── */
-.hero-tag{display:inline-flex;align-items:center;gap:9px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--green);border:1px solid rgba(124,255,178,.2);padding:6px 18px;border-radius:999px;background:rgba(124,255,178,.05);margin-bottom:36px;}
-.hero-name{font-family:'Space Mono',monospace;font-size:clamp(80px,14vw,160px);font-weight:700;line-height:.88;letter-spacing:-.03em;margin-bottom:28px;display:block;overflow:hidden;}
-.hero-name .char{display:inline-block;opacity:0;transform:translateY(100%);clip-path:inset(0 0 100% 0);}
-.hero-name .char.space{width:.28em;}
-.hero-name .grd{background:linear-gradient(125deg,#7cffb2 0%,#00e5ff 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+/* ── MAIN ────────────────────────────────────────── */
+main{margin-left:var(--nav-w);position:relative;z-index:3;}
 
-.hero-sub{font-family:'Space Mono',monospace;font-size:clamp(13px,1.6vw,16px);color:var(--t2);letter-spacing:.05em;margin-bottom:52px;min-height:20px;}
-#tw-cursor{display:inline-block;width:2px;height:1em;background:var(--green);margin-left:2px;animation:blink .7s step-end infinite;vertical-align:text-bottom;}
-@keyframes blink{0%,100%{opacity:1;}50%{opacity:0;}}
+/* ── HERO ────────────────────────────────────────── */
+#hero{
+  min-height:100vh;display:flex;flex-direction:column;
+  justify-content:flex-end;
+  padding:0 clamp(28px,4vw,64px) clamp(40px,6vh,72px);
+  position:relative;overflow:hidden;
+}
+.h-tag{
+  position:absolute;top:32px;right:clamp(28px,4vw,64px);
+  display:flex;flex-direction:column;align-items:flex-end;gap:7px;
+  font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--t3);
+}
+.h-live{display:flex;align-items:center;gap:7px;color:var(--green);}
+.pdot{
+  width:5px;height:5px;border-radius:50%;background:var(--green);
+  animation:pdot 2.2s ease-in-out infinite;
+}
+@keyframes pdot{0%,100%{opacity:1}50%{opacity:.25}}
 
-.stats-bar{display:flex;flex-wrap:wrap;border:1px solid var(--b1);border-radius:14px;overflow:hidden;background:var(--s1);backdrop-filter:blur(16px);}
-.stat{padding:18px 28px;border-right:1px solid var(--b1);text-align:left;}
-.stat:last-child{border-right:none;}
-.stat-n{display:block;font-family:'Space Mono',monospace;font-size:clamp(22px,3.5vw,36px);font-weight:700;background:linear-gradient(125deg,var(--green),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:4px;min-width:2ch;}
-.stat-l{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);font-family:'Space Mono',monospace;}
-@media(max-width:560px){.stat{width:50%;border-bottom:1px solid var(--b1);}.stat:nth-child(2){border-right:none;}}
+.h-nwrap{width:100%;overflow:hidden;margin-bottom:0;}
+.h-name{
+  font-family:'Bebas Neue',sans-serif;font-weight:400;
+  line-height:.88;letter-spacing:-.01em;
+  white-space:nowrap;display:block;width:100%;
+}
+.h-name span{display:inline-block;}
 
-/* ── TERMINAL ── */
-.terminal{background:rgba(6,6,8,.95);border:1px solid rgba(124,255,178,.18);border-radius:18px;overflow:hidden;box-shadow:0 0 0 1px rgba(0,0,0,.5),0 40px 100px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.05);}
-.term-bar{display:flex;align-items:center;gap:7px;padding:13px 18px;background:rgba(255,255,255,.025);border-bottom:1px solid rgba(255,255,255,.06);}
-.td{width:11px;height:11px;border-radius:50%;flex-shrink:0;}
-.td-r{background:#ff5f57;}.td-y{background:#ffbd2e;}.td-g{background:#28c940;}
-.term-title{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.1em;color:var(--t3);margin-left:8px;flex:1;}
-.term-live{font-family:'Space Mono',monospace;font-size:10px;color:var(--green);letter-spacing:.1em;}
-.term-body{padding:20px 22px;min-height:220px;}
-.t-line{display:flex;gap:10px;align-items:baseline;font-family:'Space Mono',monospace;font-size:12.5px;line-height:2;color:var(--t2);}
-.t-line .t-prompt{color:rgba(124,255,178,.5);flex-shrink:0;}
-.t-line .t-agent{color:var(--cyan);flex-shrink:0;}
-.t-line .t-msg{color:var(--t2);}
-.t-caret{display:inline-block;width:7px;height:13px;background:var(--green);animation:blink .9s step-end infinite;vertical-align:text-bottom;margin-left:2px;}
+.h-rule{width:100%;height:1px;background:var(--b2);margin:clamp(14px,2.5vh,28px) 0;}
+.h-bot{display:flex;align-items:flex-end;justify-content:space-between;gap:32px;}
+.h-desc{
+  font-size:clamp(13px,1.4vw,16px);line-height:1.7;color:var(--t2);max-width:400px;
+  font-style:italic;
+}
+.h-scroll{
+  font-size:10px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--t3);display:flex;flex-direction:column;align-items:center;gap:10px;flex-shrink:0;
+}
+.h-scroll::after{
+  content:'';width:1px;height:52px;
+  background:linear-gradient(var(--green),transparent);
+  animation:sline 2.2s ease-in-out infinite;
+}
+@keyframes sline{
+  0%{transform:scaleY(0);transform-origin:top}
+  49%{transform:scaleY(1);transform-origin:top}
+  50%{transform:scaleY(1);transform-origin:bottom}
+  100%{transform:scaleY(0);transform-origin:bottom}
+}
 
-/* ── MARQUEE ── */
-.marquee-wrap{position:relative;z-index:2;overflow:hidden;border-top:1px solid var(--b1);border-bottom:1px solid var(--b1);background:rgba(0,0,0,.6);backdrop-filter:blur(10px);height:48px;display:flex;align-items:center;}
-.mq-track{display:inline-flex;align-items:center;white-space:nowrap;animation:mq 55s linear infinite;}
-.mq-track:hover{animation-play-state:paused;}
-.mq-item{display:inline-flex;align-items:center;gap:10px;padding:0 36px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--t3);}
-.mq-dot{width:4px;height:4px;border-radius:50%;background:var(--green);opacity:.55;}
-.mq-sep{width:1px;height:14px;background:var(--b2);}
-@keyframes mq{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
+/* ── STATS GRID ──────────────────────────────────── */
+#stats{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  border-top:1px solid var(--b1);border-bottom:1px solid var(--b1);
+  background:var(--b1);gap:1px;
+}
+.st{
+  background:var(--bg);padding:clamp(28px,4.5vw,56px) clamp(22px,3vw,44px);
+  position:relative;overflow:hidden;
+}
+.st-ghost{
+  position:absolute;bottom:-12px;right:12px;
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(72px,11vw,148px);
+  color:rgba(255,255,255,.028);pointer-events:none;user-select:none;line-height:1;
+}
+.st-n{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(52px,7.5vw,108px);line-height:1;
+  color:var(--t1);display:block;margin-bottom:8px;
+}
+.st-n em{color:var(--green);font-style:normal;}
+.st-l{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--t3);}
 
-/* ── SECTION ── */
-section{position:relative;z-index:2;}
-.wrap{max-width:1200px;margin:0 auto;padding:110px 48px;}
-@media(max-width:768px){.wrap{padding:80px 24px;}}
-.sec-head{display:flex;align-items:flex-start;gap:22px;margin-bottom:60px;}
-.sec-num{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.15em;color:var(--green);padding:4px 12px;border:1px solid rgba(124,255,178,.2);border-radius:8px;background:rgba(124,255,178,.06);white-space:nowrap;margin-top:6px;flex-shrink:0;}
-.sec-title{font-size:clamp(30px,4.5vw,48px);font-weight:800;letter-spacing:-.025em;margin-bottom:8px;}
-.sec-desc{font-size:16px;color:var(--t2);line-height:1.65;}
+/* ── MARQUEE ─────────────────────────────────────── */
+.mq{
+  overflow:hidden;border-bottom:1px solid var(--b1);
+  height:44px;display:flex;align-items:center;
+  background:rgba(124,255,178,.02);
+}
+.mq-t{
+  display:flex;gap:56px;padding:0 28px;
+  animation:mq 30s linear infinite;white-space:nowrap;
+}
+.mq-t:hover{animation-play-state:paused;}
+.mq-i{
+  font-family:'Bebas Neue',sans-serif;font-size:13px;
+  letter-spacing:.2em;color:var(--t3);flex-shrink:0;
+}
+.mq-i .sep{color:var(--green);margin:0 14px;}
+@keyframes mq{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 
-/* ── REVEAL ── */
-.rv{opacity:0;transform:translateY(24px);transition:opacity .8s var(--ease-out),transform .8s var(--ease-out);}
+/* ── SECTION ─────────────────────────────────────── */
+.sec{padding:clamp(72px,10vh,120px) clamp(28px,4vw,64px);}
+.sec-hd{
+  display:flex;align-items:baseline;gap:20px;
+  margin-bottom:clamp(36px,5vh,64px);
+  padding-bottom:20px;border-bottom:1px solid var(--b1);
+}
+.sec-n{font-size:10px;letter-spacing:.16em;color:var(--t3);}
+.sec-t{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(44px,7.5vw,100px);line-height:.92;letter-spacing:-.01em;
+}
+.sec-s{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);margin-left:auto;}
+
+/* ── AGENT GRID ──────────────────────────────────── */
+.ag{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--b1);border:1px solid var(--b1);}
+.ac{
+  background:var(--bg);padding:clamp(22px,3vw,36px);
+  position:relative;overflow:hidden;cursor:pointer;
+  transition:background .3s;
+}
+.ac:hover{background:rgba(124,255,178,.025);}
+.ac::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,var(--green),transparent);
+  opacity:0;transition:opacity .3s;
+}
+.ac:hover::before{opacity:1;}
+.ac-n{font-size:10px;letter-spacing:.15em;color:var(--t3);margin-bottom:14px;}
+.ac-t{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(24px,3vw,42px);line-height:1;margin-bottom:10px;
+}
+.ac-d{font-size:13px;line-height:1.65;color:var(--t2);}
+.ac-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:16px;}
+.ac-tag{
+  font-size:9px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--green);border:1px solid rgba(124,255,178,.22);padding:3px 7px;
+}
+.ac-arr{
+  position:absolute;bottom:20px;right:20px;font-size:14px;color:var(--t3);
+  transition:color .2s,transform .2s;
+}
+.ac:hover .ac-arr{color:var(--green);transform:translate(3px,-3px);}
+
+/* ── PROJECTS ────────────────────────────────────── */
+.pl{display:flex;flex-direction:column;gap:1px;border:1px solid var(--b1);background:var(--b1);}
+.pi{
+  background:var(--bg);display:grid;
+  grid-template-columns:72px 1fr auto;align-items:center;
+  gap:28px;padding:clamp(22px,3vw,32px) clamp(22px,3vw,40px);
+  text-decoration:none;color:inherit;
+  position:relative;overflow:hidden;cursor:pointer;
+  transition:background .3s;
+}
+.pi::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,rgba(124,255,178,.04),transparent);
+  opacity:0;transition:opacity .3s;
+}
+.pi:hover{background:rgba(255,255,255,.008);}
+.pi:hover::before{opacity:1;}
+.pi-n{
+  font-family:'Bebas Neue',sans-serif;font-size:28px;
+  color:var(--t3);flex-shrink:0;
+}
+.pi-i{min-width:0;}
+.pi-t{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(20px,2.5vw,34px);line-height:1;margin-bottom:5px;
+  transition:color .2s;
+}
+.pi:hover .pi-t{color:var(--green);}
+.pi-d{font-size:12px;color:var(--t2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pi-st{display:flex;gap:6px;align-items:center;flex-shrink:0;}
+.pi-tag{
+  font-size:9px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--t3);border:1px solid var(--b1);padding:3px 7px;
+}
+.pi-arr{font-size:14px;color:var(--t3);margin-left:6px;transition:color .2s,transform .2s;}
+.pi:hover .pi-arr{color:var(--green);transform:translate(3px,-3px);}
+
+/* ── MANIFESTO ───────────────────────────────────── */
+#mf{
+  background:var(--green);
+  padding:clamp(56px,10vw,112px) clamp(28px,4vw,64px);
+  position:relative;overflow:hidden;
+}
+#mf::before{
+  content:'SIGNAL';position:absolute;right:-1%;top:50%;transform:translateY(-50%);
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(100px,24vw,320px);
+  color:rgba(0,0,0,.06);pointer-events:none;line-height:1;letter-spacing:-.04em;
+}
+.mf-row{overflow:hidden;margin-bottom:6px;}
+.mf-txt{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(32px,5.5vw,80px);
+  line-height:1.02;color:#000;letter-spacing:-.01em;
+  display:block;transform:translateY(108%);
+  transition:transform .95s var(--ease);
+}
+#mf.vis .mf-txt{transform:translateY(0);}
+.mf-txt:nth-child(1){transition-delay:0s}
+.mf-txt:nth-child(2){transition-delay:.12s}
+.mf-txt:nth-child(3){transition-delay:.22s}
+.mf-sub{
+  margin-top:36px;font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  color:rgba(0,0,0,.45);
+  transform:translateY(16px);opacity:0;
+  transition:transform .6s var(--ease) .5s,opacity .6s var(--ease) .5s;
+}
+#mf.vis .mf-sub{transform:none;opacity:1;}
+
+/* ── TERMINAL STRIP ──────────────────────────────── */
+#term{
+  border-top:1px solid var(--b1);border-bottom:1px solid var(--b1);
+  background:rgba(0,0,0,.8);backdrop-filter:blur(12px);
+  padding:20px clamp(28px,4vw,64px);
+  display:flex;gap:20px;align-items:center;
+}
+.term-label{
+  font-size:9px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--green);white-space:nowrap;flex-shrink:0;
+  display:flex;align-items:center;gap:10px;
+}
+.term-label::after{content:'';width:1px;height:28px;background:var(--b2);}
+.term-lines{flex:1;display:flex;flex-direction:column;gap:1px;overflow:hidden;}
+.tl{
+  font-size:12px;line-height:1.8;color:var(--t2);
+  display:flex;gap:10px;white-space:nowrap;overflow:hidden;
+}
+.tp{color:rgba(124,255,178,.4);flex-shrink:0;}
+.ta{color:#7dd3fc;flex-shrink:0;}
+.tc{
+  display:inline-block;width:6px;height:12px;
+  background:var(--green);animation:blink 1s step-end infinite;
+  vertical-align:text-bottom;margin-left:2px;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* ── FOOTER ──────────────────────────────────────── */
+footer{
+  border-top:1px solid var(--b1);
+  padding:clamp(36px,5vw,72px) clamp(28px,4vw,64px);
+}
+.ft-nwrap{width:100%;overflow:hidden;margin-bottom:28px;}
+.ft-name{
+  font-family:'Bebas Neue',sans-serif;font-weight:400;
+  line-height:.88;letter-spacing:-.01em;
+  white-space:nowrap;color:rgba(240,240,235,.07);
+}
+.ft-bot{
+  display:flex;justify-content:space-between;align-items:flex-end;gap:24px;
+  padding-top:20px;border-top:1px solid var(--b1);
+}
+.ft-tg{font-size:clamp(13px,1.6vw,18px);line-height:1.55;color:var(--t2);}
+.ft-tg .hl{color:var(--green);}
+.ft-m{font-size:10px;line-height:1.9;color:var(--t3);text-align:right;}
+
+/* ── REVEAL ──────────────────────────────────────── */
+.rv{opacity:0;transform:translateY(22px);transition:opacity .8s var(--ease),transform .8s var(--ease);}
 .rv.in{opacity:1;transform:none;}
+.rv:nth-child(2){transition-delay:.07s}
+.rv:nth-child(3){transition-delay:.14s}
+.rv:nth-child(4){transition-delay:.21s}
+.rv:nth-child(5){transition-delay:.28s}
+.rv:nth-child(6){transition-delay:.35s}
 
-/* ── ORG SECTION ── */
-#org{background:rgba(0,0,0,.4);}
-.tier-lbl{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--t3);margin-bottom:18px;display:flex;align-items:center;gap:16px;}
-.tier-lbl::before,.tier-lbl::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--b2),transparent);}
-.conn{display:flex;justify-content:center;margin:6px 0;}
-.conn-line{width:1px;height:24px;background:linear-gradient(180deg,var(--b2),transparent);}
+/* ── MOBILE ──────────────────────────────────────── */
+@media(max-width:768px){
+  :root{--nav-w:0px;}
+  #snav{display:none;}
+  main{margin-left:0;}
+  #stats{grid-template-columns:repeat(2,1fr);}
+  .ag{grid-template-columns:1fr;}
+  .pi{grid-template-columns:40px 1fr;}
+  .pi-st{display:none;}
+}
+@media(max-width:480px){
+  #stats{grid-template-columns:1fr 1fr;}
+  .h-bot{flex-direction:column;align-items:flex-start;}
+  .h-scroll{display:none;}
+}
 
-/* ── GRADIENT BORDER CARDS ── */
-.gc{position:relative;background:var(--bg2);border-radius:20px;transition:box-shadow .3s;will-change:transform;}
-.gc::before{content:'';position:absolute;inset:0;border-radius:inherit;padding:1px;background:linear-gradient(140deg,rgba(124,255,178,.35) 0%,rgba(124,255,178,.05) 45%,transparent 70%);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;}
-.gc.meta::before{background:linear-gradient(140deg,rgba(183,148,244,.35) 0%,rgba(183,148,244,.05) 45%,transparent 70%);}
-.gc.owner::before{background:linear-gradient(140deg,rgba(255,215,0,.35) 0%,rgba(255,215,0,.05) 45%,transparent 70%);}
-.gc-inner{padding:24px;position:relative;z-index:1;}
-.gc-inner.lg{padding:30px 34px;}
-
-.badge{display:inline-flex;align-items:center;gap:5px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:4px 11px;border-radius:999px;margin-bottom:12px;}
-.bg{background:rgba(124,255,178,.1);color:var(--green);border:1px solid rgba(124,255,178,.2);}
-.bm{background:rgba(183,148,244,.1);color:var(--purple);border:1px solid rgba(183,148,244,.2);}
-.bo{background:rgba(255,215,0,.1);color:var(--gold);border:1px solid rgba(255,215,0,.2);}
-.bd{background:var(--s1);color:var(--t3);border:1px solid var(--b1);}
-
-.c-icon{width:44px;height:44px;border-radius:12px;background:var(--s2);display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:14px;}
-.owner .c-icon{background:rgba(255,215,0,.1);}
-.meta .c-icon{background:rgba(183,148,244,.1);}
-.dir .c-icon{background:rgba(124,255,178,.1);}
-.c-name{font-size:16px;font-weight:700;margin-bottom:5px;}
-.c-sub{font-size:14px;color:var(--t2);line-height:1.55;margin-bottom:12px;}
-.c-trig{font-size:13px;color:var(--t3);line-height:1.6;padding-top:12px;border-top:1px solid var(--b1);}
-.c-trig strong{color:var(--t2);}
-.c-pills{display:flex;flex-wrap:wrap;gap:5px;padding-top:10px;border-top:1px solid var(--b1);margin-top:6px;}
-.pill{font-size:10px;color:var(--t3);background:var(--s1);border:1px solid var(--b1);border-radius:999px;padding:3px 10px;font-family:'Space Mono',monospace;}
-
-.owner-row{display:flex;justify-content:center;margin-bottom:4px;}
-.owner-row .gc{width:380px;}
-.meta-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:4px;}
-.dir-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
-@media(max-width:900px){.dir-row{grid-template-columns:repeat(2,1fr);}}
-@media(max-width:540px){.meta-row,.dir-row{grid-template-columns:1fr;}.owner-row .gc{width:100%;}}
-
-/* spotlight: siblings dim on hover */
-.org-cards.spotlight .gc{transition:opacity .3s,transform .3s,box-shadow .3s;}
-.org-cards.spotlight:hover .gc{opacity:.35;}
-.org-cards.spotlight .gc:hover{opacity:1!important;}
-
-/* ── PROJECTS ── */
-#projects{background:rgba(0,0,0,.55);}
-.top-p{display:flex;align-items:flex-start;gap:18px;background:linear-gradient(135deg,rgba(124,255,178,.07),rgba(124,255,178,.02));border:1px solid rgba(124,255,178,.18);border-radius:18px;padding:22px 26px;margin-bottom:24px;}
-.tp-ico{width:42px;height:42px;border-radius:12px;background:rgba(124,255,178,.1);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
-.tp-lbl{font-family:'Space Mono',monospace;font-size:11px;color:var(--green);letter-spacing:.12em;text-transform:uppercase;margin-bottom:5px;}
-.tp-ttl{font-size:16px;font-weight:700;margin-bottom:3px;}
-.tp-rsn{font-size:14px;color:var(--t2);line-height:1.65;}
-
-.pg{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;}
-@media(max-width:700px){.pg{grid-template-columns:1fr;}}
-
-.pc{position:relative;background:var(--bg2);border-radius:18px;padding:22px;overflow:hidden;}
-.pc::before{content:'';position:absolute;inset:0;border-radius:inherit;padding:1px;background:linear-gradient(140deg,rgba(124,255,178,.22) 0%,rgba(124,255,178,.03) 40%,transparent 70%);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;}
-.pc.blocked::before{background:linear-gradient(140deg,rgba(255,107,107,.3) 0%,rgba(255,107,107,.04) 40%,transparent 70%);}
-
-.pc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;}
-.pc-name{font-size:16px;font-weight:700;margin-top:4px;}
-.pst{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:5px 12px;border-radius:999px;display:flex;align-items:center;gap:6px;}
-.pst.active{background:rgba(124,255,178,.1);color:var(--green);}
-.pst.blocked{background:rgba(255,107,107,.1);color:var(--red);}
-.pst-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
-.pst.active .pst-dot{background:var(--green);animation:pulse-anim 1.5s infinite;}
-.pst.blocked .pst-dot{background:var(--red);}
-
-.mss{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
-.ms{display:flex;align-items:center;gap:10px;font-size:13px;}
-.ms-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
-.ms.done .ms-dot{background:var(--green);}
-.ms.pending .ms-dot{background:rgba(255,255,255,.12);}
-.ms.inprog .ms-dot{background:var(--yellow);box-shadow:0 0 6px rgba(255,209,102,.6);animation:pulse-anim 1.5s infinite;}
-.ms.done .ms-lbl{color:var(--t3);}
-.ms.pending .ms-lbl{color:var(--t3);}
-.ms.inprog .ms-lbl{color:var(--yellow);}
-
-.next-a{background:var(--s1);border:1px solid var(--b1);border-radius:10px;padding:11px 14px;margin-bottom:10px;}
-.na-l{font-family:'Space Mono',monospace;font-size:10px;color:var(--t3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px;}
-.na-t{font-size:14px;font-weight:600;}
-.blk-list{display:flex;flex-direction:column;gap:5px;}
-.blk{font-size:12px;color:var(--red);display:flex;align-items:center;gap:7px;}
-.sync-n{text-align:center;margin-top:24px;font-family:'Space Mono',monospace;font-size:11px;color:var(--t3);letter-spacing:.08em;}
-
-/* ── WORKS ── */
-.wg{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
-@media(max-width:900px){.wg{grid-template-columns:repeat(2,1fr);}}
-@media(max-width:540px){.wg{grid-template-columns:1fr;}}
-
-.wc{display:flex;flex-direction:column;padding:28px;background:var(--bg2);border-radius:20px;position:relative;overflow:hidden;text-decoration:none;color:inherit;transition:transform .4s var(--ease-out),box-shadow .4s;}
-.wc::before{content:'';position:absolute;inset:0;border-radius:inherit;padding:1px;background:linear-gradient(140deg,rgba(124,255,178,.3) 0%,rgba(124,255,178,.04) 45%,transparent 70%);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;}
-/* Shimmer on hover */
-.wc::after{content:'';position:absolute;top:-50%;left:-75%;width:50%;height:200%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.04),transparent);transform:skewX(-15deg);opacity:0;transition:opacity .1s;}
-.wc:hover::after{opacity:1;animation:shimmer .65s ease forwards;}
-@keyframes shimmer{0%{left:-75%;}100%{left:125%;}}
-
-.w-type{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--green);margin-bottom:16px;display:flex;align-items:center;gap:9px;}
-.w-type::before{content:'';width:18px;height:1px;background:rgba(124,255,178,.4);}
-.w-ico{width:50px;height:50px;border-radius:14px;background:rgba(124,255,178,.08);border:1px solid rgba(124,255,178,.14);display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:18px;}
-.w-name{font-size:18px;font-weight:700;margin-bottom:10px;}
-.w-desc{font-size:14px;color:var(--t2);line-height:1.7;margin-bottom:18px;flex:1;}
-.w-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:20px;}
-.w-tag{font-family:'Space Mono',monospace;font-size:10px;color:var(--t3);background:var(--s1);border:1px solid var(--b1);border-radius:999px;padding:4px 10px;}
-.w-cta{display:inline-flex;align-items:center;gap:9px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--green);background:rgba(124,255,178,.07);border:1px solid rgba(124,255,178,.2);border-radius:10px;padding:10px 18px;align-self:flex-start;transition:background .2s,border-color .2s,gap .25s var(--ease-spring);}
-.wc:hover .w-cta{background:rgba(124,255,178,.13);border-color:rgba(124,255,178,.45);gap:14px;}
-.w-arrow{font-size:14px;transition:transform .25s var(--ease-spring);}
-.wc:hover .w-arrow{transform:translate(3px,-3px);}
-
-/* ── FOOTER ── */
-footer{position:relative;z-index:2;border-top:1px solid var(--b1);padding:80px 48px;text-align:center;}
-.ft-eye{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--t3);margin-bottom:20px;}
-.ft-main{font-size:clamp(32px,6vw,64px);font-weight:800;letter-spacing:-.025em;line-height:1.15;margin-bottom:14px;}
-.ft-grd{background:linear-gradient(125deg,var(--green),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
-.ft-sub{font-family:'Space Mono',monospace;font-size:13px;color:var(--t3);letter-spacing:.06em;}
-
-/* ── MODAL ── */
-.overlay{position:fixed;inset:0;z-index:950;background:rgba(0,0,0,.82);backdrop-filter:blur(14px);display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;pointer-events:none;transition:opacity .28s;}
-.overlay.open{opacity:1;pointer-events:all;}
-.modal{background:#0a0a0c;border:1px solid var(--b2);border-radius:24px;width:100%;max-width:520px;max-height:86vh;overflow-y:auto;padding:34px;position:relative;transform:translateY(20px) scale(.97);transition:transform .32s var(--ease-out);box-shadow:0 40px 100px rgba(0,0,0,.8);}
-.overlay.open .modal{transform:none;}
-.m-close{position:absolute;top:20px;right:20px;width:34px;height:34px;background:var(--s1);border:1px solid var(--b1);border-radius:9px;cursor:none;display:flex;align-items:center;justify-content:center;color:var(--t2);font-size:14px;transition:background .15s;}
-.m-close:hover{background:var(--s2);color:var(--t1);}
-.m-back{display:inline-flex;align-items:center;gap:6px;font-family:'Space Mono',monospace;font-size:10px;color:var(--t3);letter-spacing:.08em;text-transform:uppercase;cursor:none;margin-bottom:20px;border:none;background:none;padding:0;transition:color .15s;}
-.m-back:hover{color:var(--t1);}
-.m-avatar{width:52px;height:52px;border-radius:16px;background:var(--s2);display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:14px;}
-.m-name{font-size:24px;font-weight:800;margin-bottom:4px;}
-.m-subtitle{font-family:'Space Mono',monospace;font-size:12px;color:var(--t3);margin-bottom:24px;letter-spacing:.06em;}
-.m-sl{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--t3);margin-bottom:10px;}
-.trig-box{background:var(--s1);border:1px solid var(--b1);border-radius:12px;padding:16px 18px;margin-bottom:20px;}
-.trig-txt{font-size:15px;font-weight:600;line-height:1.65;}
-.r-list{display:flex;flex-direction:column;gap:10px;margin-bottom:20px;}
-.r-item{font-size:14px;color:var(--t2);line-height:1.65;display:flex;gap:11px;align-items:flex-start;}
-.r-item::before{content:'';width:4px;height:4px;border-radius:50%;background:var(--green);flex-shrink:0;margin-top:10px;}
-.tools-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px;}
-.t-tag{font-family:'Space Mono',monospace;font-size:11px;background:rgba(124,255,178,.06);border:1px solid rgba(124,255,178,.15);color:var(--green);padding:5px 12px;border-radius:7px;}
-.m-note{font-size:14px;color:var(--t3);line-height:1.7;padding:14px 16px;background:var(--s1);border-radius:10px;border:1px solid var(--b1);margin-bottom:18px;}
-.divider{height:1px;background:var(--b1);margin:20px 0;}
-.sub-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
-@media(max-width:440px){.sub-grid{grid-template-columns:1fr;}}
-.sub-c{background:var(--s1);border:1px solid var(--b1);border-radius:12px;padding:14px;cursor:none;transition:background .15s,transform .2s var(--ease-out);}
-.sub-c:hover{background:var(--s2);transform:translateY(-2px);}
-.sc-ico{font-size:18px;margin-bottom:6px;}
-.sc-name{font-size:13px;font-weight:700;margin-bottom:2px;}
-.sc-sub{font-size:11px;color:var(--t3);line-height:1.45;}
-.sc-arr{font-size:11px;color:var(--green);margin-top:6px;font-family:'Space Mono',monospace;}
-
-/* ── REDUCED MOTION ── */
+/* ── REDUCED MOTION ──────────────────────────────── */
 @media(prefers-reduced-motion:reduce){
-  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important;}
-  .rv{opacity:1;transform:none;}
-  .mq-track{animation:none;}
-  .hero-name .char{opacity:1;transform:none;clip-path:none;}
+  *,*::before,*::after{animation-duration:0s!important;transition-duration:0s!important;}
+  .rv,.mf-txt,.mf-sub{opacity:1;transform:none;}
 }
 </style>
 </head>
 <body>
 
-<!-- Cursor -->
-<div id="c-dot" aria-hidden="true"></div>
-<div id="c-ring" aria-hidden="true"></div>
+<div id="cd"></div>
+<div id="cr"></div>
+<div id="prog"></div>
+<div id="spt"></div>
+<canvas id="tile"></canvas>
+<div class="noise"></div>
 
-<!-- Progress -->
-<div id="prog" aria-hidden="true"></div>
-
-<!-- Noise -->
-<div class="noise" aria-hidden="true"></div>
-<canvas id="bg-canvas" aria-hidden="true"></canvas>
-
-<!-- SVG Icons -->
-<svg style="display:none" aria-hidden="true">
-  <symbol id="ic-ext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><path d="M7 7h10v10"/></symbol>
-  <symbol id="ic-warn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></symbol>
-</svg>
-
-<!-- NAV -->
-<nav id="nav" role="navigation" aria-label="Main">
-  <div class="nav-logo">J.</div>
-  <div class="nav-links">
-    <a href="#hero">Home</a>
-    <a href="#org">Org</a>
-    <a href="#projects">Projects</a>
-    <a href="#works">Works</a>
+<!-- LEFT NAV -->
+<nav id="snav" aria-label="Site navigation">
+  <div class="sn-logo">Studio</div>
+  <div class="sn-links">
+    <a href="#systems" aria-label="Systems">Systems</a>
+    <a href="#work" aria-label="Work">Work</a>
+    <a href="#mf" aria-label="Signal">Signal</a>
   </div>
-  <div class="nav-dot"><div class="pulse" aria-hidden="true"></div>LIVE</div>
+  <div class="sn-yr">2026</div>
 </nav>
 
-<!-- MODAL -->
-<div class="overlay" id="overlay" role="dialog" aria-modal="true" onclick="handleOvClick(event)">
-  <div class="modal" id="modal">
-    <button class="m-close" onclick="closeModal()" aria-label="Close">✕</button>
-    <div id="modal-body"></div>
-  </div>
-</div>
+<main>
 
-<!-- ══ HERO ══ -->
-<section id="hero" aria-label="Hero">
-  <div class="hero-inner">
-    <div>
-      <div class="hero-tag"><div class="pulse" aria-hidden="true"></div>AI-POWERED ONE-PERSON STUDIO</div>
-      <h1 class="hero-name" id="hero-name" aria-label="James" data-text="JAMES"></h1>
-      <p class="hero-sub" aria-live="polite"><span id="tw"></span><span id="tw-cursor" aria-hidden="true"></span></p>
-      <div class="stats-bar rv" role="list">
-        <div class="stat" role="listitem"><span class="stat-n" id="s1" data-target="4">0</span><span class="stat-l">Projects</span></div>
-        <div class="stat" role="listitem"><span class="stat-n" id="s2" data-target="17">0</span><span class="stat-l">AI Agents</span></div>
-        <div class="stat" role="listitem"><span class="stat-n" id="s3" data-target="6">0</span><span class="stat-l">Directors</span></div>
-        <div class="stat" role="listitem"><span class="stat-n">4K</span><span class="stat-l">Video</span></div>
-      </div>
-    </div>
-    <div class="terminal rv" style="transition-delay:.18s" role="region" aria-label="System terminal">
-      <div class="term-bar">
-        <div class="td td-r"></div><div class="td td-y"></div><div class="td td-g"></div>
-        <span class="term-title">studio.terminal</span>
-        <span class="term-live">● LIVE</span>
-      </div>
-      <div class="term-body" id="term-body" aria-live="polite"></div>
-    </div>
+<!-- HERO -->
+<section id="hero" aria-label="Introduction">
+  <div class="h-tag">
+    <div class="h-live"><span class="pdot" aria-hidden="true"></span>17 agents · live</div>
+    <div>AI Studio · Taipei</div>
+  </div>
+  <div class="h-nwrap">
+    <h1 class="h-name" id="hname" aria-label="James"></h1>
+  </div>
+  <div class="h-rule"></div>
+  <div class="h-bot">
+    <p class="h-desc">One person. Infinite systems.<br>
+    AI-native studio building agents, courses,<br>and tools that compound.</p>
+    <div class="h-scroll" aria-hidden="true">Scroll</div>
   </div>
 </section>
+
+<!-- STATS -->
+<div id="stats" role="region" aria-label="Studio stats">
+  <div class="st rv">
+    <div class="st-ghost" aria-hidden="true">17</div>
+    <span class="st-n"><span class="sv" data-t="17">0</span></span>
+    <div class="st-l">AI Agents Running</div>
+  </div>
+  <div class="st rv">
+    <div class="st-ghost" aria-hidden="true">4</div>
+    <span class="st-n"><span class="sv" data-t="4">0</span></span>
+    <div class="st-l">Active Projects</div>
+  </div>
+  <div class="st rv">
+    <div class="st-ghost" aria-hidden="true">0</div>
+    <span class="st-n"><span class="sv" data-t="0">0</span><em>%</em></span>
+    <div class="st-l">Token Overhead</div>
+  </div>
+  <div class="st rv">
+    <div class="st-ghost" aria-hidden="true">∞</div>
+    <span class="st-n">∞</span>
+    <div class="st-l">Systems Compounding</div>
+  </div>
+</div>
 
 <!-- MARQUEE -->
-<div class="marquee-wrap" aria-hidden="true">
-  <div class="mq-track" id="mq-track"></div>
+<div class="mq" aria-hidden="true">
+  <div class="mq-t" id="mqt">
+    <span class="mq-i">Video Director<span class="sep">·</span></span>
+    <span class="mq-i">Course Director<span class="sep">·</span></span>
+    <span class="mq-i">Engineering Director<span class="sep">·</span></span>
+    <span class="mq-i">Content Director<span class="sep">·</span></span>
+    <span class="mq-i">PM Director<span class="sep">·</span></span>
+    <span class="mq-i">System Director<span class="sep">·</span></span>
+    <span class="mq-i">Memory Agent<span class="sep">·</span></span>
+    <span class="mq-i">Render Agent<span class="sep">·</span></span>
+    <span class="mq-i">QA Agent<span class="sep">·</span></span>
+    <span class="mq-i">Deploy Agent<span class="sep">·</span></span>
+    <span class="mq-i">Sync Agent<span class="sep">·</span></span>
+    <span class="mq-i">Priority Agent<span class="sep">·</span></span>
+    <!-- duplicate for seamless loop -->
+    <span class="mq-i">Video Director<span class="sep">·</span></span>
+    <span class="mq-i">Course Director<span class="sep">·</span></span>
+    <span class="mq-i">Engineering Director<span class="sep">·</span></span>
+    <span class="mq-i">Content Director<span class="sep">·</span></span>
+    <span class="mq-i">PM Director<span class="sep">·</span></span>
+    <span class="mq-i">System Director<span class="sep">·</span></span>
+    <span class="mq-i">Memory Agent<span class="sep">·</span></span>
+    <span class="mq-i">Render Agent<span class="sep">·</span></span>
+    <span class="mq-i">QA Agent<span class="sep">·</span></span>
+    <span class="mq-i">Deploy Agent<span class="sep">·</span></span>
+    <span class="mq-i">Sync Agent<span class="sep">·</span></span>
+    <span class="mq-i">Priority Agent<span class="sep">·</span></span>
+  </div>
 </div>
 
-<!-- ══ ORG ══ -->
-<section id="org" aria-labelledby="org-ttl">
-  <div class="wrap">
-    <div class="sec-head rv">
-      <div class="sec-num">01</div>
-      <div><h2 class="sec-title" id="org-ttl">Agent Organization</h2><p class="sec-desc">一人公司如何用 AI agents 平行運作所有業務 — 點擊節點查看詳情</p></div>
+<!-- SYSTEMS -->
+<section id="systems" class="sec" aria-labelledby="sec-sys-title">
+  <div class="sec-hd">
+    <span class="sec-n">01</span>
+    <h2 class="sec-t" id="sec-sys-title">SYSTEMS</h2>
+    <span class="sec-s">6 Directors · 17 Agents</span>
+  </div>
+  <div class="ag">
+    <div class="ac rv" tabindex="0" role="article">
+      <div class="ac-n">01 — Meta</div>
+      <div class="ac-t">System Director</div>
+      <div class="ac-d">Orchestrates every session. Manages memory, SOP, and sync. Always in the room.</div>
+      <div class="ac-tags">
+        <span class="ac-tag">Memory</span>
+        <span class="ac-tag">Sync</span>
+        <span class="ac-tag">SOP</span>
+      </div>
+      <div class="ac-arr" aria-hidden="true">↗</div>
     </div>
-
-    <div class="org-cards">
-      <!-- Owner -->
-      <div class="owner-row">
-        <div class="gc owner rv" onclick="openAgent('james')" tabindex="0" role="button" aria-label="James - Studio Owner">
-          <div class="gc-inner lg">
-            <div class="c-icon">🎯</div>
-            <div class="badge bo">Studio Owner</div>
-            <div class="c-name" style="font-size:20px">James</div>
-            <div class="c-sub">Creator · Engineer · Designer · Teacher</div>
-            <div class="c-trig"><strong>原則：</strong>只說目標，系統自己跑。</div>
-          </div>
-        </div>
+    <div class="ac rv" tabindex="0" role="article">
+      <div class="ac-n">02 — Planning</div>
+      <div class="ac-t">PM Director</div>
+      <div class="ac-d">Global view. Tracks priorities, blockers, and the one highest-leverage thing to do now.</div>
+      <div class="ac-tags">
+        <span class="ac-tag">Priority</span>
+        <span class="ac-tag">Blocker</span>
+        <span class="ac-tag">Roadmap</span>
       </div>
-      <div class="conn"><div class="conn-line"></div></div>
-      <div class="tier-lbl rv">Meta Layer</div>
-      <!-- Meta -->
-      <div class="meta-row">
-        <div class="gc meta rv" onclick="openAgent('systemDirector')" tabindex="0" role="button" aria-label="System Director">
-          <div class="gc-inner">
-            <div class="c-icon">🧠</div><div class="badge bm">Meta Orchestrator</div>
-            <div class="c-name">System Director</div>
-            <div class="c-sub">管理系統本身：memory、SOP、sync、任務派發</div>
-            <div class="c-trig"><strong>全程在場</strong> — 每次對話自動啟動</div>
-            <div class="c-pills"><span class="pill">💾 Memory</span><span class="pill">📐 SOP</span><span class="pill">🔄 Sync</span><span class="pill">🎛 Orchestrator</span><span class="pill">🆕 Onboarding</span></div>
-          </div>
-        </div>
-        <div class="gc meta rv" style="transition-delay:.08s" onclick="openAgent('pmDirector')" tabindex="0" role="button" aria-label="PM Director">
-          <div class="gc-inner">
-            <div class="c-icon">📋</div><div class="badge bm">Project Manager</div>
-            <div class="c-name">PM Director</div>
-            <div class="c-sub">全局規劃：優先序、狀態快照、blockers 分析</div>
-            <div class="c-trig"><strong>按需啟動</strong> — 「現在最重要是什麼？」</div>
-            <div class="c-pills"><span class="pill">🎬 Video PM</span><span class="pill">📚 Course PM</span><span class="pill">⚙️ Eng PM</span><span class="pill">📰 Content PM</span></div>
-          </div>
-        </div>
+      <div class="ac-arr" aria-hidden="true">↗</div>
+    </div>
+    <div class="ac rv" tabindex="0" role="article">
+      <div class="ac-n">03 — Video</div>
+      <div class="ac-t">Video Director</div>
+      <div class="ac-d">Full Remotion pipeline — audio normalization, Whisper VTT, scene dev, QA, 4K render. Parallel.</div>
+      <div class="ac-tags">
+        <span class="ac-tag">Remotion</span>
+        <span class="ac-tag">4K</span>
+        <span class="ac-tag">Whisper</span>
       </div>
-      <div class="conn"><div class="conn-line"></div></div>
-      <div class="tier-lbl rv">Domain Directors</div>
-      <!-- Directors -->
-      <div class="dir-row">
-        <div class="gc dir rv" onclick="openAgent('videoDirector')" tabindex="0" role="button" aria-label="Video Director">
-          <div class="gc-inner">
-            <div class="c-icon">🎬</div><div class="badge bg">影片製作</div>
-            <div class="c-name">Video Director</div>
-            <div class="c-sub">article-video + vibe-coding 全流程</div>
-            <div class="c-trig"><strong>啟動：</strong>「做今天 article-video」</div>
-            <div class="c-pills"><span class="pill">Audio</span><span class="pill">VTT</span><span class="pill">Scene Dev</span><span class="pill">QA</span><span class="pill">Render</span></div>
-          </div>
-        </div>
-        <div class="gc dir rv" style="transition-delay:.06s" onclick="openAgent('courseDirector')" tabindex="0" role="button" aria-label="Course Director">
-          <div class="gc-inner">
-            <div class="c-icon">📚</div><div class="badge bg">n8n 課程</div>
-            <div class="c-name">Course Director</div>
-            <div class="c-sub">n8ncourse GitHub Pages 維護與發布</div>
-            <div class="c-trig"><strong>啟動：</strong>「新增 Lecture N」</div>
-            <div class="c-pills"><span class="pill">Content</span><span class="pill">Knowledge</span><span class="pill">Deploy</span></div>
-          </div>
-        </div>
-        <div class="gc dir rv" style="transition-delay:.12s" onclick="openAgent('engineeringDirector')" tabindex="0" role="button" aria-label="Engineering Director">
-          <div class="gc-inner">
-            <div class="c-icon">⚙️</div><div class="badge bg">Booking App</div>
-            <div class="c-name">Engineering Director</div>
-            <div class="c-sub">Next.js + Supabase + Zeabur</div>
-            <div class="c-trig"><strong>啟動：</strong>「booking app 加功能」</div>
-            <div class="c-pills"><span class="pill">Backend</span><span class="pill">Frontend</span><span class="pill">QA</span></div>
-          </div>
-        </div>
-        <div class="gc dir rv" style="transition-delay:.18s" onclick="openAgent('contentDirector')" tabindex="0" role="button" aria-label="Content Director">
-          <div class="gc-inner">
-            <div class="c-icon">📰</div><div class="badge bg">每日 AI 文章</div>
-            <div class="c-name">Content Director</div>
-            <div class="c-sub">文章 → 腳本 → 交棒 Video Director</div>
-            <div class="c-trig"><strong>啟動：</strong>「今天 AI 文章做成影片」</div>
-            <div class="c-pills"><span class="pill">Research</span><span class="pill">Script</span><span class="pill">Handoff</span></div>
-          </div>
-        </div>
+      <div class="ac-arr" aria-hidden="true">↗</div>
+    </div>
+    <div class="ac rv" tabindex="0" role="article">
+      <div class="ac-n">04 — Course</div>
+      <div class="ac-t">Course Director</div>
+      <div class="ac-d">n8ncourse website updates — lecture pages, daily knowledge base, GitHub Pages deploy.</div>
+      <div class="ac-tags">
+        <span class="ac-tag">n8n</span>
+        <span class="ac-tag">GitHub Pages</span>
+        <span class="ac-tag">ZH-TW</span>
       </div>
+      <div class="ac-arr" aria-hidden="true">↗</div>
+    </div>
+    <div class="ac rv" tabindex="0" role="article">
+      <div class="ac-n">05 — Engineering</div>
+      <div class="ac-t">Engineering Director</div>
+      <div class="ac-d">LINE booking app — Next.js 16, Supabase SSR, Zeabur deploy. Backend + frontend + QA sub-agents.</div>
+      <div class="ac-tags">
+        <span class="ac-tag">Next.js</span>
+        <span class="ac-tag">Supabase</span>
+        <span class="ac-tag">Zeabur</span>
+      </div>
+      <div class="ac-arr" aria-hidden="true">↗</div>
+    </div>
+    <div class="ac rv" tabindex="0" role="article">
+      <div class="ac-n">06 — Content</div>
+      <div class="ac-t">Content Director</div>
+      <div class="ac-d">Daily AI news → research → structured script → Video Director. Research, Script, Handoff agents.</div>
+      <div class="ac-tags">
+        <span class="ac-tag">Research</span>
+        <span class="ac-tag">Script</span>
+        <span class="ac-tag">Pipeline</span>
+      </div>
+      <div class="ac-arr" aria-hidden="true">↗</div>
     </div>
   </div>
 </section>
 
-<!-- ══ PROJECTS ══ -->
-<section id="projects" aria-labelledby="proj-ttl">
-  <div class="wrap">
-    <div class="sec-head rv">
-      <div class="sec-num">02</div>
-      <div><h2 class="sec-title" id="proj-ttl">Live Projects</h2><p class="sec-desc">即時專案狀態 — 每小時自動更新，零 token</p></div>
-    </div>
-    <div id="projects-content" aria-live="polite"></div>
+<!-- TERMINAL STRIP -->
+<div id="term" aria-label="Live agent activity" role="log">
+  <div class="term-label"><span class="pdot" aria-hidden="true"></span>Live</div>
+  <div class="term-lines" id="term-lines">
+    <div class="tl"><span class="tp">›</span><span class="ta">sync-agent</span><span>push complete — 2 files updated</span></div>
+    <div class="tl"><span class="tp">›</span><span class="ta">memory-agent</span><span>feedback_remotion_style.md written</span></div>
+    <div class="tl"><span class="tp">›</span><span class="ta">pm-director</span><span>article-video ✅ vibe-coding CH2 🔲<span class="tc" aria-hidden="true"></span></span></div>
+  </div>
+</div>
+
+<!-- WORK -->
+<section id="work" class="sec" aria-labelledby="sec-work-title">
+  <div class="sec-hd">
+    <span class="sec-n">02</span>
+    <h2 class="sec-t" id="sec-work-title">WORK</h2>
+    <span class="sec-s">Live · Shipping</span>
+  </div>
+  <div class="pl">
+    <a class="pi rv" href="https://jamesatmogroup.github.io/n8ncourse" target="_blank" rel="noopener noreferrer" aria-label="n8n Automation Course — opens in new tab">
+      <div class="pi-n">01</div>
+      <div class="pi-i">
+        <div class="pi-t">n8n Automation Course</div>
+        <div class="pi-d">Structured bilingual online course — lecture pages, daily AI knowledge, GitHub Pages delivery</div>
+      </div>
+      <div class="pi-st">
+        <span class="pi-tag">GitHub Pages</span>
+        <span class="pi-tag">HTML</span>
+        <span class="pi-arr" aria-hidden="true">↗</span>
+      </div>
+    </a>
+    <a class="pi rv" href="https://learning-online-booking.zeabur.app" target="_blank" rel="noopener noreferrer" aria-label="LINE Class Booking App — opens in new tab">
+      <div class="pi-n">02</div>
+      <div class="pi-i">
+        <div class="pi-t">LINE Class Booking App</div>
+        <div class="pi-d">Full-stack LINE LIFF system — Supabase SSR, role routing (student/teacher/admin), bilingual ZH-TW/EN</div>
+      </div>
+      <div class="pi-st">
+        <span class="pi-tag">Next.js 16</span>
+        <span class="pi-tag">Supabase</span>
+        <span class="pi-arr" aria-hidden="true">↗</span>
+      </div>
+    </a>
+    <a class="pi rv" href="https://jamesatmogroup.github.io/claude-config/dashboard/studio.html" target="_blank" rel="noopener noreferrer" aria-label="AI Studio Dashboard — opens in new tab">
+      <div class="pi-n">03</div>
+      <div class="pi-i">
+        <div class="pi-t">AI Studio Dashboard</div>
+        <div class="pi-d">Agent monitoring portal — zero tokens, hourly sync, GitHub-hosted. You're looking at it.</div>
+      </div>
+      <div class="pi-st">
+        <span class="pi-tag">Vanilla JS</span>
+        <span class="pi-tag">GitHub Pages</span>
+        <span class="pi-arr" aria-hidden="true">↗</span>
+      </div>
+    </a>
+    <a class="pi rv" href="https://github.com/JamesAtMoGroup" target="_blank" rel="noopener noreferrer" aria-label="Remotion Video System on GitHub — opens in new tab">
+      <div class="pi-n">04</div>
+      <div class="pi-i">
+        <div class="pi-t">Remotion Video System</div>
+        <div class="pi-d">4K AI explainer pipeline — article-video daily series + vibe-coding course chapters</div>
+      </div>
+      <div class="pi-st">
+        <span class="pi-tag">Remotion</span>
+        <span class="pi-tag">React</span>
+        <span class="pi-arr" aria-hidden="true">↗</span>
+      </div>
+    </a>
   </div>
 </section>
 
-<!-- ══ WORKS ══ -->
-<section id="works" aria-labelledby="works-ttl">
-  <div class="wrap">
-    <div class="sec-head rv">
-      <div class="sec-num">03</div>
-      <div><h2 class="sec-title" id="works-ttl">Portfolio</h2><p class="sec-desc">公開作品 — 點擊直接瀏覽</p></div>
-    </div>
-    <div class="wg">
-      <a class="wc rv" href="https://jamesatmogroup.github.io/n8ncourse/" target="_blank" rel="noopener" aria-label="n8n 自動化課程網站">
-        <div class="w-type">Online Course</div><div class="w-ico">📚</div>
-        <div class="w-name">n8n 自動化課程網站</div>
-        <p class="w-desc">n8n 工作流自動化線上課程平台。完整課程內容、互動知識庫、逐講義設計，全站 GitHub Pages 部署。</p>
-        <div class="w-tags"><span class="w-tag">HTML/CSS</span><span class="w-tag">GitHub Pages</span><span class="w-tag">n8n</span></div>
-        <div class="w-cta">View Live <span class="w-arrow">↗</span></div>
-      </a>
-      <a class="wc rv" style="transition-delay:.07s" href="https://learning-online-booking.zeabur.app" target="_blank" rel="noopener" aria-label="LINE LIFF 預約系統">
-        <div class="w-type">Web App</div><div class="w-ico">📅</div>
-        <div class="w-name">LINE LIFF 預約系統</div>
-        <p class="w-desc">一對一家教課程預約平台。三角色路由（學生/教師/管理員），雙語 ZH-TW/EN，Supabase 即時資料庫。</p>
-        <div class="w-tags"><span class="w-tag">Next.js 16</span><span class="w-tag">Supabase</span><span class="w-tag">Zeabur</span></div>
-        <div class="w-cta">View Live <span class="w-arrow">↗</span></div>
-      </a>
-      <a class="wc rv" style="transition-delay:.14s" href="https://jamesatmogroup.github.io/claude-config/dashboard/" target="_blank" rel="noopener" aria-label="AI Studio 即時儀表板">
-        <div class="w-type">Dashboard</div><div class="w-ico">📊</div>
-        <div class="w-name">AI Studio 即時儀表板</div>
-        <p class="w-desc">零 token 即時專案狀態追蹤。Python 腳本 + cron 每小時自動更新，GitHub Pages 部署。</p>
-        <div class="w-tags"><span class="w-tag">Vanilla JS</span><span class="w-tag">Python</span><span class="w-tag">Cron</span></div>
-        <div class="w-cta">View Live <span class="w-arrow">↗</span></div>
-      </a>
-      <a class="wc rv" style="transition-delay:.21s" href="https://jamesatmogroup.github.io/claude-config/dashboard/org.html" target="_blank" rel="noopener" aria-label="AI Agent 組織架構圖">
-        <div class="w-type">Interactive UI</div><div class="w-ico">🗂</div>
-        <div class="w-name">AI Agent 組織架構圖</div>
-        <p class="w-desc">完整一人工作室 AI agent 層級視覺化。Drill-down modal 導航，查看每個 agent 職責與工具。</p>
-        <div class="w-tags"><span class="w-tag">Vanilla JS</span><span class="w-tag">CSS Grid</span><span class="w-tag">Glassmorphism</span></div>
-        <div class="w-cta">View Live <span class="w-arrow">↗</span></div>
-      </a>
-      <a class="wc rv" style="transition-delay:.28s" href="https://jamesatmogroup.github.io/claude-config/dashboard/studio.html" target="_blank" rel="noopener" aria-label="AI 一人工作室履歷">
-        <div class="w-type">Studio Page</div><div class="w-ico">🚀</div>
-        <div class="w-name">AI 一人工作室履歷</div>
-        <p class="w-desc">你正在看的這頁。Canvas 網絡粒子、3D card tilt、custom cursor、clip-path 文字動畫。</p>
-        <div class="w-tags"><span class="w-tag">Canvas API</span><span class="w-tag">Web Animations</span><span class="w-tag">3D CSS</span></div>
-        <div class="w-cta">Share Link <span class="w-arrow">↗</span></div>
-      </a>
-    </div>
-  </div>
+<!-- MANIFESTO -->
+<section id="mf" aria-label="Manifesto">
+  <div class="mf-row"><span class="mf-txt">One Person.</span></div>
+  <div class="mf-row"><span class="mf-txt">Infinite Systems.</span></div>
+  <div class="mf-row"><span class="mf-txt">Zero Wasted Tokens.</span></div>
+  <div class="mf-sub">James · AI Studio · Taipei · 2026</div>
 </section>
 
 <!-- FOOTER -->
-<footer>
-  <p class="ft-eye">JAMES · AI-POWERED ONE-PERSON STUDIO · 2026</p>
-  <p class="ft-main">Built by <span class="ft-grd">Systems</span>,<br>Driven by <span class="ft-grd">Goals</span>.</p>
-  <p class="ft-sub" style="margin-top:18px">17 agents · 4 projects · updated hourly · zero tokens</p>
+<footer role="contentinfo">
+  <div class="ft-nwrap">
+    <div class="ft-name" id="fname"></div>
+  </div>
+  <div class="ft-bot">
+    <div class="ft-tg">
+      Built by <span class="hl">Systems</span>,<br>
+      Driven by <span class="hl">Goals</span>.
+    </div>
+    <div class="ft-m">17 agents · 4 projects<br>updated hourly · zero tokens<br>© 2026 James</div>
+  </div>
 </footer>
 
+</main>
+
 <script>
-'use strict';
+/* ── CURSOR ───────────────────────────────────────── */
+const cd=document.getElementById('cd'),cr=document.getElementById('cr');
+const spt=document.getElementById('spt');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{
+  mx=e.clientX; my=e.clientY;
+  cd.style.left=mx+'px'; cd.style.top=my+'px';
+  spt.style.setProperty('--sx',mx+'px');
+  spt.style.setProperty('--sy',my+'px');
+});
+(function lerpRing(){
+  rx+=(mx-rx)*.1; ry+=(my-ry)*.1;
+  cr.style.left=rx+'px'; cr.style.top=ry+'px';
+  requestAnimationFrame(lerpRing);
+})();
+document.querySelectorAll('a,button,.ac,.pi').forEach(el=>{
+  el.addEventListener('mouseenter',()=>document.body.classList.add('hov'));
+  el.addEventListener('mouseleave',()=>document.body.classList.remove('hov'));
+});
+document.addEventListener('mousedown',()=>document.body.classList.add('clk'));
+document.addEventListener('mouseup',()=>document.body.classList.remove('clk'));
 
-// ─── FEATURE DETECT ──────────────────────────────────────────
-const hasHover = window.matchMedia('(hover:hover)').matches;
-const reducedMotion = window.matchMedia('(prefers-reduced-motion:reduce)').matches;
-
-// ─── CANVAS: network constellation ───────────────────────────
+/* ── TILE BG ──────────────────────────────────────── */
 (function(){
-  const cv = document.getElementById('bg-canvas');
-  const cx = cv.getContext('2d');
-  let W, H, pts = [];
-  let mx = -9999, my = -9999;
-
-  function resize(){ W = cv.width = innerWidth; H = cv.height = innerHeight; }
-  resize(); addEventListener('resize', resize);
-  addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; }, {passive:true});
-
-  function init(){
-    pts = [];
-    const n = Math.min(Math.floor(W * H / 16000), 60);
-    for(let i=0;i<n;i++) pts.push({
-      x:Math.random()*W, y:Math.random()*H,
-      vx:(Math.random()-.5)*.4, vy:(Math.random()-.5)*.4,
-      r:Math.random()*1.5+.5, a:Math.random()*.5+.1
-    });
-  }
-  init(); addEventListener('resize', init);
-
+  const c=document.getElementById('tile'),ctx=c.getContext('2d');
+  let oy=0;
+  function resize(){c.width=innerWidth;c.height=innerHeight;}
   function draw(){
-    cx.clearRect(0,0,W,H);
-    const LINK = 130;
-    for(let i=0;i<pts.length;i++){
-      const p = pts[i];
-      // mouse repulsion
-      const dx = p.x - mx, dy = p.y - my;
-      const d = Math.sqrt(dx*dx+dy*dy);
-      if(d < 90 && d > 0){ const f = (90-d)/90*1.8; p.x += dx/d*f; p.y += dy/d*f; }
-      // connections
-      for(let j=i+1;j<pts.length;j++){
-        const q = pts[j];
-        const dd = Math.sqrt((p.x-q.x)**2+(p.y-q.y)**2);
-        if(dd < LINK){
-          cx.beginPath(); cx.moveTo(p.x,p.y); cx.lineTo(q.x,q.y);
-          cx.strokeStyle = `rgba(124,255,178,${.09*(1-dd/LINK)})`;
-          cx.lineWidth = .7; cx.stroke();
-        }
+    ctx.clearRect(0,0,c.width,c.height);
+    ctx.font="12px 'Courier Prime',monospace";
+    ctx.fillStyle='rgba(240,240,235,0.022)';
+    const rh=26,cw=88,rows=Math.ceil(c.height/rh)+2,cols=Math.ceil(c.width/cw)+1;
+    for(let r=0;r<rows;r++){
+      const off=(r%2===0)?0:44;
+      for(let col=0;col<cols;col++){
+        ctx.fillText('JAMES',col*cw+off,((r*rh+oy)%((rows-1)*rh))+rh);
       }
-      // node
-      cx.beginPath(); cx.arc(p.x,p.y,p.r,0,Math.PI*2);
-      cx.fillStyle=`rgba(124,255,178,${p.a})`; cx.fill();
-      p.x += p.vx; p.y += p.vy;
-      if(p.x<0||p.x>W) p.vx*=-1;
-      if(p.y<0||p.y>H) p.vy*=-1;
     }
-    requestAnimationFrame(draw);
   }
-  draw();
+  function tick(){oy=(oy+.25)%(26*2);draw();requestAnimationFrame(tick);}
+  resize(); tick();
+  addEventListener('resize',resize);
 })();
 
-// ─── CUSTOM CURSOR ────────────────────────────────────────────
-if(hasHover && !reducedMotion){
-  const dot = document.getElementById('c-dot');
-  const ring = document.getElementById('c-ring');
-  let tx=0,ty=0,rx=0,ry=0;
-  addEventListener('mousemove', e=>{ tx=e.clientX; ty=e.clientY; });
-  addEventListener('mousedown', ()=>document.body.classList.add('cursor-click'));
-  addEventListener('mouseup', ()=>document.body.classList.remove('cursor-click'));
-
-  (function cursorLoop(){
-    rx += (tx-rx)*0.11; ry += (ty-ry)*0.11;
-    dot.style.transform = `translate(${tx}px,${ty}px)`;
-    ring.style.transform = `translate(${rx}px,${ry}px)`;
-    requestAnimationFrame(cursorLoop);
-  })();
-
-  document.querySelectorAll('a,button,[role="button"],[tabindex]').forEach(el=>{
-    el.addEventListener('mouseenter',()=>document.body.classList.add('cursor-hover'));
-    el.addEventListener('mouseleave',()=>document.body.classList.remove('cursor-hover'));
-  });
-}
-
-// ─── SCROLL PROGRESS ─────────────────────────────────────────
-const prog = document.getElementById('prog');
+/* ── SCROLL PROGRESS ──────────────────────────────── */
+const prog=document.getElementById('prog');
 addEventListener('scroll',()=>{
-  const p = scrollY/(document.body.scrollHeight-innerHeight);
-  prog.style.transform=`scaleX(${p})`;
-},{passive:true});
+  prog.style.transform=`scaleX(${scrollY/(document.body.scrollHeight-innerHeight)||0})`;
+},{ passive:true });
 
-// ─── NAV SCROLL + ACTIVE ─────────────────────────────────────
-const nav = document.getElementById('nav');
-const secs = document.querySelectorAll('section[id]');
-const navAs = document.querySelectorAll('.nav-links a');
-addEventListener('scroll',()=>{
-  nav.classList.toggle('scrolled', scrollY>60);
-  let cur='';
-  secs.forEach(s=>{ if(scrollY>=s.offsetTop-120) cur=s.id; });
-  navAs.forEach(a=>a.classList.toggle('active', a.getAttribute('href')==='#'+cur));
-},{passive:true});
+/* ── FIT TEXT ─────────────────────────────────────── */
+function fit(el){
+  const w=el.parentElement.clientWidth;
+  let lo=10,hi=900;
+  while(lo<hi-1){
+    const mid=(lo+hi)>>1;
+    el.style.fontSize=mid+'px';
+    el.scrollWidth>w?hi=mid:lo=mid;
+  }
+  el.style.fontSize=lo+'px';
+}
+const hname=document.getElementById('hname');
+const fname=document.getElementById('fname');
+function runFit(){fit(hname);if(fname.textContent)fit(fname);}
 
-// ─── HERO MOUSE GLOW ─────────────────────────────────────────
-const heroEl = document.getElementById('hero');
-if(hasHover){
-  heroEl.addEventListener('mousemove', e=>{
-    const r = heroEl.getBoundingClientRect();
-    heroEl.style.setProperty('--mx', ((e.clientX-r.left)/r.width*100)+'%');
-    heroEl.style.setProperty('--my', ((e.clientY-r.top)/r.height*100)+'%');
+/* ── HERO ENTRANCE ────────────────────────────────── */
+let heroReady=false;
+function heroIn(){
+  hname.textContent='JAMES';
+  runFit();
+  // split + animate chars
+  const letters=[...'JAMES'];
+  hname.innerHTML='';
+  letters.forEach((ch,i)=>{
+    const s=document.createElement('span');
+    s.textContent=ch;
+    s.style.cssText='display:inline-block;will-change:transform,opacity,clip-path;';
+    hname.appendChild(s);
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      s.style.transition=`
+        opacity .7s cubic-bezier(.16,1,.3,1) ${i*.07+.05}s,
+        transform .9s cubic-bezier(.16,1,.3,1) ${i*.07+.05}s,
+        clip-path .7s cubic-bezier(.16,1,.3,1) ${i*.07+.05}s
+      `;
+      s.style.opacity='0';
+      s.style.transform='translateY(10%) skewY(3deg)';
+      s.style.clipPath='inset(0 0 100% 0)';
+      requestAnimationFrame(()=>{
+        s.style.opacity='1';
+        s.style.transform='none';
+        s.style.clipPath='inset(0 0 0% 0)';
+      });
+    }));
   });
+  setTimeout(()=>{ heroReady=true; },1400);
 }
 
-// ─── HERO TEXT SPLIT + ANIMATE ───────────────────────────────
-(function(){
-  const el = document.getElementById('hero-name');
-  const text = el.dataset.text || 'JAMES';
-  el.innerHTML = [...text].map((ch,i)=>{
-    const isLast = i >= text.length - 2; // last 2 = gradient
-    const cls = isLast ? 'char grd' : 'char';
-    return `<span class="${cls}" style="--i:${i}">${ch}</span>`;
-  }).join('');
+document.fonts.ready.then(()=>{
+  fname.textContent='JAMES'; fit(fname);
+  heroIn();
+});
+addEventListener('resize',runFit);
 
-  if(reducedMotion){ el.querySelectorAll('.char').forEach(c=>{ c.style.opacity=1; c.style.transform='none'; c.style.clipPath='none'; }); return; }
+/* ── HERO MOUSE TILT ──────────────────────────────── */
+document.addEventListener('mousemove',e=>{
+  if(!heroReady) return;
+  const ry=((e.clientY/innerHeight)-.5)*5;
+  const rx=((e.clientX/innerWidth)-.5)*-8;
+  hname.style.transform=`perspective(900px) rotateX(${ry}deg) rotateY(${rx}deg)`;
+});
 
-  document.fonts.ready.then(()=>{
-    el.querySelectorAll('.char').forEach((ch,i)=>{
-      ch.animate([
-        {opacity:0, transform:'translateY(60%) skewY(8deg)', clipPath:'inset(0 0 100% 0)'},
-        {opacity:1, transform:'none', clipPath:'inset(0 0 0% 0)'}
-      ],{duration:750, delay:80+i*80, easing:'cubic-bezier(.16,1,.3,1)', fill:'forwards'});
-    });
-  });
-})();
-
-// ─── TYPEWRITER ───────────────────────────────────────────────
-(function(){
-  const phrases=['Building Systems That Run Without Me','Creator · Engineer · Designer · Teacher','高價值 · 最低成本 · 最大結果','One Person. Infinite Leverage.','AI Automation Is a Life Skill'];
-  let pi=0,ci=0,del=false;
-  const tw=document.getElementById('tw');
-  function loop(){
-    const p=phrases[pi];
-    del ? tw.textContent=p.slice(0,--ci) : tw.textContent=p.slice(0,++ci);
-    if(!del && ci===p.length){ del=true; setTimeout(loop,2600); return; }
-    if(del && ci===0){ del=false; pi=(pi+1)%phrases.length; }
-    setTimeout(loop, del?26:52);
-  }
-  loop();
-})();
-
-// ─── STAT SCRAMBLE ────────────────────────────────────────────
-function scramble(el, target){
-  const CHARS='0123456789';
-  const dur=1400, start=performance.now();
-  function frame(now){
-    const t=Math.min((now-start)/dur,1);
-    const ease=1-Math.pow(1-t,3);
-    el.textContent = t<.65 ? CHARS[Math.floor(Math.random()*CHARS.length)] : Math.round(ease*target);
-    if(t<1) requestAnimationFrame(frame); else el.textContent=target;
-  }
-  requestAnimationFrame(frame);
-}
-
-// ─── SCROLL REVEAL ────────────────────────────────────────────
-const rvObs = new IntersectionObserver(entries=>{
+/* ── NAV ACTIVE ───────────────────────────────────── */
+const navLinks=document.querySelectorAll('.sn-links a');
+const secs=['hero','systems','work','mf'].map(id=>document.getElementById(id)).filter(Boolean);
+new IntersectionObserver(entries=>{
   entries.forEach(e=>{
-    if(!e.isIntersecting) return;
-    e.target.classList.add('in');
-    // trigger scramble for stats
-    e.target.querySelectorAll('.stat-n[data-target]').forEach(s=>scramble(s,+s.dataset.target));
-    rvObs.unobserve(e.target);
+    if(e.isIntersecting){
+      navLinks.forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+e.target.id));
+    }
   });
-},{threshold:.08});
+},{threshold:.25}).observe;
+// simpler: observe each
+secs.forEach(s=>{
+  new IntersectionObserver(entries=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        navLinks.forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+e.target.id));
+      }
+    });
+  },{threshold:.3}).observe(s);
+});
+
+/* ── STAT COUNT UP ────────────────────────────────── */
+document.querySelectorAll('.sv').forEach(el=>{
+  new IntersectionObserver(entries=>{
+    if(!entries[0].isIntersecting) return;
+    const target=+el.dataset.t, start=performance.now(), dur=1100;
+    (function step(now){
+      const t=Math.min((now-start)/dur,1);
+      el.textContent=Math.round((1-Math.pow(1-t,4))*target);
+      if(t<1) requestAnimationFrame(step);
+    })(start);
+  },{threshold:.5}).observe(el);
+});
+
+/* ── REVEAL ON SCROLL ─────────────────────────────── */
+const rvObs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){e.target.classList.add('in');rvObs.unobserve(e.target);}
+  });
+},{threshold:.1,rootMargin:'0px 0px -40px 0px'});
 document.querySelectorAll('.rv').forEach(el=>rvObs.observe(el));
 
-// stats bar itself
-const statsBar = document.querySelector('.stats-bar');
-if(statsBar){
-  const so = new IntersectionObserver(entries=>{
-    entries.forEach(e=>{ if(!e.isIntersecting) return;
-      document.querySelectorAll('.stat-n[data-target]').forEach(s=>scramble(s,+s.dataset.target));
-      so.disconnect();
-    });
-  },{threshold:.5});
-  so.observe(statsBar);
-}
+/* ── MANIFESTO ────────────────────────────────────── */
+new IntersectionObserver(entries=>{
+  if(entries[0].isIntersecting) document.getElementById('mf').classList.add('vis');
+},{threshold:.25}).observe(document.getElementById('mf'));
 
-// ─── TERMINAL ────────────────────────────────────────────────
-(function(){
-  const MSGS=[
-    {agent:'system-director', msg:'soul.md → personality.md → MEMORY.md ✓'},
-    {agent:'memory-agent',    msg:'feedback_audio_pipeline.md written'},
-    {agent:'orchestrator',   msg:'Routing task → 🎬 Video Director'},
-    {agent:'video-director', msg:'Phase 1: Audio + VTT + SceneDev spawned'},
-    {agent:'sync-agent',     msg:'Pushed to JamesAtMoGroup/claude-config ✓'},
-    {agent:'pm-director',    msg:'topPriority → dashboard.json updated'},
-    {agent:'qa-agent',       msg:'iMessage sent → awaiting 通過'},
-    {agent:'course-director',msg:'Lecture 04 → GitHub Pages live ✓'},
-    {agent:'backend-agent',  msg:'RLS policy: sessions table applied ✓'},
-    {agent:'render-agent',   msg:'remotion render --gl=angle → 4K done ✓'},
-  ];
-  const body=document.getElementById('term-body');
-  const MAX=5; let buf=[],idx=0;
-  function add(){
-    buf.push(MSGS[idx++%MSGS.length]);
-    if(buf.length>MAX) buf.shift();
-    body.innerHTML=buf.map((l,i)=>{
-      const last=i===buf.length-1;
-      return `<div class="t-line"><span class="t-prompt">$</span><span class="t-agent">${l.agent}</span><span class="t-msg">${l.msg}${last?'<span class="t-caret" aria-hidden="true"></span>':''}</span></div>`;
-    }).join('');
-    setTimeout(add, 2600+Math.random()*700);
-  }
-  setTimeout(add,1000);
-})();
-
-// ─── MARQUEE ─────────────────────────────────────────────────
-(function(){
-  const ITEMS=['REMOTION','NEXT.JS 16','SUPABASE','WHISPER AI','N8N','TAILWIND CSS','ZEABUR','GITHUB PAGES','CLAUDE AI','4K VIDEO','TYPESCRIPT','PYTHON','GLASSMORPHISM','LINE LIFF','17 AGENTS'];
-  const track=document.getElementById('mq-track');
-  const doubled=[...ITEMS,...ITEMS];
-  track.innerHTML=doubled.map(s=>`<span class="mq-item"><span class="mq-dot"></span>${s}</span><span class="mq-sep"></span>`).join('');
-})();
-
-// ─── 3D TILT ─────────────────────────────────────────────────
-if(hasHover && !reducedMotion){
-  document.querySelectorAll('.gc').forEach(card=>{
-    let raf, cx=0,cy=0, tx2=0,ty2=0;
-    card.addEventListener('mouseenter',()=>{
-      function animate(){
-        cx+=(tx2-cx)*.1; cy+=(ty2-cy)*.1;
-        card.style.transform=`perspective(800px) rotateX(${cx}deg) rotateY(${cy}deg) scale(1.03)`;
-        card.style.boxShadow=`0 ${20+cx}px ${60+Math.abs(cy)*3}px rgba(0,0,0,.55)`;
-        raf=requestAnimationFrame(animate);
-      }
-      animate();
-    });
-    card.addEventListener('mousemove',e=>{
-      const r=card.getBoundingClientRect();
-      ty2=((e.clientX-r.left)/r.width-.5)*16;
-      tx2=((e.clientY-r.top)/r.height-.5)*-16;
-    });
-    card.addEventListener('mouseleave',()=>{
-      cancelAnimationFrame(raf);
-      tx2=0; ty2=0;
-      function reset(){
-        cx+=(0-cx)*.14; cy+=(0-cy)*.14;
-        card.style.transform=`perspective(800px) rotateX(${cx}deg) rotateY(${cy}deg)`;
-        card.style.boxShadow='';
-        if(Math.abs(cx)>.05||Math.abs(cy)>.05) requestAnimationFrame(reset);
-        else card.style.transform='';
-      }
-      requestAnimationFrame(reset);
-    });
+/* ── AGENT CARD 3D TILT ───────────────────────────── */
+document.querySelectorAll('.ac').forEach(card=>{
+  let raf,cx=0,cy=0,tx=0,ty=0;
+  card.addEventListener('mousemove',e=>{
+    const r=card.getBoundingClientRect();
+    tx=(e.clientX-r.left-r.width/2)/(r.width/2)*9;
+    ty=(e.clientY-r.top-r.height/2)/(r.height/2)*-9;
   });
-}
-
-// ─── SPOTLIGHT on org cards ───────────────────────────────────
-if(hasHover){
-  const orgCards=document.querySelector('.org-cards');
-  if(orgCards){
-    orgCards.classList.add('spotlight');
-    orgCards.addEventListener('mouseleave',()=>{
-      orgCards.querySelectorAll('.gc').forEach(c=>c.style.opacity='');
-    });
-  }
-}
-
-// ─── MAGNETIC BUTTONS ─────────────────────────────────────────
-if(hasHover && !reducedMotion){
-  document.querySelectorAll('.w-cta,.nav-dot').forEach(el=>{
-    el.style.transition='transform .5s cubic-bezier(.16,1,.3,1)';
-    el.addEventListener('mousemove',e=>{
-      const r=el.getBoundingClientRect();
-      const dx=(e.clientX-r.left-r.width/2)*.35;
-      const dy=(e.clientY-r.top-r.height/2)*.35;
-      el.style.transform=`translate(${dx}px,${dy}px)`;
-    });
-    el.addEventListener('mouseleave',()=>{ el.style.transform=''; });
+  card.addEventListener('mouseenter',()=>{
+    cancelAnimationFrame(raf);
+    (function loop(){
+      cx+=(tx-cx)*.1; cy+=(ty-cy)*.1;
+      card.style.transform=`perspective(700px) rotateX(${cy}deg) rotateY(${cx}deg) translateZ(3px)`;
+      raf=requestAnimationFrame(loop);
+    })();
   });
-}
+  card.addEventListener('mouseleave',()=>{
+    cancelAnimationFrame(raf); tx=0; ty=0;
+    (function reset(){
+      cx+=(0-cx)*.12; cy+=(0-cy)*.12;
+      card.style.transform=`perspective(700px) rotateX(${cy}deg) rotateY(${cx}deg)`;
+      if(Math.abs(cx)>.05||Math.abs(cy)>.05) raf=requestAnimationFrame(reset);
+      else card.style.transform='';
+    })();
+  });
+});
 
-// ─── LOAD PROJECTS ────────────────────────────────────────────
-const DATA='https://raw.githubusercontent.com/JamesAtMoGroup/claude-config/main/dashboard/dashboard.json';
-async function loadProjects(){
-  try{
-    const r=await fetch(DATA+'?t='+Date.now());
-    if(!r.ok) throw 0;
-    renderProjects(await r.json());
-  }catch{
-    try{
-      const r2=await fetch('./dashboard.json?t='+Date.now());
-      if(!r2.ok) throw 0;
-      renderProjects(await r2.json());
-    }catch{
-      document.getElementById('projects-content').innerHTML='<div style="text-align:center;padding:48px;font-family:\'Space Mono\',monospace;font-size:12px;color:var(--t3)">Unable to load live data</div>';
-    }
-  }
-}
-function renderProjects(data){
-  const projs=Object.values(data.projects);
-  const ts=new Date(data.lastSync).toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
-  const cards=projs.map(p=>{
-    const ms=p.milestones.slice(-5).map(m=>{
-      const cls=m.done?'done':m.inProgress?'inprog':'pending';
-      return `<div class="ms ${cls}"><div class="ms-dot" aria-hidden="true"></div><span class="ms-lbl">${m.label}</span></div>`;
-    }).join('');
-    const blk=p.blockers.length?`<div class="blk-list">${p.blockers.slice(0,3).map(b=>`<div class="blk"><svg width="11" height="11" aria-hidden="true"><use href="#ic-warn"/></svg>${b}</div>`).join('')}</div>`:'';
-    return `<div class="pc ${p.status}">
-      <div class="pc-top"><div><div style="font-size:22px;margin-bottom:4px">${p.emoji}</div><div class="pc-name">${p.name}</div></div>
-      <div class="pst ${p.status}"><div class="pst-dot"></div>${p.status==='active'?'運作中':'卡住了'}</div></div>
-      <div class="mss">${ms}</div>
-      <div class="next-a"><div class="na-l">下一步</div><div class="na-t">${p.nextAction}</div></div>
-      ${blk}</div>`;
-  }).join('');
-  document.getElementById('projects-content').innerHTML=`
-    <div class="top-p rv"><div class="tp-ico">🎯</div><div><div class="tp-lbl">最高槓桿</div><div class="tp-ttl">${data.topPriority.label}</div><div class="tp-rsn">${data.topPriority.reason}</div></div></div>
-    <div class="pg">${cards}</div>
-    <div class="sync-n">↺ 上次同步 ${ts} · 每小時自動更新</div>`;
-  document.querySelectorAll('#projects-content .rv').forEach(el=>rvObs.observe(el));
-}
-loadProjects(); setInterval(loadProjects,60000);
-
-// ─── AGENT DATA ───────────────────────────────────────────────
-const AG={
-  james:{name:'James',subtitle:'Studio Owner / CEO',emoji:'🎯',tier:'owner',trigger:'你是唯一的目標設定者，其他所有事情系統自己處理。',resp:['設定所有專案的目標與方向','最終決策者 — 只在真正需要判斷時介入','提供創意與品味標準（aesthetic final call）','設計 agent 系統的規則與原則'],tools:[],note:'你不追蹤狀態、不管流程、不問進度。系統自己跑。',children:[]},
-  systemDirector:{name:'System Director',subtitle:'Meta Orchestrator',emoji:'🧠',tier:'meta',trigger:'每次對話，全程在場。無需手動啟動。',resp:['對話開始：sync.sh pull → 讀 soul / personality / MEMORY','收到目標 → Orchestrator 判斷派給哪個 Director','對話中途：監聽新規則 → 立刻觸發 Memory Agent 寫入','對話結束：確認 memory 更新 → sync.sh push → 回報 token','偵測 .new-project/ flag → 觸發 Project Onboarding Agent'],tools:['sync.sh','memory/','MEMORY.md','agents.md'],children:['memoryAgent','sopAgent','syncAgent','orchestrator','onboardingAgent']},
-  pmDirector:{name:'PM Director',subtitle:'Project Manager',emoji:'📋',tier:'meta',trigger:'「現在最重要是什麼」、「幫我規劃」、「哪裡卡住了」',resp:['平行讀所有 project 狀態 → 輸出全局快照','判斷當前最高槓桿的一件事','更新 dashboard.json topPriority 欄位','識別跨 project 依賴與阻礙','產出 roadmap.md 規劃文件'],tools:['dashboard.json','roadmap.md','*-status.json'],children:['videoPM','coursePM','engineeringPM','contentPM']},
-  memoryAgent:{name:'Memory Agent',subtitle:'System Director Sub',emoji:'💾',tier:'sub',trigger:'學到新 rule / feedback，或 James 說「記住」',resp:['立刻寫對應 memory 檔','更新 MEMORY.md index','選正確 type：user / feedback / project / reference'],tools:['memory/*.md','MEMORY.md'],children:[]},
-  sopAgent:{name:'SOP Agent',subtitle:'System Director Sub',emoji:'📐',tier:'sub',trigger:'工作流有調整、優化、新步驟',resp:['即時更新對應 skill 檔','更新 agents.md 的 SOP','確保任何工作流改變都被永久記錄'],tools:['~/.claude/skills/','agents.md'],children:[]},
-  syncAgent:{name:'Sync Agent',subtitle:'System Director Sub',emoji:'🔄',tier:'sub',trigger:'重要工作段落結束 / 對話結束',resp:['執行 sync.sh push','確認 GitHub 有最新版'],tools:['sync.sh'],children:[]},
-  orchestrator:{name:'Orchestrator',subtitle:'System Director Sub',emoji:'🎛',tier:'sub',trigger:'收到 James 的目標',resp:['讀對應 progress / status 判斷狀態','決定派給哪個 Director','不問 James — 自己讀 state'],tools:['progress.md','dashboard.json'],children:[]},
-  onboardingAgent:{name:'Project Onboarding',subtitle:'System Director Sub',emoji:'🆕',tier:'sub',trigger:'watch-projects.sh 偵測到 ~/Projects/ 新目錄',resp:['讀 README / package.json / CLAUDE.md','判斷類型：video / course / engineering / content','指派 Director + 建 status.json + 更新 memory'],tools:['watch-projects.sh','dashboard/','memory/'],children:[]},
-  videoPM:{name:'Video PM',subtitle:'PM Director Sub',emoji:'🎬',tier:'sub',trigger:'PM Director 查詢',resp:['追蹤 article-video + vibe-coding 狀態','偵測 out/ 更新'],tools:['progress.md','out/'],children:[]},
-  coursePM:{name:'Course PM',subtitle:'PM Director Sub',emoji:'📚',tier:'sub',trigger:'PM Director 查詢',resp:['追蹤 lecture 上線數','監控知識庫更新'],tools:['gh api','courses.json'],children:[]},
-  engineeringPM:{name:'Engineering PM',subtitle:'PM Director Sub',emoji:'⚙️',tier:'sub',trigger:'PM Director 查詢',resp:['追蹤 5 個 pre-build blockers','讀 .resolved/'],tools:['PROGRESS.md','.resolved/'],children:[]},
-  contentPM:{name:'Content PM',subtitle:'PM Director Sub',emoji:'📰',tier:'sub',trigger:'PM Director 查詢',resp:['追蹤今日 AI 文章','確認 pipeline 完整'],tools:['out/'],children:[]},
-  videoDirector:{name:'Video Director',subtitle:'影片製作',emoji:'🎬',tier:'director',trigger:'「做今天 article-video」、「做 CH N vibe coding」',resp:['讀 progress.md 自行判斷從哪繼續','平行啟動 Phase 1','QA 通過 → 啟動 Render','套用：4K / neon-green / iMessage callout'],tools:['Remotion','ffmpeg','Whisper','imessage_send.sh'],children:['audioAgent','transcriptionAgent','sceneDevAgent','qaAgentVideo','renderAgent','assetAgent','htmlAnalysisAgent']},
-  audioAgent:{name:'Audio Agent',subtitle:'Video Director Sub',emoji:'🎵',tier:'sub',trigger:'Phase 1（平行）',resp:['article: -20 LUFS Peak -2 dBFS','vibe: -16 LUFS（不 denoise）'],tools:['ffmpeg'],children:[]},
-  transcriptionAgent:{name:'Transcription Agent',subtitle:'Video Director Sub',emoji:'📝',tier:'sub',trigger:'Phase 1（平行）',resp:['Whisper → .vtt','對照講稿校正'],tools:['Whisper'],children:[]},
-  sceneDevAgent:{name:'Scene Dev Agent',subtitle:'Video Director Sub',emoji:'🖥',tier:'sub',trigger:'Phase 1（平行）',resp:['寫 Remotion TSX components','iMessage callout：top-right stacking'],tools:['Remotion TSX','TypeScript'],children:[]},
-  qaAgentVideo:{name:'QA Agent',subtitle:'Video Director Sub',emoji:'✅',tier:'sub',trigger:'Phase 1 完成後',resp:['檢查 callout / timing / 字幕','發送報告到 iMessage','等「通過」→ 觸發 Render'],tools:['imessage_send.sh','imessage_wait_approval.sh'],children:[]},
-  renderAgent:{name:'Render Agent',subtitle:'Video Director Sub',emoji:'🎞',tier:'sub',trigger:'QA 通過',resp:['npx remotion render --gl=angle','out/YYYY-MM-DD/ 或 out/CH{N}/'],tools:['Remotion CLI'],children:[]},
-  assetAgent:{name:'Asset Agent',subtitle:'vibe-coding only',emoji:'📦',tier:'sub',trigger:'vibe-coding 開始',resp:['確認音檔在 chapters/{N}/audio/'],tools:['chapters/'],children:[]},
-  htmlAnalysisAgent:{name:'HTML Analysis',subtitle:'vibe-coding only',emoji:'🔍',tier:'sub',trigger:'Scene Dev 開始前',resp:['解析 HTML slides','對應音檔時間戳'],tools:['HTML slides'],children:[]},
-  courseDirector:{name:'Course Director',subtitle:'n8n 課程網站',emoji:'📚',tier:'director',trigger:'「新增 Lecture N」、「更新知識庫」',resp:['讀 n8ncourse/CLAUDE.md','讀 courses.json','派 Content / Knowledge / Deploy'],tools:['GitHub Pages','gh CLI'],children:['contentAgent','knowledgeAgent','deployAgent']},
-  contentAgent:{name:'Content Agent',subtitle:'Course Director Sub',emoji:'✍️',tier:'sub',trigger:'新增 Lecture',resp:['寫 lecture{N}/index.html','套 design tokens','掃禁詞'],tools:['HTML/CSS'],children:[]},
-  knowledgeAgent:{name:'Knowledge Agent',subtitle:'Course Director Sub',emoji:'🧩',tier:'sub',trigger:'更新知識庫',resp:['新增條目到 knowledge.json','維護 courses.json'],tools:['knowledge.json'],children:[]},
-  deployAgent:{name:'Deploy Agent',subtitle:'Course Director Sub',emoji:'🚀',tier:'sub',trigger:'完成後',resp:['git push → n8ncourse','驗證 GitHub Pages'],tools:['git','GitHub Pages'],children:[]},
-  engineeringDirector:{name:'Engineering Director',subtitle:'LINE Booking App',emoji:'⚙️',tier:'director',trigger:'「booking app 加功能」、「修 bug」',resp:['讀 PROGRESS.md','優先 5 個 pre-build blockers'],tools:['Next.js 16','Supabase','Zeabur'],children:['backendAgent','frontendAgent','qaAgentEng']},
-  backendAgent:{name:'Backend Agent',subtitle:'Engineering Sub',emoji:'🗄',tier:'sub',trigger:'後端任務',resp:['Supabase schema、RLS','await createClient()'],tools:['Supabase','PostgreSQL'],children:[]},
-  frontendAgent:{name:'Frontend Agent',subtitle:'Engineering Sub',emoji:'🎨',tier:'sub',trigger:'前端任務',resp:['Glassmorphism dark + Tailwind','ZH-TW/EN bilingual'],tools:['Next.js 16','Tailwind'],children:[]},
-  qaAgentEng:{name:'QA Agent',subtitle:'Engineering Sub',emoji:'🧪',tier:'sub',trigger:'完成後',resp:['auth flow 測試','Zeabur 部署驗證'],tools:['Zeabur','Supabase Auth'],children:[]},
-  contentDirector:{name:'Content Director',subtitle:'每日 AI 文章',emoji:'📰',tier:'director',trigger:'「今天的 AI 文章做成影片」',resp:['Research → Script → Handoff'],tools:['WebSearch'],children:['researchAgent','scriptAgent','handoffAgent']},
-  researchAgent:{name:'Research Agent',subtitle:'Content Sub',emoji:'🔬',tier:'sub',trigger:'啟動',resp:['找當日最高訊噪比 AI 文章','整理摘要'],tools:['WebSearch','WebFetch'],children:[]},
-  scriptAgent:{name:'Script Agent',subtitle:'Content Sub',emoji:'📄',tier:'sub',trigger:'Research 後',resp:['~6.5 分鐘 ZH-TW 腳本','輸出 article-YYYY-MM-DD.md'],tools:[],children:[]},
-  handoffAgent:{name:'Handoff',subtitle:'Content Sub',emoji:'↗️',tier:'sub',trigger:'Script 後',resp:['交 article-YYYY-MM-DD.md 給 Video Director'],tools:['→ Video Director'],children:[]}
-};
-const TL={owner:'Studio Owner',meta:'Meta Layer',director:'Domain Director',sub:'Sub-Agent'};
-const BC={owner:'bo',meta:'bm',director:'bg',sub:'bd'};
-const AI={owner:'rgba(255,215,0,.1)',meta:'rgba(183,148,244,.1)',director:'rgba(124,255,178,.1)',sub:'rgba(255,255,255,.05)'};
-
-let hist=[];
-function openAgent(id,push=true){
-  if(push) hist=[id];
-  const a=AG[id];
-  if(!a) return;
-  const back=hist.length>1?`<button class="m-back" onclick="goBack()">← Back</button>`:'';
-  const subs=a.children&&a.children.length?`<div class="divider"></div><div class="m-sl" style="margin-bottom:12px">Team (${a.children.length})</div><div class="sub-grid">${a.children.map(c=>{const ag=AG[c];return`<div class="sub-c" onclick="drillInto('${c}')" tabindex="0" role="button"><div class="sc-ico">${ag.emoji}</div><div class="sc-name">${ag.name}</div><div class="sc-sub">${ag.subtitle}</div><div class="sc-arr">查看詳情 →</div></div>`;}).join('')}</div>`:'';
-  document.getElementById('modal-body').innerHTML=`${back}
-    <div class="m-avatar" style="background:${AI[a.tier]}">${a.emoji}</div>
-    <div class="badge ${BC[a.tier]}" style="margin-bottom:12px">${TL[a.tier]}</div>
-    <div class="m-name">${a.name}</div>
-    <div class="m-subtitle">${a.subtitle}</div>
-    <div class="trig-box"><div class="m-sl" style="margin-bottom:6px">啟動條件</div><div class="trig-txt">${a.trigger}</div></div>
-    <div class="m-sl">工作內容</div><div class="r-list">${a.resp.map(r=>`<div class="r-item">${r}</div>`).join('')}</div>
-    ${a.tools.length?`<div class="m-sl">使用工具</div><div class="tools-row">${a.tools.map(t=>`<span class="t-tag">${t}</span>`).join('')}</div>`:''}
-    ${a.note?`<div class="m-note">${a.note}</div>`:''}${subs}`;
-  document.getElementById('overlay').classList.add('open');
-  document.getElementById('modal').scrollTop=0;
-}
-function drillInto(id){hist.push(id);openAgent(id,false);}
-function goBack(){hist.pop();if(hist.length)openAgent(hist[hist.length-1],false);}
-function closeModal(){document.getElementById('overlay').classList.remove('open');hist=[];}
-function handleOvClick(e){if(e.target===document.getElementById('overlay'))closeModal();}
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
-document.querySelectorAll('[role="button"][tabindex]').forEach(el=>{
-  el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();el.click();}});
+/* ── KEYBOARD NAV ─────────────────────────────────── */
+document.querySelectorAll('.ac[tabindex]').forEach(card=>{
+  card.addEventListener('keydown',e=>{
+    if(e.key==='Enter'||e.key===' '){e.preventDefault();card.click();}
+  });
 });
 </script>
 </body>

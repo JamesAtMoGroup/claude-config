@@ -331,36 +331,6 @@ const CalloutCard: React.FC<{ c: Callout; allCallouts: Callout[] }> = ({ c, allC
 
 ---
 
-## Lottie Avatar 規格
-
-> **使用 Lottie，不使用 HeyGen 影片作為 avatar overlay。**
-
-- Lottie 檔案：`src/speaking-animation.json`（從 `speaking.lottie` 解壓）
-- 解壓方式：`unzip -p speaking.lottie animations/speaking-animation.json > src/speaking-animation.json`
-- `.lottie` 是 ZIP 格式，不可直接 import — 必須解壓為 JSON
-
-```tsx
-import { Lottie } from "@remotion/lottie";
-import speakingData from "./speaking-animation.json";
-
-const AvatarOverlay: React.FC = () => {
-  const frame = useCurrentFrame();
-  const fadeIn = interpolate(frame, [0, 20], [0, 1], clamp);
-  return (
-    <div style={{
-      position: "absolute", bottom: 40, right: 40, width: 200, height: 200,
-      borderRadius: "50%", overflow: "hidden",
-      border: "3px solid rgba(124,255,178,0.6)",
-      boxShadow: "0 0 20px rgba(124,255,178,0.25), 0 4px 16px rgba(0,0,0,0.6)",
-      opacity: fadeIn, zIndex: 20,
-    }}>
-      <Lottie animationData={speakingData} style={{ width: "100%", height: "100%" }} />
-    </div>
-  );
-};
-// 在每個 scene 加：<AvatarOverlay />
-```
-
 ---
 
 ## 逐字稿同步原則
@@ -460,6 +430,5 @@ durationInFrames = Math.ceil(audioDurationSec × 30) + 10
    ✓ 所有文字在手機畫面清晰可讀
    ✓ 底部 SUBTITLE_H=160px 保留空白（不放內容）
    ✓ iMessage 字卡從頂部滑入、堆疊正確、文字無換行
-   ✓ 每個 scene 有 AvatarOverlay（Lottie）
    ✓ out/CH{章節}/ 包含 .mp4 + .vtt
 ```

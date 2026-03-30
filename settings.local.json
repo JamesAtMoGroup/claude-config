@@ -167,7 +167,14 @@
       "Bash(sed -i '' 's/靠 few 來寫誠識/靠感覺來寫程式/g' 0-1_4.2.vtt)",
       "Bash(cd:*)",
       "Bash(textutil -convert txt -stdout /Users/jamesshih/Projects/vibe-coding-video/chapters/0-1/章節0-1_逐字講稿.pages)",
-      "Bash(osascript:*)"
+      "Bash(osascript:*)",
+      "Bash(sed -i '' 's/這個以方做出來/這個乙方做出來/g' \"/Users/jamesshih/Projects/vibe-coding-video/chapters/0-1/0-1 音檔/0-1_4.3.vtt\")",
+      "Bash(sed -i '' 's/也就是也就是甲方/也就是甲方/g' \"/Users/jamesshih/Projects/vibe-coding-video/chapters/0-1/0-1 音檔/0-1_4.3.vtt\")",
+      "Bash(ffmpeg -i \"/Users/jamesshih/Projects/article-video/ai-knowledge-2026-03-30/ai-knowledge-2026-03-30_script.m4a\" -acodec pcm_s16le -ar 44100 \"/Users/jamesshih/Projects/article-video/ai-knowledge-2026-03-30/ai-knowledge-2026-03-30.wav\" -y)",
+      "Bash(ffmpeg -i /Users/jamesshih/Projects/article-video/ai-knowledge-2026-03-30/ai-knowledge-2026-03-30.wav -stream_loop -1 -i /Users/jamesshih/Projects/article-video/public/audio/course_bgmusic.wav -filter_complex \":*)",
+      "Bash(mkdir -p ~/.claude/skills/frontend-design)",
+      "Bash(~/.claude/skills/frontend-design/SKILL.md)",
+      "Bash(whisper public/audio/ai-knowledge-2026-03-30-processed.wav --model medium --language zh --output_format vtt --output_dir out/2026-03-30/)"
     ]
   }
 }
