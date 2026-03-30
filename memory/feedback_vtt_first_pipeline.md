@@ -15,5 +15,14 @@ VTT 必須在 Scene Dev 之前完成。所有動畫 frame timing 來自 VTT（se
 4. ContentColumn 必須加 `maxHeight = H - contentTop - SUBTITLE_SAFE`，其中 `SUBTITLE_SAFE = 120 * S`（4K 下 360px = 17% 的字幕安全區）— **勿改回 80*S，已驗證過**
 5. **多元素 Scene 的 Element Fade-Out 規則（必須執行）：** 若一個 Scene 有多個垂直疊加元素，當後來元素出現時，早期元素必須先 fade out 再從 DOM 移除（height=0）。Pattern：`const showEarly = frame < REMOVE_FRAME; const earlyOpacity = interpolate(frame, [FADE_START, REMOVE_FRAME], [1, 0], clamp);`。REMOVE_FRAME 必須早於 LaterElement.startFrame 至少 100f。
 6. **AnalogyBox delay 不能 ≥ scene duration** — 否則永遠不顯示（03-30 TipsScene bug：delay=2250 = scene duration）
-7. Animation QA 是獨立角色，負責對照 VTT 逐條確認每個視覺元素出現時間
-8. `python3 -m whisper` 而非 `whisper`（PATH 問題）；sub-agents 沒有 Bash 權限，ffmpeg/whisper 由 Director 直接跑
+7. **VTT QA 逐字比對規則（非常重要）：**
+   - **掃描方式（必須用這個指令）：**
+     ```bash
+     grep -v "^[0-9]" file.vtt | grep -v "^-->" | grep -v "^WEBVTT" | grep -v "^$" | tr '\n' '|'
+     ```
+     將所有字幕文字合成一行，再對照 script MD 逐字比對。
+   - QA Agent 必須逐字元比對，不能只看語意。
+   - Whisper 常犯的同音字錯誤：常→長、斷→段、播→撥、員→源、多餘字（如「英文方不一樣」的「方」）
+   - 修正報告必須列出每一處 before→after，不能寫「已校對」
+8. Animation QA 是獨立角色，負責對照 VTT 逐條確認每個視覺元素出現時間
+9. `python3 -m whisper` 而非 `whisper`（PATH 問題）；sub-agents 沒有 Bash 權限，ffmpeg/whisper 由 Director 直接跑

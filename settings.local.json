@@ -178,7 +178,8 @@
       "Bash(kill 86525)",
       "Bash(ffmpeg -i ai-knowledge-2026-03-30/ai-knowledge-2026-03-30.mp3 -stream_loop -1 -i public/audio/course_bgmusic.wav -filter_complex \":*)",
       "Bash(pkill -f \"remotion render ArticleVideo-2026-03-30\")",
-      "Bash(kill 80798 80782)"
+      "Bash(kill 80798 80782)",
+      "Bash(tr '\\\\n' '|')"
     ]
   }
 }
