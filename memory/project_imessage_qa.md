@@ -22,8 +22,22 @@ Need to implement iMessage QA approval flow for Vibe Coding video production.
 - Handle confirmed: `+886981928525` (iMessage)
 - Dry run tested: sent test message, received "通過" reply, DB query confirmed working
 
-**How to use in agent flow:**
+**Applies to:** Both Vibe Coding (`~/Projects/vibe-coding-video/`) and article-video (`~/Projects/article-video/`)
+
+**Dual-channel approval — either one triggers render:**
+1. iMessage reply「通過」(polled via script)
+2. James says「通過」directly in the Claude conversation
+
+**Director agent flow:**
 ```bash
+# 1. Send QA report via iMessage
 ~/.claude/scripts/imessage_send.sh "🎬 QA Report:\n$QA_SUMMARY\n\n請回覆「通過」開始 render"
-~/.claude/scripts/imessage_wait_approval.sh 3600 && trigger_render
+
+# 2. Run polling in background
+~/.claude/scripts/imessage_wait_approval.sh 3600 &
+POLL_PID=$!
+
+# 3. Ask James in conversation: "QA 報告已發送，請在這裡或 iMessage 回覆「通過」"
+# 4. If James replies here → kill $POLL_PID → start Render Agent
+# 5. If iMessage poll detects approval → also start Render Agent
 ```
