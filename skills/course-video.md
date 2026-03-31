@@ -457,11 +457,47 @@ const CALLOUTS: Callout[] = [
     1. 讀逐字講稿全文
     2. 為每個段落決定：
        a. 教材 slides 動畫方式（progressive_append / scroll / row_by_row / fade）
-       b. 補充視覺動畫（不改教材內容，在旁邊新增）
-          - 觸發詞：「舉例來說」「想像一下」「比較看看」「例如」等
-          - 位置依內容決定（不固定）
-          - 風格：SVG 線條動畫（黑底霓虹綠）
-    3. 輸出 visual-spec-{章節}.json
+       b. 補充視覺動畫 ← 每個段落都要主動判斷，不可留白
+          逐句掃描，出現以下任一情境就必須設計對應動畫：
+
+          【觸發情境 → 動畫類型對照表】
+          ┌─────────────────────────────┬──────────────────────────────────────────────────┐
+          │ 觸發情境                     │ 動畫類型                                          │
+          ├─────────────────────────────┼──────────────────────────────────────────────────┤
+          │ 比喻 / 類比（「就像...」）    │ SVG draw-in：繪製對應物件輪廓（依序描繪）           │
+          │ 流程 / 步驟說明              │ 流程圖逐步 pop-in：每步驟獨立 spring，講者說到才出現 │
+          │ 費用 / 數字 / 比例           │ Counter 動畫：數字從 0 跑到目標值                  │
+          │ 兩者比較對照                 │ Left/Right reveal：兩欄從中間向外展開               │
+          │ 強調關鍵詞 / 結論            │ Underline draw：關鍵字下方線條由左至右畫出           │
+          │ 工具 / 概念圖示              │ Icon bounce-in：icon 彈跳出現（scale 0.6→1.1→1）   │
+          │ 完成 / 確認感                │ Checkmark draw：SVG 打勾路徑動畫                   │
+          │ 舉例列點（多個例子逐一說）   │ 例子逐一 slide-in from left，講者說到才出現          │
+          └─────────────────────────────┴──────────────────────────────────────────────────┘
+
+          風格規範：
+          - 配色：霓虹綠 (#7CFFB2) 線條 / icon，黑底或半透明背景
+          - 位置：不遮擋教材主內容，放置於空白區域（左側、右側、或內容下方）
+          - 時機：對應台詞的 VTT 開始幀 + 0–5f（與講者同步，不超前）
+          - 每個場景至少設計 1 個補充視覺動畫；若該段落無任何觸發情境，需在 spec 中明確標記 "visual_anim: none" 並說明原因
+
+    3. 輸出 visual-spec-{章節}.json，格式：
+       {
+         "scenes": [
+           {
+             "scene_id": "3.1",
+             "slide_anim": "progressive_append",
+             "visual_anims": [
+               {
+                 "type": "flow_diagram_step_by_step",
+                 "trigger_text": "AI 生成程式碼，你把它貼進 Apps Script",
+                 "vtt_start_sec": 42.3,
+                 "description": "3 步驟流程圖，每步驟獨立 pop-in",
+                 "position": "below_content"
+               }
+             ]
+           }
+         ]
+       }
 
 [Phase 2 — Phase 1 全部完成後]
 
@@ -494,6 +530,12 @@ const CALLOUTS: Callout[] = [
     □ 場景轉場
         - 教材內容是否包在 <SceneScroller> 裡？
         - BgOrbs / ProgressBar / CalloutCard 是否在 SceneScroller 外？
+    □ 補充視覺動畫（強制）
+        - 讀 visual-spec.json 中本場景的 visual_anims 陣列
+        - 陣列內每一個動畫項目是否都已實作？
+        - 若 visual_anims 為空或標記 "none"：是否有說明原因？重新確認講稿是否真的沒有比喻/流程/數字/比較等觸發情境
+        - 動畫出現的 startFrame 是否對照 VTT（與講者台詞同步，不超前）？
+        - 動畫位置沒有遮擋教材主內容？
     □ 視覺一致性
         - 場景內容是否對應 HTML 的對應 section？
         - 文字、標題、項目數量與 HTML 一致？
@@ -530,8 +572,13 @@ const CALLOUTS: Callout[] = [
         → 不得出現：Vycoding / VibeCoding / ViveCoding / Live Coding / AI Codein / AICoding
         → 不得出現：城市碼 / 聊天室的AI / Appsgreed / AppsGrid / 以方 / 越越浴室
         → 發現 → 直接修正 → 記錄
-    □ 補充視覺動畫
-        → 動畫出現幀對照 VTT（「舉例來說」「想像一下」等觸發詞所在幀）
+    □ 補充視覺動畫（逐場景，最重要之一）
+        讀 visual-spec.json 的每個場景 visual_anims 陣列
+        → 每個 visual_anim 項目是否在 TSX 中有對應實作？（逐一比對，不可有缺）
+        → 標記 "none" 的場景：講稿中確認沒有比喻/流程/數字/比較觸發詞？
+        → 動畫 startFrame 是否對照 VTT（與台詞同步，不超前）？
+        → 動畫位置沒有遮擋教材主內容？
+        → 至少回報：共有幾個動畫、哪幾個場景有、哪幾個場景標記 none
     □ 視覺一致性（場景 vs HTML）
         → TSX slides 內容與 (N){章節}.html 對應 section 一致
 
@@ -639,9 +686,52 @@ Transcription Agent 負責找到對應 VTT 時間點，並分割音檔。
 - 字卡 `from` = VTT 中對應台詞說完後 + 10–20f 緩衝（不早於台詞結束幀）
 - 用詞必須對照逐字講稿（如「單元」非「章節」）
 
-### 補充視覺動畫
-- 依 visual-spec.json 實作，位置依內容決定
-- 不修改教材主內容，僅在旁邊新增
+### 補充視覺動畫（強制）
+- 依 visual-spec.json 逐一實作，每個 `visual_anims` 項目都必須實作，不可跳過
+- 不修改教材主內容，僅在指定位置新增
+- 每種動畫類型的標準實作：
+
+  **SVG draw-in（類比 / 物件輪廓）**
+  ```tsx
+  const drawProgress = interpolate(frame, [startF, startF + 45], [0, 1], clamp);
+  <svg><path strokeDasharray="200" strokeDashoffset={200 * (1 - drawProgress)} .../></svg>
+  ```
+
+  **流程圖逐步 pop-in**
+  ```tsx
+  // 每個 step 獨立 useFadeUp，startFrame 對照 VTT 逐步出現
+  const step1 = useFadeUp(vttFrame_step1);
+  const step2 = useFadeUp(vttFrame_step2);
+  const step3 = useFadeUp(vttFrame_step3);
+  ```
+
+  **Counter 動畫（數字）**
+  ```tsx
+  const count = Math.floor(interpolate(frame, [startF, startF + 60], [0, targetValue], clamp));
+  ```
+
+  **Underline draw（關鍵詞強調）**
+  ```tsx
+  const lineW = interpolate(frame, [startF, startF + 30], [0, 100], clamp);
+  <div style={{ borderBottom: `3px solid ${C.primary}`, width: `${lineW}%` }} />
+  ```
+
+  **Icon bounce-in**
+  ```tsx
+  const s = spring({ frame: f, fps, config: { damping: 12, stiffness: 200 } });
+  const scale = interpolate(s, [0, 1], [0.6, 1], clamp);
+  ```
+
+  **Checkmark draw**
+  ```tsx
+  // SVG polyline 24,12 12,24 0,16，stroke-dashoffset 動畫
+  ```
+
+  **Slide-in from left（例子列點）**
+  ```tsx
+  const x = interpolate(progress, [0, 1], [-60, 0], clamp);
+  // 每個例子獨立 startFrame，對照 VTT
+  ```
 
 ## 常見錯誤
 
