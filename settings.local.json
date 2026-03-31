@@ -183,7 +183,8 @@
       "Bash(ffmpeg -y -i \"/Users/jamesshih/Projects/article-video/out/2026-03-30/2026-03-30.mp4\" -i \"/Users/jamesshih/Projects/article-video/ai-knowledge-2026-03-30/ai-knowledge-2026-03-30-female.mp3\" -stream_loop -1 -i \"/Users/jamesshih/Projects/article-video/public/audio/course_bgmusic.wav\" -filter_complex \":*)",
       "Bash(OUT_DIR=\"out/CH0-2-工具這麼多，用這 3 個就夠了\")",
       "Bash(mkdir -p \"$OUT_DIR\")",
-      "Bash(echo \"Output dir ready: $OUT_DIR\")"
+      "Bash(echo \"Output dir ready: $OUT_DIR\")",
+      "Bash(pip show:*)"
     ]
   }
 }

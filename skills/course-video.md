@@ -507,6 +507,7 @@ const CALLOUTS: Callout[] = [
     3. 實作所有場景（依規格，不得一次顯示全部內容）
     4. 實作補充視覺動畫
     5. 所有字卡最短 90 frames，內容不重複 slides
+    6. 完成後回報 Director，由 Director 立即啟動 QA Agent（不等待 James 指示）
 
     ── 每實作完一個場景，必須逐項 check 以下清單，全部 ✅ 才可繼續下一場景 ──
 
@@ -540,7 +541,13 @@ const CALLOUTS: Callout[] = [
         - 場景內容是否對應 HTML 的對應 section？
         - 文字、標題、項目數量與 HTML 一致？
 
-[Phase 3]
+[Phase 3 — Scene Dev 完成後由 Director 立即啟動，不等 James 指示]
+
+  ⚠️  Director 強制閘門：
+      Scene Dev 完成 → Director 立即啟動 QA Agent（背景執行）
+      QA 完成且全部 ✅ → 才可通知 James / 開放 preview
+      QA 有 ❌ → Director 立即派 Fix Agent 修正，修正完再跑 QA，直到全部通過
+      禁止在 QA 尚未完成前讓 James 看到 preview 或通知他「完成了」
 
   QA Agent:
     ── 以下每項必須逐一執行並回報結果，非僅確認檔案存在 ──
