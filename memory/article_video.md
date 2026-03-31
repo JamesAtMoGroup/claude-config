@@ -24,15 +24,16 @@ Daily AI knowledge video pipeline using Remotion + narrator's own recorded audio
 - Key lessons: QA before render; ContentColumn maxHeight=570*S; SUBTITLE_SAFE=80*S; rich animations required
 
 ## Critical Rules (all video Agents must know)
-1. **VTT-first**: Scene Dev CANNOT start until corrected VTT exists
+1. **VTT-first**: Scene Dev AND Visual Concept Agent CANNOT start until corrected VTT exists
 2. **QA before render**: No render until Animation QA passes
 3. **Subtitle safe zone**: ContentColumn maxHeight = H - contentTop - SUBTITLE_SAFE where `SUBTITLE_SAFE = 120*S` (360px at 4K, 17% of canvas) — NOT 80*S
 4. **Element Fade-Out**: Multi-element Scenes MUST fade out + remove early elements from DOM before later elements appear; total visible height must never exceed maxHeight=1590px at 4K
 5. **AnalogyBox delay**: delay must be < scene duration; if delay ≥ duration it never renders
-6. **Rich animations required**: Every scene must have visual animation components, not just text fade-in
-7. **SummaryScene required**: Last ~30s must have dedicated SummaryScene with 3 recap cards
-8. **Whisper**: use `python3 -m whisper` (not `whisper`); sub-agents have no Bash access
-9. **No anlmdn**: Skip denoise filter; breaks audio quality
+6. **Sentence-level animation**: Every VTT cue is a visual design decision. Ask: "What should the audience SEE at the exact moment this sentence is spoken?" Visual elements must appear at `vtt_seconds × 30`, not guessed
+7. **No 30s gaps**: No scene may go 30+ seconds without a new visual element appearing
+8. **SummaryScene required**: Last ~30s must have dedicated SummaryScene with 3 recap cards
+9. **Whisper**: use `python3 -m whisper` (not `whisper`); sub-agents have no Bash access
+10. **No anlmdn**: Skip denoise filter; breaks audio quality
 
 ## Completed Videos
 | ID | Date | Notes |
