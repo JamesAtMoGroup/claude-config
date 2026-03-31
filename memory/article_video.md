@@ -7,7 +7,7 @@ type: project
 Daily AI knowledge video pipeline using Remotion + narrator's own recorded audio.
 
 **Why:** Turns daily AI articles into ~6.5 min explainer videos with 3D animations and iMessage callouts.
-**How to apply:** Read `~/Projects/article-video/progress.md` first. Use Vibe Coding dark neon-green style (S=3, 4K). Always multi-agent for new videos.
+**How to apply:** Read `~/Projects/article-video/progress.md` first. Use Vibe Coding dark neon-green style (S=3, 4K). Always multi-agent for new videos. Every agent must produce a checklist file in `ai-knowledge-YYYY-MM-DD/`; Director verifies all checklists before render.
 
 ## Key Details
 - Repo: https://github.com/JamesAtMoGroup/article-video
@@ -24,7 +24,8 @@ Daily AI knowledge video pipeline using Remotion + narrator's own recorded audio
 - Key lessons: QA before render; ContentColumn maxHeight=570*S; SUBTITLE_SAFE=80*S; rich animations required
 
 ## Critical Rules (all video Agents must know)
-1. **VTT-first**: Scene Dev AND Visual Concept Agent CANNOT start until corrected VTT exists
+1. **Mandatory checklists**: Every agent must save a checklist file to `ai-knowledge-YYYY-MM-DD/checklist-[agent].md`. Director reads and verifies all `[x]` before next phase. Any `[ ]` = agent must redo.
+2. **VTT-first**: Scene Dev AND Visual Concept Agent CANNOT start until corrected VTT exists
 2. **QA before render**: No render until Animation QA passes
 3. **Subtitle safe zone**: ContentColumn maxHeight = H - contentTop - SUBTITLE_SAFE where `SUBTITLE_SAFE = 120*S` (360px at 4K, 17% of canvas) — NOT 80*S
 4. **Element Fade-Out**: Multi-element Scenes MUST fade out + remove early elements from DOM before later elements appear; total visible height must never exceed maxHeight=1590px at 4K
