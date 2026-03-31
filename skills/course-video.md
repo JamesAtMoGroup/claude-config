@@ -431,7 +431,22 @@ const CALLOUTS: Callout[] = [
 ## 完整影片製作流程（強制 Multi-Agent SOP）
 
 ```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+AGENT TEAM（每章節固定陣容）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Director              — 分派任務、強制 QA 閘門、唯一通知 James 的人
+Audio Agent           — 音檔 normalize，輸出 frames
+Transcription Agent   — VTT + 逐字稿校正 + timing-map.json
+HTML Spec Agent       — HTML → scene-spec.json（場景內容的唯一來源）
+Scene Dev A/B/C/D     — 各負責 5–7 個場景，平行寫作，各自 ≤500 lines
+Integration Agent     — 合併 4 份 TSX，跑 tsc，修 import/type 錯誤
+QA Agent              — 逐場景 checklist，報告給 Director（非 James）
+Fix Agent             — QA ❌ 時由 Director 派出，修完再跑 QA
+Render Agent          — QA PASS 後才啟動
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 [Phase 1 — 三個 Agent 並行啟動]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   Audio Agent:
     1. 來源：chapters/{章節}/{章節} 音檔/*.wav
@@ -440,141 +455,167 @@ const CALLOUTS: Callout[] = [
     4. 回報每支音檔的 duration_sec 和 frames（Math.ceil(sec*30)+10）
 
   Transcription Agent:
-    前提：chapters/{章節}/章節{章節}_逐字講稿.txt 必須存在（見 Step 0）
+    前提：chapters/{章節}/章節{章節}_逐字講稿.txt 必須存在
     1. Whisper 轉錄每支音檔 → VTT（--language zh）
     2. 對照 .txt 逐字稿逐行校正：
-       - 繁簡轉換：opencc s2twp 全量轉換（消除簡體字）
-         ⚠️  opencc 可能過度轉換，需手動還原：「消息」←非「訊息」、「類型」←非「型別」等
-            原則：以逐字稿原文為準，opencc 結果與逐字稿不符時以逐字稿為準
-       - 專有名詞：grep 出 Vibe Coding / AI Coding 等，確認拼寫正確
-       - 聽音近似錯誤：逐字稿有「程式」→ VTT 出現「城市」；「午休」→「五修」；「乙方」→「以方」等
-       - 校正後再過一遍：grep "城市|五修|以方|VibeCod|ViveCod|Vycod|Live Coding|AI Codein"
-    3. 找出逐字講稿中 **備注** 標記對應的 VTT 時間點 → 決定音檔分割點
+       - 繁簡轉換：opencc s2twp（原則：以逐字稿原文為準）
+       - 專有名詞確認：Vibe Coding / AI Coding 拼寫
+       - 校正後 grep "城市|五修|以方|VibeCod|ViveCod|Vycod|Live Coding|AI Codein"
+    3. 找出逐字講稿中 **備注** 標記 → 決定音檔分割點
     4. 用 ffmpeg 分割有 **備注** 的音檔（如 4.3 → 4.3a/b/c）
-    5. 回報所有分割時間點和新的 frames
+    5. 輸出 timing-map.json ← 關鍵輸出，Scene Dev 必讀
+       格式：
+       {
+         "segments": {
+           "1.1": { "seg_start_frame": 0,    "frames": 1423 },
+           "2.0": { "seg_start_frame": 1423, "frames": 2180 },
+           ...
+         },
+         "keywords": {
+           "房間天才": { "abs_frame": 14883, "scene": "4.0", "local_frame": 1837 },
+           "試試看":   { "abs_frame": 18711, "scene": "4.1", "local_frame": 1196 },
+           ...
+         }
+       }
+       規則：每個 scene 裡有多個列點就要有多個 keyword 條目
+       timing-map.json 是 startFrame 的唯一來源，Scene Dev 不得自行估算
 
-  Visual Concept Agent:  ← 不可省略
-    1. 讀逐字講稿全文
-    2. 為每個段落決定教材 slides 動畫方式：
-       - progressive_append：列點逐一出現（useFadeUp 每項獨立 startF）
-       - scroll：內容超過畫面，隨講者進度 translateY 捲動
-       - row_by_row：表格逐行出現
-       - fade：整塊淡入
-
-       ⚠️ 不做補充 SVG 動畫（已廢棄）：
-       SVG draw-in、counter、underline、checkmark、icon bounce-in 等複雜動畫
-       已決定不使用，原因：難以維護、與 slides 內容重複、品質不穩定。
-       只做 slides 本身的動畫，確保內容 100% 正確。
-
-    3. 輸出 visual-spec-{章節}.json，只需記錄 slide_anim：
+  HTML Spec Agent:  ← 這是新增的關鍵 Agent
+    1. 讀 (N){章節}.html 全文
+    2. 為每個 section 輸出 scene-spec.json ← 場景內容的唯一來源
+       格式：
        {
          "scenes": [
            {
-             "scene_id": "3.1",
-             "slide_anim": "progressive_append"
+             "scene_id": "1.1",
+             "type": "hero",
+             "title": "寫程式的 7 大流程與 AI 溝通技巧",
+             "subtitle": "CH 0-3",
+             "tags": ["SDLC", "AI 溝通", "7 大流程"],
+             "slide_anim": "fade"
+           },
+           {
+             "scene_id": "4.0",
+             "type": "section",
+             "section_num": "03",
+             "title": "SDLC 七大流程",
+             "items": [
+               "需求分析 (Requirements)",
+               "系統設計 (Design)",
+               "開發實作 (Development)",
+               "測試驗證 (Testing)",
+               "部署上線 (Deployment)",
+               "維護優化 (Maintenance)",
+               "專案結案 (Closure)"
+             ],
+             "slide_anim": "progressive_append",
+             "callout": { "sender": "觀念釐清", "text": "AI 只看得到你塞進去的那張紙" }
            }
          ]
        }
+    3. scene-spec.json 必須涵蓋 HTML 裡每一個 section，不得遺漏
+    4. slide_anim 選項：progressive_append / scroll / row_by_row / fade
+       - 項目 > 5 個且總高度會超過畫面 → scroll
+       - 表格 → row_by_row
+       - 純文字段落 / 比較區塊 → progressive_append
+       - 整頁圖片 / 單一訊息 → fade
 
-[Phase 2 — Phase 1 全部完成後]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[Phase 2 — Phase 1 全部完成後，4 個 Scene Dev 並行]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  Scene Dev Agent:
-    1. 讀 visual-spec.json + 所有 VTT + 音頻 frames
-    2. 讀 (N){章節}.html 確認視覺基準
-    3. 實作所有場景（依規格，不得一次顯示全部內容）
-    4. 所有字卡最短 90 frames，內容不重複 slides
-    6. 完成後回報 Director，由 Director 立即啟動 QA Agent（不等待 James 指示）
+  Scene Dev A/B/C/D — 各自負責不重疊的場景範圍
+    每個 Agent 的規則：
+    - 只讀自己負責的場景範圍
+    - 讀 scene-spec.json 取得內容（標題、項目文字）— 不從 HTML 直接讀取
+    - 讀 timing-map.json 取得所有 startFrame — 不自行估算
+    - 讀 FullVideo02.tsx 作為唯一程式碼參考（組件結構、SceneScroller 用法）
+    - 輸出 ScenesPart{N}.tsx（只有 React components，無 import / Root 定義）
+    - 每個 Part 目標 ≤ 500 lines
 
     ── 每實作完一個場景，必須逐項 check 以下清單，全部 ✅ 才可繼續下一場景 ──
 
     【Scene Dev Per-Scene Checklist】
-    □ Progressive Animation
-        - 場景內有幾個項目（列點 / 卡片 / 表格列）？每個項目是否有獨立 useFadeUp(startFrame)？
-        - 有沒有任何兩個項目的 startFrame 相同？（不可相同）
-        - 用 VTT 時間點驗證每個 startFrame，非估算值
+    □ 內容完整性（對照 scene-spec.json）
+        - 場景內的標題、所有列點、標籤數量與 scene-spec.json 完全一致？
+        - 沒有遺漏任何項目？沒有自行添加 spec 沒有的內容？
+    □ Progressive Animation（對照 timing-map.json）
+        - 每個列點 / 卡片項目有獨立 useFadeUp(startFrame)？
+        - 所有 startFrame 來自 timing-map.json，非估算值？
+        - 沒有任何兩個項目 startFrame 相同？
     □ Subtitle 安全區
-        - 最後一個可見項目的底部 y ≤ canvasH - SUBTITLE_H - 20px？
-        - 若有 scroll 動畫：maxScroll = contentH - (canvasH - topOffset - SUBTITLE_H - 20)，是否已套用？
+        - maxScroll = contentH - (canvasH - topOffset - SUBTITLE_H - 20)？
+        - 最後項目底部 ≤ canvasH - SUBTITLE_H - 20px？
     □ 媒體插入（若本場景有 **備注** 素材）
-        - 素材是否用 <Video> 全螢幕？width/height 均為 100%？
-        - 絕對沒有 inset / 角落小視窗？
-        - 插入後所有後續段落的起始幀是否已加上媒體幀數偏移？
-        - EFFECTIVE_STARTS 陣列是否已更新？
-    □ Callout 字卡時機
-        - 每張字卡的 from 是否對照 VTT，在講者說完對應內容後 + 10–20f 緩衝？
-        - 沒有任何字卡在講者還未說到該內容前出現？
-        - 每張字卡 to - from ≥ 90 frames？
-    □ 場景轉場
-        - 教材內容是否包在 <SceneScroller> 裡？
-        - BgOrbs / ProgressBar / CalloutCard 是否在 SceneScroller 外？
-    □ 視覺一致性
-        - 場景內容是否對應 HTML 的對應 section？
-        - 文字、標題、項目數量與 HTML 一致？
-        - 視覺動畫是「補充在教材 slides 下方」，不是取代 slides 內容
-        - 確認每個 scene 的 slides 主內容（標題、列點、卡片）都存在，沒有被動畫佔滿而遺漏
-    □ CalloutCard iMessage 設計一致性
-        - CalloutCard 必須對齊 article-video NotificationCard 規格（見下方）：
-          layout: flex row（icon 左 + text 右），borderRadius: 14*S，padding: 10*S / 14*S
-          icon: CSS speech bubble（白色圓角矩形 + 三角形尾巴），background: rgba(28,28,30,0.9)
-          backdropFilter: blur(48px)，NOTIF_SLOT: 148*S，depth fade 必須實作
-          fontFamily: -apple-system,'SF Pro Text','PingFang TC',system-ui
-          Row1: "iMessage" + "now"，fontBase: 11*S
-          Row2: sender，fontSize: 13*S，fontWeight: 700，opacity 0.92
-          Row3: body，fontSize: 13*S，fontWeight: 400，opacity 0.60，typewriter 0.85 chars/frame
-        - 禁止使用：Noto Sans TC 作為 CalloutCard 字體、fontSize > 13*S、垂直排列佈局
+        - <Video> 全螢幕（width/height 100%）？無 inset 小視窗？
+        - 後續段落 seg_start_frame 已加上媒體幀數？
+    □ Callout 字卡
+        - from/to 來自 timing-map.json？to - from ≥ 90？
+    □ S=2 scaling
+        - 所有 px 值都有 *S？font size / padding / borderRadius / gap 全部乘 S？
+    □ CalloutCard 設計
+        - 使用共用 CalloutCard component（不重新實作）？
 
-[Phase 3 — Scene Dev 完成後由 Director 立即啟動，不等 James 指示]
+  Integration Agent — Scene Dev A/B/C/D 全部完成後
+    1. 合併 ScenesPart1~4.tsx 成完整 FullVideo0X.tsx
+    2. 加入所有 import、constants（S, W, NAV_H, SUBTITLE_H, C...）
+    3. 加入 Sequence wiring（依 timing-map.json 的 seg_start_frame）
+    4. 加入 TOTAL_FRAMES 計算和 export
+    5. 加入共用 CalloutCard（article-video 規格，見下方）
+    6. 執行 npx tsc --noEmit --skipLibCheck，修正所有錯誤
+    7. 完成後回報 Director → Director 立即啟動 QA Agent
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[Phase 3 — Integration 完成後由 Director 立即啟動]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   ⚠️  Director 強制閘門：
-      Scene Dev 完成 → Director 立即啟動 QA Agent（背景執行）
-      QA 完成且全部 ✅ → 才可通知 James / 開放 preview
-      QA 有 ❌ → Director 立即派 Fix Agent 修正，修正完再跑 QA，直到全部通過
-      禁止在 QA 尚未完成前讓 James 看到 preview 或通知他「完成了」
+      Integration 完成 → Director 立即啟動 QA Agent（不等 James 指示）
+      QA 全部 ✅ → 才可通知 James / 開放 preview
+      QA 有 ❌ → Director 立即派 Fix Agent → 修完再跑 QA → 全 ✅ 才通知
+      禁止在 QA 未完成前讓 James 看到 preview 或通知他「完成了」
 
   QA Agent:
     ── 以下每項必須逐一執行並回報結果，非僅確認檔案存在 ──
+    ── 對照 scene-spec.json 和 timing-map.json，不靠記憶判斷 ──
 
     【QA Checklist — 全部 ✅ 才可通知 James】
 
-    □ 字幕安全區（逐場景）
-        對每個場景，讀 TSX 計算最後一個項目的底部 y 值
-        → 驗證 ≤ canvasH - SUBTITLE_H - 20px
-        → 有 scroll 的場景：maxScroll 計算值是否正確
-    □ Progressive Animation（逐場景）
-        讀 TSX，找出每個含多項目的場景
-        → 每個項目是否有獨立且不同的 useFadeUp startFrame？
-        → 有無項目 startFrame 為 0 或相同值（代表同時出現）？
+    □ 內容完整性（對照 scene-spec.json，逐場景）
+        每個 scene_id → TSX 中找對應 component
+        → 標題文字是否完全一致？
+        → items 數量和文字是否完全一致？
+        → 有無遺漏的場景（scene-spec 有但 TSX 沒有）？
+    □ Progressive Animation（對照 timing-map.json）
+        → 每個列點有獨立且不同的 useFadeUp startFrame？
+        → startFrame 與 timing-map.json 中的 local_frame 一致（誤差 ≤ 5f）？
+        → 無 startFrame = 0 或多項目共用同一 startFrame？
+    □ Subtitle 安全區（逐場景）
+        → 每場景 maxScroll 公式正確？
+        → 最後項目底部 ≤ 1820px（4K canvas）？
     □ 媒體插入（若有）
-        讀 TSX 找 <Video> / <Img> 媒體場景
-        → <Video> 是否全螢幕（style width/height 100%）？
-        → 有無 position absolute / inset 的小視窗用法？
-        → EFFECTIVE_STARTS 偏移是否正確（後續段落都加了 MP4 幀數）？
+        → <Video> 全螢幕？無 inset？EFFECTIVE_STARTS 偏移正確？
     □ Callout 字卡時機
-        對每張字卡的 from，對照對應 VTT segment 的時間戳
-        → from 是否 ≥ 對應台詞結束幀 + 10f？
-        → to - from 是否 ≥ 90？
-    □ 字卡內容
-        → 字卡文字不重複 slides 已有的標題/項目文字
-        → 用詞對照逐字講稿（「單元」非「章節」等）
+        → from ≥ 對應台詞幀 + 10f？to - from ≥ 90？
     □ VTT 專有名詞
-        grep 所有 segment VTT：
-        → 不得出現：Vycoding / VibeCoding / ViveCoding / Live Coding / AI Codein / AICoding
-        → 不得出現：城市碼 / 聊天室的AI / Appsgreed / AppsGrid / 以方 / 越越浴室
+        grep：不得出現 Vycoding / VibeCoding / ViveCoding / Live Coding / 城市碼 / 以方 等
         → 發現 → 直接修正 → 記錄
-    □ CalloutCard iMessage 設計（對照 article-video 規格）
-        → layout: flex row（icon 左 + 文字右），不是垂直排列
-        → borderRadius: 14*S（不是 18*S），padding: 10*S / 14*S
-        → icon: CSS speech bubble（白色圓角矩形 + 三角形），background: rgba(28,28,30,0.9)
-        → fontFamily: -apple-system,'SF Pro Text','PingFang TC',system-ui
-        → Row1: "iMessage"（fontBase 11*S），Row2: sender（13*S bold），Row3: body（13*S opacity 0.60）
-        → depth fade 有實作（舊卡片隨深度變暗）
-        → NOTIF_SLOT: 148*S
-    □ 視覺一致性（場景 vs HTML）
-        → TSX slides 內容與 (N){章節}.html 對應 section 一致
+    □ S=2 scaling（抽查 5 個場景）
+        → font size / padding / gap / borderRadius 全部有 *S？
+    □ CalloutCard iMessage 設計
+        → layout: flex row（icon 左 + text 右）？
+        → borderRadius: 14*S，padding: 10*S / 14*S，blur: 48px？
+        → fontFamily: -apple-system,'SF Pro Text','PingFang TC'？
+        → Row1: "iMessage" + "now"，Row2: sender 13*S，Row3: body 13*S opacity 0.60？
+        → depth fade 實作？NOTIF_SLOT: 148*S？
+    □ TypeScript
+        → npx tsc --noEmit --skipLibCheck → 0 errors？
 
-    → 回報每項 ✅/❌ + 問題清單 → iMessage + 對話通知 James
+    → 回報每項 ✅/❌ + 問題清單 → 對話通知 Director（Director 決定是否通知 James）
 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 [Phase 4 — James 通過後]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   Render Agent:
     1. 渲染 out/CH{章節}-{章節標題}/CH{章節}-{章節標題}-complete.mp4（--gl=angle --codec=h264 --overwrite）
        輸出目錄命名格式：out/CH{章節}-{章節中文標題}/（如 out/CH0-1-AI 寫程式、Vibe Coding 是什麼/）
