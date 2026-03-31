@@ -472,23 +472,70 @@ const CALLOUTS: Callout[] = [
     4. 實作補充視覺動畫
     5. 所有字卡最短 90 frames，內容不重複 slides
 
+    ── 每實作完一個場景，必須逐項 check 以下清單，全部 ✅ 才可繼續下一場景 ──
+
+    【Scene Dev Per-Scene Checklist】
+    □ Progressive Animation
+        - 場景內有幾個項目（列點 / 卡片 / 表格列）？每個項目是否有獨立 useFadeUp(startFrame)？
+        - 有沒有任何兩個項目的 startFrame 相同？（不可相同）
+        - 用 VTT 時間點驗證每個 startFrame，非估算值
+    □ Subtitle 安全區
+        - 最後一個可見項目的底部 y ≤ canvasH - SUBTITLE_H - 20px？
+        - 若有 scroll 動畫：maxScroll = contentH - (canvasH - topOffset - SUBTITLE_H - 20)，是否已套用？
+    □ 媒體插入（若本場景有 **備注** 素材）
+        - 素材是否用 <Video> 全螢幕？width/height 均為 100%？
+        - 絕對沒有 inset / 角落小視窗？
+        - 插入後所有後續段落的起始幀是否已加上媒體幀數偏移？
+        - EFFECTIVE_STARTS 陣列是否已更新？
+    □ Callout 字卡時機
+        - 每張字卡的 from 是否對照 VTT，在講者說完對應內容後 + 10–20f 緩衝？
+        - 沒有任何字卡在講者還未說到該內容前出現？
+        - 每張字卡 to - from ≥ 90 frames？
+    □ 場景轉場
+        - 教材內容是否包在 <SceneScroller> 裡？
+        - BgOrbs / ProgressBar / CalloutCard 是否在 SceneScroller 外？
+    □ 視覺一致性
+        - 場景內容是否對應 HTML 的對應 section？
+        - 文字、標題、項目數量與 HTML 一致？
+
 [Phase 3]
 
   QA Agent:
-    必須執行以下所有檢查（非僅檔案存在）：
-    ✓ 抽查 5 幀：內容未被 SUBTITLE_H 裁切
-    ✓ 每張字卡 >= 90 frames
-    ✓ 字卡文字不重複 slides 內容
-    ✓ 字卡用詞對照逐字講稿（下個單元 vs 下個章節 等）
-    ✓ 多項目場景：項目逐一出現（非同時）
-    ✓ 補充動畫：在正確台詞時出現
-    ✓ VTT 專有名詞審查（兜底 Transcription Agent）：
-        grep 所有 segment VTT，確認以下詞彙拼寫正確：
-        - "Vibe Coding"（不得出現：Vycoding / VibeCoding / ViveCoding / Live Coding）
-        - "AI Coding"（不得出現：AI Codein / AICoding / ai coding）
-        - 其他課程專有名詞依逐字講稿確認
-        發現錯誤 → 直接修正 VTT → 記錄修正清單
-    → 回報問題清單 → iMessage + 對話通知 James
+    ── 以下每項必須逐一執行並回報結果，非僅確認檔案存在 ──
+
+    【QA Checklist — 全部 ✅ 才可通知 James】
+
+    □ 字幕安全區（逐場景）
+        對每個場景，讀 TSX 計算最後一個項目的底部 y 值
+        → 驗證 ≤ canvasH - SUBTITLE_H - 20px
+        → 有 scroll 的場景：maxScroll 計算值是否正確
+    □ Progressive Animation（逐場景）
+        讀 TSX，找出每個含多項目的場景
+        → 每個項目是否有獨立且不同的 useFadeUp startFrame？
+        → 有無項目 startFrame 為 0 或相同值（代表同時出現）？
+    □ 媒體插入（若有）
+        讀 TSX 找 <Video> / <Img> 媒體場景
+        → <Video> 是否全螢幕（style width/height 100%）？
+        → 有無 position absolute / inset 的小視窗用法？
+        → EFFECTIVE_STARTS 偏移是否正確（後續段落都加了 MP4 幀數）？
+    □ Callout 字卡時機
+        對每張字卡的 from，對照對應 VTT segment 的時間戳
+        → from 是否 ≥ 對應台詞結束幀 + 10f？
+        → to - from 是否 ≥ 90？
+    □ 字卡內容
+        → 字卡文字不重複 slides 已有的標題/項目文字
+        → 用詞對照逐字講稿（「單元」非「章節」等）
+    □ VTT 專有名詞
+        grep 所有 segment VTT：
+        → 不得出現：Vycoding / VibeCoding / ViveCoding / Live Coding / AI Codein / AICoding
+        → 不得出現：城市碼 / 聊天室的AI / Appsgreed / AppsGrid / 以方 / 越越浴室
+        → 發現 → 直接修正 → 記錄
+    □ 補充視覺動畫
+        → 動畫出現幀對照 VTT（「舉例來說」「想像一下」等觸發詞所在幀）
+    □ 視覺一致性（場景 vs HTML）
+        → TSX slides 內容與 (N){章節}.html 對應 section 一致
+
+    → 回報每項 ✅/❌ + 問題清單 → iMessage + 對話通知 James
 
 [Phase 4 — James 通過後]
   Render Agent:
