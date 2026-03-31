@@ -12,7 +12,7 @@ VTT 必須在 Scene Dev 之前完成。所有動畫 frame timing 來自 VTT（se
 1. Phase 順序：Audio + Script 並行 → Whisper VTT → QA VTT → Scene Dev（讀 VTT）→ Animation QA → Render
 2. QA Agent 通過前絕對不能啟動 render
 3. Scene Dev 必須等到 corrected VTT 才能計算 frame：`frame = seconds × 30`, `local = global − scene_start`
-4. ContentColumn 必須加 `maxHeight = H - contentTop - SUBTITLE_SAFE`，其中 `SUBTITLE_SAFE = 120 * S`（4K 下 360px = 17% 的字幕安全區）— **勿改回 80*S，已驗證過**
+4. **字幕是全片都在的**。所有 scene 的所有視覺元素，bottom edge 不得低於 `H - SUBTITLE_SAFE = 1800px`（4K）。這是絕對邊界，不限佈局類型：ContentColumn 用 `maxHeight=1590px`；AbsoluteFill 置中 scene 用 `paddingBottom: SUBTITLE_SAFE`；自訂定位元素確認 `top + height ≤ 1800px`。`SUBTITLE_SAFE = 120 * S` — **勿改回 80*S**
 5. **多元素 Scene 的 Element Fade-Out 規則（必須執行）：** 若一個 Scene 有多個垂直疊加元素，當後來元素出現時，早期元素必須先 fade out 再從 DOM 移除（height=0）。Pattern：`const showEarly = frame < REMOVE_FRAME; const earlyOpacity = interpolate(frame, [FADE_START, REMOVE_FRAME], [1, 0], clamp);`。REMOVE_FRAME 必須早於 LaterElement.startFrame 至少 100f。
 6. **AnalogyBox delay 不能 ≥ scene duration** — 否則永遠不顯示（03-30 TipsScene bug：delay=2250 = scene duration）
 7. **VTT QA 逐字比對規則（非常重要）：**
