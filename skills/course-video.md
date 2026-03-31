@@ -526,7 +526,7 @@ const CALLOUTS: Callout[] = [
 
 ---
 
-## 媒體插入規則（逐字稿 **備注**）
+## ⚠️ 媒體插入規則（逐字稿 **備注**）— Scene Dev 必讀
 
 逐字稿中 `**備注**：使用相關素材 {檔名}（片長 N 秒）` 代表在**該句台詞結束後立刻**插入媒體（不是等整段結束）。
 Transcription Agent 負責找到對應 VTT 時間點，並分割音檔。
@@ -544,8 +544,10 @@ Transcription Agent 負責找到對應 VTT 時間點，並分割音檔。
 - 插入點 = 對應音頻 Sequence 結束後的下一幀
 - 媒體 Sequence：無 `<Audio>` 旁白，BGM 由外層 loop 持續播放
 - 圖片用 `<Img>` + 淡入淡出（0→1 前 15 幀，1→0 後 15 幀）
-- 影片用 `<Video>` 全螢幕，`durationInFrames = Math.ceil(秒數 * 30)`
+- **影片用 `<Video>` 全螢幕覆蓋整個畫面（width:100%, height:100%），絕對不可做成角落 inset 或小視窗**
+- `durationInFrames = Math.ceil(秒數 * 30)`
 - 插入後的音頻 Sequence 起始幀需加上媒體佔用的幀數
+- 全域 `EFFECTIVE_STARTS` 陣列必須在插入點之後的所有段落加上媒體幀數偏移
 
 ---
 
@@ -565,13 +567,16 @@ Transcription Agent 負責找到對應 VTT 時間點，並分割音檔。
 - 內容永遠不可被 SUBTITLE_H 擋住
 - 超過一頁的內容必須用 `translateY` scroll 動畫（模擬人類向上滑動）
 - Scroll 時機依 VTT 確認
+- **Scroll 上限**：scroll 動畫的最終 translateY 值必須保留底部安全距離，確保最後一個項目底部 ≤ `canvasH - SUBTITLE_H - 20px`。計算方式：`maxScroll = contentH - (canvasH - topOffset - SUBTITLE_H - 20)`
 
 ### Progressive Animation（強制）
 - 同一場景有多個項目（列點、卡片、表格列）→ 必須依旁白順序逐一出現
-- 絕不可一次全部顯示
+- **絕不可一次全部顯示——這是最常見的錯誤，必須主動檢查每個 list/table**
+- 每個項目必須有獨立的 `useFadeUp(startFrame)` hook，startFrame 各不相同
 - **教材 slide 內容**（card、analogy box、列點、表格列）→ 講者**正在說**對應內容時跳出來，讓觀眾對應視覺
 - **iMessage 字卡（Callout）** → 講者說完相關內容**之後**出現，作為觀眾反應/補充視角
 - 每個項目的 startFrame 必須對照 VTT，不可估算
+- Scene Dev 實作完成後，必須自我審查：「這個場景有沒有任何 list/table 是同時出現的？」如有，立刻修正
 
 ### 場景轉場（必須）
 - 每個場景的教材內容（card、table、analogy 等）必須包在 `<SceneScroller>` 裡
