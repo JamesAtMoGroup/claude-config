@@ -540,6 +540,18 @@ const CALLOUTS: Callout[] = [
     □ 視覺一致性
         - 場景內容是否對應 HTML 的對應 section？
         - 文字、標題、項目數量與 HTML 一致？
+        - 視覺動畫是「補充在教材 slides 下方」，不是取代 slides 內容
+        - 確認每個 scene 的 slides 主內容（標題、列點、卡片）都存在，沒有被動畫佔滿而遺漏
+    □ CalloutCard iMessage 設計一致性
+        - CalloutCard 必須對齊 article-video NotificationCard 規格（見下方）：
+          layout: flex row（icon 左 + text 右），borderRadius: 14*S，padding: 10*S / 14*S
+          icon: CSS speech bubble（白色圓角矩形 + 三角形尾巴），background: rgba(28,28,30,0.9)
+          backdropFilter: blur(48px)，NOTIF_SLOT: 148*S，depth fade 必須實作
+          fontFamily: -apple-system,'SF Pro Text','PingFang TC',system-ui
+          Row1: "iMessage" + "now"，fontBase: 11*S
+          Row2: sender，fontSize: 13*S，fontWeight: 700，opacity 0.92
+          Row3: body，fontSize: 13*S，fontWeight: 400，opacity 0.60，typewriter 0.85 chars/frame
+        - 禁止使用：Noto Sans TC 作為 CalloutCard 字體、fontSize > 13*S、垂直排列佈局
 
 [Phase 3 — Scene Dev 完成後由 Director 立即啟動，不等 James 指示]
 
@@ -585,6 +597,15 @@ const CALLOUTS: Callout[] = [
         → 標記 "none" 的場景：講稿中確認沒有比喻/流程/數字/比較觸發詞？
         → 動畫 startFrame 是否對照 VTT（與台詞同步，不超前）？
         → 動畫位置沒有遮擋教材主內容？
+        → 視覺動畫是「補充」，教材 slides 主內容（標題、列點、卡片、表格）必須完整存在
+    □ CalloutCard iMessage 設計（對照 article-video 規格）
+        → layout: flex row（icon 左 + 文字右），不是垂直排列
+        → borderRadius: 14*S（不是 18*S），padding: 10*S / 14*S
+        → icon: CSS speech bubble（白色圓角矩形 + 三角形），background: rgba(28,28,30,0.9)
+        → fontFamily: -apple-system,'SF Pro Text','PingFang TC',system-ui
+        → Row1: "iMessage"（fontBase 11*S），Row2: sender（13*S bold），Row3: body（13*S opacity 0.60）
+        → depth fade 有實作（舊卡片隨深度變暗）
+        → NOTIF_SLOT: 148*S
         → 至少回報：共有幾個動畫、哪幾個場景有、哪幾個場景標記 none
     □ 視覺一致性（場景 vs HTML）
         → TSX slides 內容與 (N){章節}.html 對應 section 一致

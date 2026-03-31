@@ -184,7 +184,9 @@
       "Bash(OUT_DIR=\"out/CH0-2-工具這麼多，用這 3 個就夠了\")",
       "Bash(mkdir -p \"$OUT_DIR\")",
       "Bash(echo \"Output dir ready: $OUT_DIR\")",
-      "Bash(pip show:*)"
+      "Bash(pip show:*)",
+      "Bash(do)",
+      "Bash(echo -n \"$f: \")"
     ]
   }
 }
