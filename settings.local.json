@@ -186,7 +186,9 @@
       "Bash(echo \"Output dir ready: $OUT_DIR\")",
       "Bash(pip show:*)",
       "Bash(do)",
-      "Bash(echo -n \"$f: \")"
+      "Bash(echo -n \"$f: \")",
+      "Bash(pkill -f \"remotion render\")",
+      "Bash(wc -l /Users/jamesshih/Projects/vibe-coding-video/chapters/0-3/\\\\\\(N\\\\\\)ch0-3.html)"
     ]
   }
 }
