@@ -19,6 +19,7 @@
 - [VTT-first pipeline](./feedback_vtt_first_pipeline.md) — VTT must exist before Scene Dev; QA before render; ContentColumn needs subtitle safe zone (80*S px)
 - [Always update SOP immediately](./feedback_sop_update_rule.md) — Any workflow/adjustment/optimization mentioned → add to relevant SOP file immediately
 - [Script over tokens](./feedback_script_over_tokens.md) — Any task a script can do must never use tokens; scripts live in ~/.claude/scripts/
+- [No inter-lecture navigation](./feedback_no_inter_lecture_nav.md) — Never add "上一堂/下一堂" labels; only ← 返回主頁 for cross-lecture nav
 
 ## Agent System
 - [Agent Organization](~/.claude/commands/agents.md) — 4 domain directors (Video / Course / Engineering / Content) + sub-agents; invocation cheatsheet

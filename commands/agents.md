@@ -176,6 +176,13 @@ James 說目標
 - Output: 4K — article-video S=3 (1280×720 base)，vibe-coding S=2 (1920×1080 base)
 - iMessage callouts: macOS dark frosted-glass，sender/text spec，top-right stacking push-down
 
+**Scene Dev Agent — article-video 強制規則:**
+- `SUBTITLE_SAFE = 120 * S = 360px`（勿改）；ContentColumn `maxHeight = H - NAV_H - 20*S - SUBTITLE_SAFE = 1590px`
+- Phase A/B element fade-out: `A_FADE_START` 必須對齊 VTT timestamp，不得早於 Phase A 最後一句話的結束時間
+- **Scroll-up rule**: 當 Phase B 元素累計高度可能超過 1590px 時，ContentColumn 必須加上 `scrollUp={{ at: triggerFrame, amount: overflowPx + 20 }}` prop。`ContentColumn` 元件本身需支援此 prop（使用 spring + translateY 平滑滾動），確保任何元素都不被字幕區遮擋。overflow 估算：逐一計算各元素 padding + font-size × lineHeight × lines + marginBottom。
+- 所有 element delay 值 = 對應 VTT cue 的 scene-local frame（seconds × 30 - sceneStart）；Phase B 第一個元素 delay = showB 的 frame 值
+- Font size 最小值：Space Mono labels ≥ 11*S，body text ≥ 14*S，featured text ≥ 17*S
+
 **Spawn in parallel (Phase 1):**
 
 | Agent | Job | Input | Output |

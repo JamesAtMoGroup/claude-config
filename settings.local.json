@@ -188,7 +188,13 @@
       "Bash(do)",
       "Bash(echo -n \"$f: \")",
       "Bash(pkill -f \"remotion render\")",
-      "Bash(wc -l /Users/jamesshih/Projects/vibe-coding-video/chapters/0-3/\\\\\\(N\\\\\\)ch0-3.html)"
+      "Bash(wc -l /Users/jamesshih/Projects/vibe-coding-video/chapters/0-3/\\\\\\(N\\\\\\)ch0-3.html)",
+      "Bash(pkill -f 'remotion render FullVideo03')",
+      "Bash(pkill -9 -f remotion)",
+      "Bash(ffmpeg -i /tmp/test_fv02.mp4 -vframes 1 /tmp/fv02_frame0.png)",
+      "Bash(ffmpeg -i /tmp/test_fv02_mid.mp4 -vframes 1 -update 1 /tmp/fv02_frame500.png)",
+      "Bash(ffmpeg -i /tmp/test_fv03_2m36.mp4 -vframes 1 -update 1 /tmp/fv03_4680.png)",
+      "Bash(ffmpeg -i /tmp/test_s21.mp4 -vframes 1 -update 1 /tmp/s21_frame.png)"
     ]
   }
 }

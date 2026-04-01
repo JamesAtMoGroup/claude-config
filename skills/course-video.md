@@ -590,9 +590,17 @@ Render Agent          — QA PASS 後才啟動
         → 每個列點有獨立且不同的 useFadeUp startFrame？
         → startFrame 與 timing-map.json 中的 local_frame 一致（誤差 ≤ 5f）？
         → 無 startFrame = 0 或多項目共用同一 startFrame？
-    □ Subtitle 安全區（逐場景）
-        → 每場景 maxScroll 公式正確？
-        → 最後項目底部 ≤ 1820px（4K canvas）？
+    □ 元素顯示時長（逐場景）
+        → 最後一個 useFadeUp startFrame ≤ durationInFrames - 60？
+        → 所有元素 startFrame 來自 timing-map.json（無估算值）？
+        → 無兩個元素共用相同 startFrame？
+    □ Subtitle 安全區（逐場景，QA Agent 必須逐一計算，不靠目測）
+        → content container 設有 bottom: SUBTITLE_H？
+        → 有 scrollY 的場景：maxScroll 公式 = totalContentH - (H - NAV_H - SUBTITLE_H - 20*S) 是否正確？
+        → maxScroll 是否被實際使用（interpolate 的終點 = maxScroll）？
+        → 若 maxScroll ≤ 0，scrollY 應為 0（不需要捲動）—— 有無誤設？
+        → 最後項目底部 ≤ H - SUBTITLE_H - 20*S（4K: ≤ 3820px）？
+        → **如有任何疑慮，直接 render 單幀驗證**：`npx remotion render --frames=N-N` 截圖確認
     □ 媒體插入（若有）
         → <Video> 全螢幕？無 inset？EFFECTIVE_STARTS 偏移正確？
     □ Callout 字卡時機
@@ -694,6 +702,17 @@ Transcription Agent 負責找到對應 VTT 時間點，並分割音檔。
 - Scroll 時機依 VTT 確認
 - **Scroll 上限**：scroll 動畫的最終 translateY 值必須保留底部安全距離，確保最後一個項目底部 ≤ `canvasH - SUBTITLE_H - 20px`。計算方式：`maxScroll = contentH - (canvasH - topOffset - SUBTITLE_H - 20)`
 
+#### Scene Dev 在 subtitle 安全區的責任
+1. 每個 scene 的內容容器必須設定 `bottom: SUBTITLE_H`（或等效的 paddingBottom）
+2. 有 scroll 的場景，Scene Dev 必須**計算並寫出** `maxScroll` 的值（不可省略）：
+   ```tsx
+   // 必須明確計算，不可用估算值
+   const CONTENT_H = NAV_H + paddingTop + sum_of_all_element_heights + gaps;
+   const maxScroll = Math.max(0, CONTENT_H - (H - NAV_H - SUBTITLE_H - 20 * S));
+   const scrollY = interpolate(frame, [scrollStart, scrollStart + 90], [0, maxScroll], clamp);
+   ```
+3. 如果無法計算精確高度，**保守估算並偏高**（寧可多捲也不要讓內容被 subtitle 擋住）
+
 ### Progressive Animation（強制）
 - 同一場景有多個項目（列點、卡片、表格列）→ 必須依旁白順序逐一出現
 - **絕不可一次全部顯示——這是最常見的錯誤，必須主動檢查每個 list/table**
@@ -703,11 +722,21 @@ Transcription Agent 負責找到對應 VTT 時間點，並分割音檔。
 - 每個項目的 startFrame 必須對照 VTT，不可估算
 - Scene Dev 實作完成後，必須自我審查：「這個場景有沒有任何 list/table 是同時出現的？」如有，立刻修正
 
+### 元素顯示時長（Scene Dev 負責）
+- 每個元素沒有明確的 `to` 幀——它一旦出現就持續到 Sequence 結束
+- **最後一個元素必須在 `durationInFrames - 60` 之前出現**（確保觀眾有時間看到內容再切換）
+- 如果最後元素出現時間晚於 `durationInFrames - 60`，Scene Dev 必須：延後 Callout 或縮短其他元素的間距，或在 timing-map.json 中確認該段音檔確實有這麼長
+- scrollY（內容向上捲動）的時機：
+  - 當最後一個「將出現」的元素在畫面底部以下時，才開始捲動
+  - 捲動開始幀 = 最後可見元素出現前 ~30 frames
+  - 捲動結束幀 = 開始幀 + 90~120 frames
+  - **最大捲動量公式**：`maxScroll = totalContentHeight - (canvasH - topOffset - SUBTITLE_H - 20*S)`
+  - 若 totalContentHeight ≤ canvasH - topOffset - SUBTITLE_H，則不需要 scroll（maxScroll = 0）
+
 ### 場景轉場（必須）
 - 每個場景的教材內容（card、table、analogy 等）必須包在 `<SceneScroller>` 裡
 - `SceneScroller` 使用 `useSceneTransition()` hook，自動加上 scroll-up 進場（700px from below）和出場（700px upward）
 - BgOrbs、ProgressBar、CalloutCard **不放在 SceneScroller 內**（它們固定不動）
-- 有 SVG 補充動畫的場景，SVG 也放在 `<SceneScroller>` 裡一起滾
 - SceneMediaInsert（MP4 全屏插入）不需要 SceneScroller
 
 ### 字卡（Callout）規則
@@ -717,15 +746,15 @@ Transcription Agent 負責找到對應 VTT 時間點，並分割音檔。
 - 字卡 `from` = VTT 中對應台詞說完後 + 10–20f 緩衝（不早於台詞結束幀）
 - 用詞必須對照逐字講稿（如「單元」非「章節」）
 
-### 補充視覺動畫（強制）
-- 依 visual-spec.json 逐一實作，每個 `visual_anims` 項目都必須實作，不可跳過
-- 不修改教材主內容，僅在指定位置新增
-- 每種動畫類型的標準實作：
+### 動畫規則（強制）
 
-  **SVG draw-in（類比 / 物件輪廓）**
+> **⛔ 禁止使用任何 SVG 動畫。** 沒有例外。不管是 draw-in、stroke-dashoffset、SVG path、SVG polyline，全部禁止。理由：SVG 動畫品質不穩定、代理實作容易出錯，且不必要。
+
+**允許的動畫類型（slides-only）：**
+
+  **useFadeUp（主要進場動畫）**
   ```tsx
-  const drawProgress = interpolate(frame, [startF, startF + 45], [0, 1], clamp);
-  <svg><path strokeDasharray="200" strokeDashoffset={200 * (1 - drawProgress)} .../></svg>
+  const fadeStyle = useFadeUp(startFrame); // translateY + opacity
   ```
 
   **流程圖逐步 pop-in**
@@ -733,7 +762,6 @@ Transcription Agent 負責找到對應 VTT 時間點，並分割音檔。
   // 每個 step 獨立 useFadeUp，startFrame 對照 VTT 逐步出現
   const step1 = useFadeUp(vttFrame_step1);
   const step2 = useFadeUp(vttFrame_step2);
-  const step3 = useFadeUp(vttFrame_step3);
   ```
 
   **Counter 動畫（數字）**
@@ -741,27 +769,15 @@ Transcription Agent 負責找到對應 VTT 時間點，並分割音檔。
   const count = Math.floor(interpolate(frame, [startF, startF + 60], [0, targetValue], clamp));
   ```
 
-  **Underline draw（關鍵詞強調）**
-  ```tsx
-  const lineW = interpolate(frame, [startF, startF + 30], [0, 100], clamp);
-  <div style={{ borderBottom: `3px solid ${C.primary}`, width: `${lineW}%` }} />
-  ```
-
-  **Icon bounce-in**
-  ```tsx
-  const s = spring({ frame: f, fps, config: { damping: 12, stiffness: 200 } });
-  const scale = interpolate(s, [0, 1], [0.6, 1], clamp);
-  ```
-
-  **Checkmark draw**
-  ```tsx
-  // SVG polyline 24,12 12,24 0,16，stroke-dashoffset 動畫
-  ```
-
   **Slide-in from left（例子列點）**
   ```tsx
   const x = interpolate(progress, [0, 1], [-60, 0], clamp);
-  // 每個例子獨立 startFrame，對照 VTT
+  ```
+
+  **Scale pop-in（卡片強調）**
+  ```tsx
+  const s = spring({ frame: f, fps, config: { damping: 12, stiffness: 200 } });
+  const scale = interpolate(s, [0, 1], [0.8, 1], clamp);
   ```
 
 ## 常見錯誤
