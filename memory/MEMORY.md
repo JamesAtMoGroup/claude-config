@@ -22,7 +22,11 @@
 - [No inter-lecture navigation](./feedback_no_inter_lecture_nav.md) — Never add "上一堂/下一堂" labels; only ← 返回主頁 for cross-lecture nav
 
 ## Agent System
-- [Agent Organization](~/.claude/commands/agents.md) — 4 domain directors (Video / Course / Engineering / Content) + sub-agents; invocation cheatsheet
+- [Agent Organization](~/.claude/commands/agents.md) — 5 domain directors (Vibe Coding Video / Article Video / Course / Engineering / Content) + sub-agents; invocation cheatsheet
+- Video agents MUST read `.agents/AGENTS.md` → `rules/project.md` → `rules/pipeline.md` → `progress.md` before planning
+
+## Kolable Agent
+- [Kolable Agent](./project_kolable_agent.md) — James 指定的品牌後台串接專屬角色；學米/無限/職能/財經/xlab；crm-note-tool 已部署
 
 ## Projects
 - [iMessage QA approval flow](./project_imessage_qa.md) — QA Agent sends report to 0981928525; waits for "通過" before render; Terminal Full Disk Access just enabled

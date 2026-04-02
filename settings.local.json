@@ -194,7 +194,28 @@
       "Bash(ffmpeg -i /tmp/test_fv02.mp4 -vframes 1 /tmp/fv02_frame0.png)",
       "Bash(ffmpeg -i /tmp/test_fv02_mid.mp4 -vframes 1 -update 1 /tmp/fv02_frame500.png)",
       "Bash(ffmpeg -i /tmp/test_fv03_2m36.mp4 -vframes 1 -update 1 /tmp/fv03_4680.png)",
-      "Bash(ffmpeg -i /tmp/test_s21.mp4 -vframes 1 -update 1 /tmp/s21_frame.png)"
+      "Bash(ffmpeg -i /tmp/test_s21.mp4 -vframes 1 -update 1 /tmp/s21_frame.png)",
+      "Bash(git fetch:*)",
+      "Bash(git checkout:*)",
+      "Bash(git restore:*)",
+      "Bash(# Also copy to public/ for Remotion\ncp /Users/jamesshih/Projects/article-video/out/2026-04-01/ai-knowledge-2026-04-01.wav \\\\\n   /Users/jamesshih/Projects/article-video/public/audio/ai-knowledge-2026-04-01.wav\necho \"copied to public/audio/\"\n\n# Start Whisper transcription in background\nwhisper /Users/jamesshih/Projects/article-video/out/2026-04-01/ai-knowledge-2026-04-01.wav \\\\\n  --model large --language zh \\\\\n  --output_format vtt \\\\\n  --output_dir /Users/jamesshih/Projects/article-video/out/2026-04-01/ \\\\\n  &> /tmp/whisper-2026-04-01.log &\necho \"Whisper PID: $!\")",
+      "Bash(kill 32211)",
+      "Bash(npx skills:*)",
+      "Bash(/Users/jamesshih/Projects/article-video/out/2026-04-01/ai-knowledge-2026-04-01.vtt:*)",
+      "mcp__claude_ai_Gmail__gmail_search_messages",
+      "mcp__claude_ai_Google_Calendar__gcal_list_events",
+      "WebFetch(domain:gsap.com)",
+      "WebFetch(domain:medium.com)",
+      "WebFetch(domain:codesandbox.io)",
+      "WebFetch(domain:jaywu-fe.medium.com)",
+      "Bash(ffmpeg -i ai-knowledge-2026-04-01/ai-knowledge-2026-04-01_female.mp3 -stream_loop -1 -i public/audio/course_bgmusic.wav -filter_complex \":*)",
+      "Bash(python3.11 -m whisper public/audio/ai-knowledge-2026-04-01-processed.wav --model medium --language zh --output_format vtt --output_dir out/2026-04-01)",
+      "Read(//opt/homebrew/bin/**)",
+      "Read(//opt/**)",
+      "Bash(pip3 list:*)",
+      "Bash(git -C /Users/jamesshih/Downloads/crm-note-tool status)",
+      "Bash(find /Users/jamesshih/Projects/article-video/src -name \"*.tsx\" -exec wc -l {})",
+      "Bash(~/.claude/scripts/imessage_send.sh \"✅ 2026-04-01 render 完成！out/2026-04-01/2026-04-01.mp4\" 2>&1)"
     ]
   }
 }

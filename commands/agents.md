@@ -21,16 +21,17 @@
                             │ dispatches to
            ┌────────────────┼──────────────┬──────────────┐
            ▼                ▼              ▼              ▼
-      🎬 Video          📚 Course      ⚙️ Engineering  📰 Content
-      Director          Director        Director       Director
-      │                 │               │              │
-      ├ Audio           ├ Content        ├ Backend      ├ Research
-      ├ Transcription   ├ Knowledge      ├ Frontend     ├ Script
-      ├ Scene Dev        ├ Deploy         └ QA           └ Handoff→🎬
-      ├ QA ──→ iMessage
-      ├ Render
-      ├ Asset (vibe)
-      └ HTML Analysis (vibe)
+  🎬 Vibe Coding      🎬 Article         📚 Course      ⚙️ Engineering  📰 Content
+  Video Director     Video Director     Director        Director       Director
+  │                  │                  │               │              │
+  ├ Audio            ├ Audio            ├ Content        ├ Backend      ├ Research
+  ├ Transcription    ├ Transcription    ├ Knowledge      ├ Frontend     ├ Script
+  ├ Visual Concept   ├ Visual Concept   ├ Deploy         └ QA           └ Handoff→🎬
+  ├ Scene Dev        ├ Scene Dev
+  ├ Asset            ├ QA ──→ iMessage
+  ├ HTML Analysis    └ Render
+  ├ QA ──→ iMessage
+  └ Render
 ```
 
 ---
@@ -139,10 +140,10 @@ James 說目標
 ```
 📋 Project Status
 ──────────────────
-🎬 article-video   ✅ 03-27 完成 / ⏳ 03-28 進行中
-🎬 vibe-coding     ✅ CH 0-1 完成 / 🔲 CH 2 未開始
-⚙️ booking app     🔴 5 個 pre-build blockers 未解
-📚 n8ncourse       ✅ Lecture 1-2 上線
+🎬 article-video   [讀 progress.md 取得現況]
+🎬 vibe-coding     [讀 progress.md 取得現況]
+⚙️ booking app     [讀 PROGRESS.md 取得現況]
+📚 n8ncourse       [讀 courses.json 取得現況]
 
 🎯 現在最高槓桿的一件事
 ──────────────────
@@ -161,64 +162,167 @@ James 說目標
 
 ---
 
-## 🎬 Video Director
+## 🎬 Vibe Coding Video Director
 
-**When to activate:** Any video production task — article-video or vibe-coding-video.
+**When to activate:** Any task for `vibe-coding-video` project.
 
-**Start protocol:**
-1. 讀 `progress.md` — 這是唯一的狀態來源
-2. article-video: `~/Projects/article-video/progress.md`
-3. vibe-coding: `~/Projects/vibe-coding-video/progress.md` + `~/.claude/skills/course-video.md`
-4. 自行判斷做到哪、從哪繼續 — James 不追蹤狀態，Agent 追蹤
+**Start protocol (mandatory — do not skip):**
+1. Read `~/Projects/vibe-coding-video/.agents/AGENTS.md`
+2. Read `~/Projects/vibe-coding-video/.agents/rules/project.md`
+3. Read `~/Projects/vibe-coding-video/.agents/rules/pipeline.md`
+4. Read `~/Projects/vibe-coding-video/progress.md` — current chapter state
+5. Read relevant Remotion skill rules from `.agents/skills/remotion-best-practices/`
 
-**Invariants (兩個 project 都適用):**
-- Visual: `#000000` bg, `#7cffb2` neon-green, `#ffd166` yellow, Noto Sans TC + Space Mono
-- Output: 4K — article-video S=3 (1280×720 base)，vibe-coding S=2 (1920×1080 base)
-- iMessage callouts: macOS dark frosted-glass，sender/text spec，top-right stacking push-down
+**Scale:** S=2, 3840×2160 | **Audio:** -16 LUFS, NO denoise | **Output:** `out/CH{N}/CH{N}-complete.mp4`
 
-**Scene Dev Agent — article-video 強制規則:**
-- `SUBTITLE_SAFE = 120 * S = 360px`（勿改）；ContentColumn `maxHeight = H - NAV_H - 20*S - SUBTITLE_SAFE = 1590px`
-- Phase A/B element fade-out: `A_FADE_START` 必須對齊 VTT timestamp，不得早於 Phase A 最後一句話的結束時間
-- **Scroll-up rule**: 當 Phase B 元素累計高度可能超過 1590px 時，ContentColumn 必須加上 `scrollUp={{ at: triggerFrame, amount: overflowPx + 20 }}` prop。`ContentColumn` 元件本身需支援此 prop（使用 spring + translateY 平滑滾動），確保任何元素都不被字幕區遮擋。overflow 估算：逐一計算各元素 padding + font-size × lineHeight × lines + marginBottom。
-- 所有 element delay 值 = 對應 VTT cue 的 scene-local frame（seconds × 30 - sceneStart）；Phase B 第一個元素 delay = showB 的 frame 值
-- Font size 最小值：Space Mono labels ≥ 11*S，body text ≥ 14*S，featured text ≥ 17*S
+**Skills (Scene Dev Agent must load ALL before writing any TSX):**
 
-**Spawn in parallel (Phase 1):**
+**— Remotion Core —**
+| Skill | Purpose |
+|-------|---------|
+| `~/.claude/skills/remotion-best-practices/` | Remotion composition, frame hooks, spring configs — mandatory |
+| `~/.claude/commands/remotion-video.md` | Core Remotion API: `useCurrentFrame`, `interpolate`, `spring`, `<Sequence>` |
+| `~/.claude/skills/course-video.md` | Visual system, scale S=2, color tokens, progress bar rules |
 
-| Agent | Job | Input | Output |
-|-------|-----|-------|--------|
-| **Audio Agent** | trim silence → normalize | Raw audio | Normalized `.wav` |
-| **Transcription Agent** | Whisper → VTT → cross-ref script | Audio + script | `.vtt` |
-| **Scene Dev Agent** | 寫/改 Remotion TSX components | Article MD + VTT timing | TSX components |
+**— Design & UI —**
+| Skill | Purpose |
+|-------|---------|
+| `~/.claude/skills/design/` | Brand identity, design tokens, icon/visual generation |
+| `~/.claude/skills/ui-styling/` | shadcn/ui + Tailwind component patterns, dark mode |
+| `~/.claude/skills/ui-ux-pro-max/` | 50+ styles, UX guidelines, glassmorphism baseline |
+| `~/.claude/skills/css-keyframes/` | Pure CSS `@keyframes` patterns, timing functions, Tailwind animations |
 
-**Sequential (Phase 2):**
+**— Animation Libraries (JS) —**
+| Skill | Purpose |
+|-------|---------|
+| `~/.claude/skills/gsap/` | GSAP comprehensive — use paused timeline + `tl.seek(frame/fps)` in Remotion |
+| `~/.agents/skills/gsap-core` | `gsap.to/from/fromTo`, easing, stagger, defaults |
+| `~/.agents/skills/gsap-timeline` | Timeline sequencing, position param, nesting |
+| `~/.agents/skills/gsap-plugins` | ScrollToPlugin, Flip, Draggable, SplitText, MorphSVG |
+| `~/.agents/skills/gsap-performance` | GPU transforms, batching, avoid layout thrash |
+| `~/.agents/skills/gsap-react` | `useGSAP` hook, `gsap.context()`, cleanup |
+| `~/.claude/skills/animejs/` | Anime.js v4 — timelines, stagger, SVG, spring |
+| `~/.claude/skills/motion-one/` | Lightweight WAAPI-based `animate()`, `timeline()` |
+| `~/.claude/skills/waapi/` | Native `element.animate()`, no library needed |
+
+**— Interactive & Media —**
+| Skill | Purpose |
+|-------|---------|
+| `~/.claude/skills/kling-ai/` | Kling AI video clips — image-to-video or text-to-video for inserts |
+| `~/.claude/skills/rive/` | Rive `.riv` runtime animations, state machines (`@remotion/rive` supported) |
+| `~/.claude/skills/fabricjs/` | Canvas-based graphics, shapes, text, image manipulation |
+
+> ⚠️ **Animation priority order: Remotion natives FIRST** (`spring()`, `interpolate()`, `useCurrentFrame`) → GSAP (paused timeline + `tl.seek(frame/fps)`) → other JS libs. **NEVER use Framer Motion in Remotion** — wall-clock time is incompatible with frame-based rendering.
+
+**Pipeline order:** Audio Agent + Transcription Agent (parallel) → **Visual Concept Agent** → Scene Dev Agent → QA Agent → Render Agent
+
+**Sub-agents:**
 
 | Agent | Job |
 |-------|-----|
-| **QA Agent** | 對齊檢查 → iMessage 傳報告 → 等「通過」 |
-| **Render Agent** | `npx remotion render --gl=angle` → 輸出到 `out/` |
+| **Audio Agent** | ffmpeg normalize (-16 LUFS, no denoise). Output frame count. Saves `checklist-audio.md`. |
+| **Transcription Agent** | Whisper VTT + script verification. Saves `checklist-transcription.md`. |
+| **Visual Concept Agent** | Read VTT + HTML slides → identify 4–6 concept moments per chapter → output `motion-spec-CH{N}.json` with triggerFrame, conceptType, position, animationIdea for each cue — must complete before Scene Dev starts. Saves `checklist-visual-concept.md`. |
+| **Scene Dev Agent** | Write/edit `src/FullVideo03.tsx` reading motion-spec + VTT — load ALL skills above before writing any code. Saves `checklist-scene-dev.md`. |
+| **Asset Agent** | Verify audio in `chapters/{N}/audio/`, match to script `**備注**`. Saves `checklist-asset.md`. |
+| **HTML Analysis Agent** | Parse HTML slides → extract audio timestamps. Saves `checklist-html-analysis.md`. |
+| **QA Agent** | Verify ALL checklists are `[x]` → animation timing report → iMessage report → wait "通過" |
+| **Render Agent** | Only after ALL checklists ✅ and QA "通過" confirmed |
 
-**Audio rules:**
-- article-video: -20 LUFS, Peak -2 dBFS
-- vibe-coding: trim → -16 LUFS only（不 denoise，James 自己校正）
+**QA Gate:**
+```
+Audio ✅ + Transcription ✅ (parallel)
+        ↓
+Visual Concept Agent → motion-spec-CH{N}.json ✅
+        ↓
+Scene Dev Agent (reads motion-spec + VTT) ✅
+        ↓
+QA Agent verifies ALL checklist-*.md are [x] → iMessage → wait "通過"
+        ↓                                      → QA fails → Fix Agent → redo QA
+Render Agent
+```
 
-**vibe-coding 額外 agents:**
-
-| Agent | Job |
-|-------|-----|
-| **Asset Agent** | 確認音檔在 `chapters/{N}/audio/`，素材對應講稿 `**備注**` |
-| **HTML Analysis Agent** | 解析 HTML slides → 對應音檔時間戳 |
-
-**QA Agent iMessage flow:**
+**QA iMessage flow:**
 ```bash
 ~/.claude/scripts/imessage_send.sh "🎬 QA Report:\n$QA_SUMMARY\n\n請回覆「通過」開始 render"
 ~/.claude/scripts/imessage_wait_approval.sh 3600 &
-# 或 James 在對話直接說「通過」也觸發 Render Agent
 ```
 
-**Output paths:**
-- article-video: `out/YYYY-MM-DD/YYYY-MM-DD.mp4` + `.vtt`
-- vibe-coding: `out/CH{N}/CH{N}-complete.mp4` + `CH{N}-subtitles.vtt`
+---
+
+## 🎬 Article Video Director
+
+**When to activate:** Any task for `article-video` project.
+
+**Start protocol (mandatory — do not skip):**
+1. Read `~/.claude/skills/article-video.md` — source of truth for ALL article-video rules
+2. Read `~/Projects/article-video/progress.md` — current episode state
+3. Self-judge which phase to start from (Audio / VTT / Scene Dev / QA / Render)
+
+**Scale:** S=3, 3840×2160 | **Audio:** -20 LUFS Peak -2 dBFS, NO denoise | **Output:** `out/YYYY-MM-DD/YYYY-MM-DD.mp4`
+
+**Skills (Scene Dev Agent must load ALL before writing any TSX):**
+
+**— Remotion Core —**
+| Skill | Purpose |
+|-------|---------|
+| `~/.claude/skills/remotion-best-practices/` | Remotion composition, frame hooks, spring configs — mandatory |
+| `~/.claude/commands/remotion-video.md` | Core Remotion API: `useCurrentFrame`, `interpolate`, `spring`, `<Sequence>` |
+| `~/.claude/skills/article-video.md` | Visual system, S=3, black+neon-green style, iMessage callout spec |
+
+**— Design & UI —**
+| Skill | Purpose |
+|-------|---------|
+| `~/.claude/skills/design/` | Brand identity, design tokens, icon/visual generation |
+| `~/.claude/skills/ui-styling/` | shadcn/ui + Tailwind component patterns, dark mode |
+| `~/.claude/skills/ui-ux-pro-max/` | 50+ styles, UX guidelines, glassmorphism baseline |
+| `~/.claude/skills/css-keyframes/` | Pure CSS `@keyframes` patterns, timing functions, Tailwind animations |
+
+**— Animation Libraries (JS) —**
+| Skill | Purpose |
+|-------|---------|
+| `~/.claude/skills/gsap/` | GSAP comprehensive — use paused timeline + `tl.seek(frame/fps)` in Remotion |
+| `~/.agents/skills/gsap-core` | `gsap.to/from/fromTo`, easing, stagger, defaults |
+| `~/.agents/skills/gsap-timeline` | Timeline sequencing, position param, nesting |
+| `~/.agents/skills/gsap-plugins` | ScrollToPlugin, Flip, Draggable, SplitText, MorphSVG |
+| `~/.agents/skills/gsap-performance` | GPU transforms, batching, avoid layout thrash |
+| `~/.agents/skills/gsap-react` | `useGSAP` hook, `gsap.context()`, cleanup |
+| `~/.claude/skills/animejs/` | Anime.js v4 — timelines, stagger, SVG, spring |
+| `~/.claude/skills/motion-one/` | Lightweight WAAPI-based `animate()`, `timeline()` |
+| `~/.claude/skills/waapi/` | Native `element.animate()`, no library needed |
+
+**— Interactive & Media —**
+| Skill | Purpose |
+|-------|---------|
+| `~/.claude/skills/kling-ai/` | Kling AI video clips — image-to-video or text-to-video for inserts |
+| `~/.claude/skills/rive/` | Rive `.riv` runtime animations, state machines (`@remotion/rive` supported) |
+| `~/.claude/skills/fabricjs/` | Canvas-based graphics, shapes, text, image manipulation |
+
+> ⚠️ **Animation priority order: Remotion natives FIRST** (`spring()`, `interpolate()`, `useCurrentFrame`) → GSAP (paused timeline + `tl.seek(frame/fps)`) → other JS libs. **NEVER use Framer Motion in Remotion** — wall-clock time is incompatible with frame-based rendering.
+
+**Phase 1 — Parallel:**
+
+| Agent | Job | Output |
+|-------|-----|--------|
+| **Audio Agent** | ffmpeg normalize + BG music mix | `processed.wav` + checklist |
+| **Transcription Agent** | Whisper VTT + script cross-ref | `.vtt` + checklist |
+
+**Phase 2 — Sequential:**
+
+| Agent | Job |
+|-------|-----|
+| **Visual Concept Agent** | `visual-spec.json` per VTT cue — cannot start before QA VTT |
+| **Scene Dev Agent** | Write TSX from visual-spec.json + VTT — load ALL skills above before writing any code |
+| **QA Agent** | Animation timing report → iMessage → wait "通過" |
+| **Render Agent** | Only after all checklists ✅ |
+
+**Every agent saves** `ai-knowledge-YYYY-MM-DD/checklist-[agent].md`. Director verifies all `[x]` before next phase.
+
+**QA iMessage flow:**
+```bash
+~/.claude/scripts/imessage_send.sh "🎬 QA Report:\n$QA_SUMMARY\n\n請回覆「通過」開始 render"
+~/.claude/scripts/imessage_wait_approval.sh 3600 &
+```
 
 ---
 
@@ -272,7 +376,7 @@ James 說目標
 |-----------|-----|
 | **Research Agent** | 找當日最高訊噪比 AI 文章，整理成結構化摘要 |
 | **Script Agent** | 轉成 ~6.5 分鐘 ZH-TW 腳本；分段對應 Remotion scenes；標記 iMessage callout 觸發點 |
-| **Handoff** | 輸出 `article-YYYY-MM-DD.md` → 交給 🎬 Video Director |
+| **Handoff** | 輸出 `article-YYYY-MM-DD.md` → 交給 🎬 Article Video Director |
 
 ---
 
@@ -282,12 +386,12 @@ James 說目標
 |---------|--------|
 | 現在最重要的是什麼 / 今天該做什麼 | 📋 PM Director |
 | 哪裡卡住了 / 幫我規劃 | 📋 PM Director → Blocker/Roadmap Agent |
-| 做今天的 article-video | 🎬 Video Director (article 模式) |
-| 做 CH N vibe coding | 🎬 Video Director (vibe 模式) |
+| 做今天的 article-video | 🎬 Article Video Director |
+| 做 CH N vibe coding | 🎬 Vibe Coding Video Director |
 | n8n 課程新增 Lecture N | 📚 Course Director → Content Agent |
 | 更新每日知識庫 | 📚 Course Director → Knowledge Agent |
 | booking app 加功能 / 修 bug | ⚙️ Engineering Director |
-| 今天的 AI 文章做成影片 | 📰 Content Director → 🎬 Video Director |
+| 今天的 AI 文章做成影片 | 📰 Content Director → 🎬 Article Video Director |
 | 記住 / 以後都這樣 | 🧠 System Director → Memory Agent (立刻執行) |
 
 ---
@@ -302,3 +406,69 @@ James 說目標
 6. **深色優先** — 任何 UI 預設深色
 7. **有 skill 檔就讀** — 不猜，不跳過
 8. **結束前 sync** — `sync.sh push` 是 System Director 的最後一步
+9. **video 任務必讀 AGENTS.md** — 任何 vibe-coding 或 article-video 任務，Director 第一步必讀 `.agents/AGENTS.md`，再讀 `rules/project.md` + `rules/pipeline.md`，再讀 `progress.md`，才能開始規劃
+10. **Scene Dev Agent 必讀全部 skills** — 任何影片 Scene Dev 開始前，必須先載入各 Director 的完整 skill 表格（含 Remotion Core、Design & UI、Animation Libraries、Interactive & Media 四個分組的所有 skill），不得跳過任何一個
+11. **動畫優先順序（video 內）** — Remotion natives (`spring`, `interpolate`, `useCurrentFrame`) → GSAP (paused timeline + `seek`) → 其他 JS 動畫庫。永遠不用 Framer Motion 在 Remotion 內。
+
+---
+
+## Skill Library (完整清單，所有 Agent 可用)
+
+任何 Agent 在執行任務時，若有對應的 skill 存在，**必須先讀 skill 再動手**。以下是目前系統中所有可用的 skill：
+
+### Video / Animation
+| Skill | 用途 |
+|-------|------|
+| `~/.claude/skills/remotion-best-practices/` | Remotion 最佳實踐（所有影片任務必讀） |
+| `~/.claude/commands/remotion-video.md` | Remotion 核心 API |
+| `~/.claude/skills/course-video.md` | Vibe Coding 課程影片視覺系統 |
+| `~/.claude/skills/article-video.md` | Article Video 視覺系統與 pipeline |
+| `~/.claude/skills/gsap/` | GSAP 完整知識（Remotion 內用 paused timeline + seek） |
+| `~/.agents/skills/gsap-core` | GSAP 核心 API |
+| `~/.agents/skills/gsap-timeline` | GSAP Timeline 序列 |
+| `~/.agents/skills/gsap-scrolltrigger` | ScrollTrigger 滾動動畫 |
+| `~/.agents/skills/gsap-plugins` | GSAP 所有插件 |
+| `~/.agents/skills/gsap-react` | GSAP + React (`useGSAP`) |
+| `~/.agents/skills/gsap-performance` | GSAP 效能優化 |
+| `~/.agents/skills/gsap-utils` | GSAP 工具函數 |
+| `~/.agents/skills/gsap-frameworks` | GSAP + Vue/Svelte |
+| `~/.agents/skills/animejs` | Anime.js v4 |
+| `~/.claude/skills/framer-motion/` | Framer Motion（僅限非 Remotion 的 React 專案） |
+| `~/.claude/skills/motion-one/` | Motion One — 輕量 WAAPI 動畫 |
+| `~/.claude/skills/waapi/` | Web Animations API — 原生動畫 |
+| `~/.claude/skills/css-keyframes/` | CSS `@keyframes` 動畫 |
+| `~/.claude/skills/rive/` | Rive 動畫 runtime + state machine |
+| `~/.claude/skills/fabricjs/` | Fabric.js Canvas 圖形庫 |
+| `~/.claude/skills/kling-ai/` | Kling AI 影片生成 |
+
+### Design & UI
+| Skill | 用途 |
+|-------|------|
+| `~/.claude/skills/design/` | 品牌設計、logo、icon、設計 tokens |
+| `~/.claude/skills/ui-ux-pro-max/` | UI/UX 設計系統，50+ 風格 |
+| `~/.claude/skills/ui-styling/` | shadcn/ui + Tailwind 元件 |
+| `~/.claude/skills/frontend-design/` | 生產級前端 UI 元件 |
+| `~/.claude/skills/design-system/` | Design token 架構 |
+| `~/.claude/skills/motion-design/` | UI 動態設計指南 |
+| `~/.claude/skills/brand/` | 品牌語音與視覺識別 |
+| `~/.claude/skills/banner-design/` | 社群/廣告橫幅設計 |
+| `~/.claude/skills/canvas-design/` | PNG/PDF 靜態視覺設計 |
+
+### Presentation & Docs
+| Skill | 用途 |
+|-------|------|
+| `~/.claude/skills/frontend-slides/` | HTML 動態簡報 |
+| `~/.claude/skills/slides/` | Chart.js HTML 簡報 |
+| `~/.claude/skills/pptx/` | PowerPoint 建立/編輯 |
+| `~/.claude/skills/pdf/` | PDF 操作 |
+| `~/.claude/skills/docx/` | Word 文件 |
+| `~/.claude/skills/xlsx/` | 試算表 |
+
+### AI & Tools
+| Skill | 用途 |
+|-------|------|
+| `~/.claude/skills/mcp-response-analyzer/` | 大型 MCP 回應截斷（節省 90–97% token） |
+| `~/.claude/skills/notebooklm/` | 查詢 NotebookLM 知識庫 |
+| `~/.claude/skills/music-generation/` | music21 音樂生成 |
+| `~/.claude/skills/code-to-music/` | 用程式碼生成音樂 |
+| `~/.claude/skills/image-gen/` | AI 圖像生成（需 MAX_API_KEY）|

@@ -36,6 +36,17 @@ Daily AI knowledge video pipeline using Remotion + narrator's own recorded audio
 9. **Whisper**: use `python3 -m whisper` (not `whisper`); sub-agents have no Bash access
 10. **No anlmdn**: Skip denoise filter; breaks audio quality
 
+## Standard Production Requirements (updated 2026-04-02)
+
+**Concept Animations (Motion Graphics)** are now mandatory for all article-video productions:
+- Every video must include 3–5 concept animations synced to VTT timestamps (ideally 1 per scene + title)
+- triggerFrame = `Math.round(vttSeconds × 30)`; animations float as `position: absolute` overlays at `zIndex: 50`, `pointerEvents: none`
+- Standard envelope: fade-in 0–10f, hold, fade-out last 12f; total duration 70–90f
+- `useCurrentFrame()` called once at component top level only — never inside `.map()`
+- Must not overlap subtitle safe zone (bottom `120*S` px)
+- First implemented in 04-01 RAG video: `BrainForgetAnimation` (f415), `KnowledgeFreezeAnimation` (f4022), `DocumentSliceAnimation` (f6716)
+- Full spec in `~/.claude/skills/article-video.md` → "Concept Animations (Motion Graphics)" section
+
 ## Completed Videos
 | ID | Date | Notes |
 |----|------|-------|

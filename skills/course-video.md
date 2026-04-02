@@ -830,3 +830,101 @@ Transcription Agent 負責找到對應 VTT 時間點，並分割音檔。
 - Takeaway counter dot：`color: #000000`（黑字在綠底上）
 
 **目的**：HTML 是課程平台最終版本。影片與 HTML 必須保持一致，學生在平台看到的頁面要和影片裡的 slides 相同。
+
+---
+
+## Concept Animations (Motion Graphics)
+
+每個章節應在 4–6 個 VTT 關鍵時刻加入 concept animation — 浮動於畫面上的視覺隱喻，與講師台詞精確同步。
+
+### 重要：禁止使用 Emoji
+
+Course video **嚴格禁止 emoji**。所有概念動畫必須用以下替代方案：
+- CSS 幾何圖形（圓形、方塊、線條）
+- SVG 路徑
+- 純文字標籤 + `✦` 排版符號
+- 帶 glow 的 border 圖形
+
+### Motion Graphics Agent — 職責
+
+**輸入：** VTT 檔（`chapters/{N}/audio/*.vtt`）+ 逐字講稿
+**輸出：** `motion-spec-CH{N}.json`
+
+```json
+[
+  {
+    "triggerFrame": 420,
+    "vttText": "當你在瀏覽器輸入網址",
+    "conceptType": "request-flow",
+    "animationIdea": "箭頭從左側 CLIENT 方塊射向右側 SERVER 方塊，帶光流效果",
+    "position": "bottom-center",
+    "duration": 80
+  }
+]
+```
+
+**Must complete before Scene Dev starts.**
+
+### 標準組件模板（無 emoji 版）
+
+```tsx
+function ConceptAnimation({ triggerFrame }: { triggerFrame: number }) {
+  const frame = useCurrentFrame();
+  const f = Math.max(0, frame - triggerFrame);
+  const DURATION = 80;
+  const envelope = interpolate(f, [0, 10, DURATION-12, DURATION], [0, 1, 1, 0], clamp);
+  if (f > DURATION) return null;
+
+  return (
+    <div style={{
+      position: "absolute",
+      /* 位置 × S=2 */
+      opacity: envelope,
+      pointerEvents: "none", zIndex: 50,
+    }}>
+      {/* 用 CSS div/border/SVG 建構，不用 emoji */}
+    </div>
+  );
+}
+```
+
+### 常見概念動畫類型（Vibe Coding 課程）
+
+| 概念 | 動畫設計 |
+|------|---------|
+| Client → Server 請求 | 帶光流的水平箭頭，左方塊 → 右方塊 |
+| 程式碼執行 | 逐行 highlight，綠色 glow 從上往下掃 |
+| 資料庫查詢 | 方塊堆疊（rows），查詢時某幾行閃亮 |
+| 變數賦值 | 左邊 `x =` 文字，右邊值從虛線框 pop 進來 |
+| 函數呼叫 | 箭頭從呼叫方飛入函數框，結果箭頭飛回 |
+| 迴圈 | 圓形循環箭頭，計數器遞增 |
+| 錯誤/例外 | 紅色邊框從 normal 卡片閃現，搖晃 |
+| Before/After 對比 | 左右兩張卡片，Before 淡出 After 淡入 |
+
+### 注入方式
+
+與 article-video 相同模式（S=2 for course-video）：
+
+```tsx
+// TitleScene 或各場景的 return 內
+<AbsoluteFill style={{ pointerEvents: "none" }}>
+  <ConceptAnimation triggerFrame={localFrame} />
+</AbsoluteFill>
+```
+
+### 位置規則
+
+- 不遮擋 Content Column（1720px 置中欄）
+- 可放在 Content Column 左右兩側空白區（各 `(3840-1720)/2 = 1060px`）
+- 或放在畫面底部（留 `SUBTITLE_H = 160*S` 安全區）
+- `bottom-center`：`bottom: 200*S, left: 50%, transform: translateX(-50%)`
+- `side-right`：`right: 80*S, top: 300*S`
+- `side-left`：`left: 80*S, top: 300*S`
+
+### 配色
+
+遵循課程影片色彩系統：
+- 主動/流動：`#7cffb2` + `boxShadow: 0 0 12px #7cffb2`
+- 靜態/背景：`rgba(255,255,255,0.08)` border + `rgba(0,0,0,0.6)` bg
+- 錯誤/警告：`rgba(255,107,107,0.8)` + red border
+- 資料/標籤：`#ffd166` (yellow)

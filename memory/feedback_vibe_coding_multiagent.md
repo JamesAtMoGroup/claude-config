@@ -4,7 +4,7 @@ description: Always use multi-agent teams for ANY video work (Vibe Coding AND ar
 type: feedback
 ---
 
-Always use a multi-agent team when working on any video task — never do it as a single agent. Applies to both Vibe Coding and article-video projects.
+Always use a multi-agent team when working on any video task — never do it as a single agent. Applies to both Vibe Coding and article-video projects. Each project now has a SEPARATE Director.
 
 **Why:** James explicitly requires parallelized multi-agent workflow for all video work. Jobs like audio processing, VTT correction, and rendering should run in parallel agents, not sequentially in one agent.
 
@@ -12,6 +12,10 @@ Always use a multi-agent team when working on any video task — never do it as 
 - Audio processing (ffmpeg chain) ↔ Reading/analyzing source files
 - VTT transcription ↔ Scene planning
 - Multiple scene components written simultaneously by separate agents
+
+**Read before planning (MANDATORY for any video Director):**
+- vibe-coding-video: `.agents/AGENTS.md` → `.agents/rules/project.md` → `.agents/rules/pipeline.md` → `progress.md`
+- article-video: `.agents/AGENTS.md` → `.agents/rules/project.md` → `.agents/rules/pipeline.md` → `progress.md`
 
 ## Director 強制閘門（必須遵守）
 
