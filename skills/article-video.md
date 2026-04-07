@@ -154,6 +154,8 @@ function ContentColumn({ children, scrollUp }: {
 - `zIndex: 10` — 確保 navbar 永遠在所有 scene content 之上
 - padding 必須 × S
 - 無 mm:ss 時間戳，只顯示 chapter label
+- **左側只顯示「每日 AI 知識庫」，不加日期（禁止寫 `· YYYY-MM-DD`）**
+- TitleScene badge 同樣只寫「每日 AI 知識庫」，不加日期
 
 ---
 
@@ -264,9 +266,30 @@ import { fade } from "@remotion/transitions/fade";
 
 - **VTT-synced**: 每個動畫對應一個 VTT 台詞，triggerFrame = `Math.round(vttSeconds × 30)`
 - **Overlay pattern**: 使用 `position: absolute` 浮於場景上方，`zIndex: 50`，`pointerEvents: none`
-- **Envelope**: 每個動畫有 fade-in (0–10f) → hold → fade-out (DURATION-12f → DURATION) 包絡線
-- **Duration**: 通常 70–90 frames；超過 DURATION return null 停止 render
-- **Hook safety**: `useCurrentFrame()` 只在 component 頂層呼叫一次，不在 `.map()` 裡
+- **不遮 slides（禁止）**: 動畫必須定位在 content column（x 960–2880）以外；右側用 `right: 40*S`，左側用 `left: 40*S`；**禁止 `left: "50%"` 或任何置中定位**
+- **Envelope**: 每個動畫有 fade-in (0–10f) → hold → fade-out (DURATION-20f → DURATION) 包絡線
+- **Duration**: 160–360 frames（足夠讓講者說完該段落）；超過 DURATION return null 停止 render
+- **Hook safety**: `useCurrentFrame()` 只在 component 頂層呼叫一次，**絕對禁止在 `.map()` 、條件式（`{showA && ...}`）、或任何 JSX prop 展開內呼叫 hook**
+- **列點動畫必須逐一出現**: 有多個列點的動畫，每個點的 `appearsAt` 必須對齊 VTT 時間戳；**禁止用固定小 stagger（如 `i * 60`）一次全部列出**
+- **累積顯示**: 列點出現後持續留在畫面，不消失，直到整體 DURATION 結束才淡出
+
+### Motion Graphics 重疊禁止規則（Anti-overlap）
+
+> 同一時間點，同一側（左或右）只能有一個 motion graphic 在畫面上。
+
+**必做的重疊檢查流程**（Scene Dev Agent 寫完所有動畫後必須執行）：
+
+1. 列出每個 Scene 的所有動畫：`triggerLocalFrame`、`DURATION`、位置（左/右）
+2. 確認同側動畫無時間重疊：`triggerA + DURATION_A < triggerB`
+3. 如有重疊，擇一處理：
+   - 縮短先出現的動畫 DURATION（在下一個動畫開始前 15f 結束）
+   - 或將其中一個移至對側（右→左，或左→右）
+4. 跨越 Phase A→B 轉場的長效動畫（如累積列點），必須確認後續同側動畫不重疊
+
+**常見錯誤範例**（已修正，勿再重複）：
+- ThreeReasonsAnimation（右，長達 1700f）+ AgentFlowAnimation（右，同時段）→ 衝突，AgentFlow 應移左側
+- MCPToolsListAnimation（右）+ USBUnifyAnimation（右，在 MCPTools 結束前啟動）→ 縮短 MCPTools DURATION
+- EcosystemBurstAnimation（右）+ ThreeReasons 的累積 card（右，同時顯示）→ EcosystemBurst 移左側
 
 ### 標準組件模板
 
@@ -575,9 +598,26 @@ Visual Concept Agent 在規劃 scene 視覺佈局時，應載入以下 skill 輔
 4. Scene Dev Agent → 讀 spec + VTT → 寫 VideoComposition_YYYY_MM_DD.tsx
 5. QA Agent        → Studio 預覽 → iMessage 傳報告 → 等「通過」
 6. Render Agent    → npm run build:YYYY-MM-DD
+7. Upload Agent    → rclone 上傳 out/YYYY-MM-DD/ 到 Google Drive → iMessage 通知完成
 ```
 
 **VTT 必須存在且 QA 通過，才能進入 Scene Dev。**
+
+### Render 後自動上傳 Google Drive
+
+每次 render 完成後，**必須立即**上傳到 Google Drive：
+
+```bash
+rclone copy /Users/jamesshih/Projects/article-video/out/YYYY-MM-DD/ gdrive: \
+  --drive-root-folder-id 1Q2Jdflw80FXXDpGMw22OFVbwlqsMoWGz \
+  --drive-use-trash=false \
+  --progress
+```
+
+- Remote: `gdrive`（~/.config/rclone/rclone.conf 已設定）
+- Folder ID: `1Q2Jdflw80FXXDpGMw22OFVbwlqsMoWGz`（每日 AI 知識庫）
+- **必須用 `--drive-root-folder-id`**，不可用 `gdrive:folder-id`（會建立同名資料夾於根目錄）
+- 上傳完成後傳 iMessage 通知
 
 ---
 
@@ -599,7 +639,7 @@ import { VideoComposition_YYYY_MM_DD, TOTAL_FRAMES_YYYY_MM_DD } from "./VideoCom
 
 ```json
 // package.json scripts
-"build:YYYY-MM-DD": "remotion render ArticleVideo-YYYY-MM-DD out/YYYY-MM-DD/YYYY-MM-DD.mp4 --codec h264"
+"build:YYYY-MM-DD": "remotion render ArticleVideo-YYYY-MM-DD out/YYYY-MM-DD/{標題}-YYYY-MM-DD.mp4 --codec h264"
 ```
 
 ---

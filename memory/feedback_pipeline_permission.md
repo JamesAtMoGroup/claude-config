@@ -1,11 +1,15 @@
 ---
 name: Pipeline permission rule
-description: During article-video (and vibe-coding) pipeline, never ask for permission mid-pipeline — only ask before render
+description: Full auto pipeline for article-video and vibe-coding — no gates, no confirmations, render automatically
 type: feedback
 ---
 
-Never stop to ask permission during the production pipeline. Just proceed through all phases autonomously.
+Never stop to ask permission at any point in the pipeline. Run everything end-to-end autonomously.
 
-**Why:** James explicitly said "stop asking me for permission."
+**Why:** James explicitly said "stop asking me for permission — I need this to be automated."
 
-**How to apply:** Run Audio → Whisper → VTT QA → Scene Dev → Animation QA all without pausing to confirm each step. The only gate is **before render** — always open the browser preview first, then ask "ready to render?" before running `npm run build:YYYY-MM-DD`.
+**How to apply:**
+- Run Audio → Whisper → VTT QA → Visual Concept → Scene Dev → QA → Render all without pausing
+- After QA passes, send iMessage notification (notify only, do NOT wait for reply) then render immediately
+- Never ask "ready to render?" or any other confirmation gate
+- `~/.claude/settings.json` has `permissions.allow: ["Bash(*)", "Edit(*)", "Write(*)", ...]` — all tools auto-approved

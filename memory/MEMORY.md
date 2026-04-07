@@ -12,6 +12,12 @@
 - [No timeframes or instructor sections](./feedback_no_timeframes.md) — Never mention 三週/fixed course duration or include instructor bios in lecture pages
 - [Remotion style preference](./remotion_style_preference.md) — Default to Glassmorphism + YouTube Tutorial style; no timestamp in progress bar
 - [Multi-agent requirement (all video work)](./feedback_vibe_coding_multiagent.md) — Always use Director + scoped sub-agents for ALL video work (Vibe Coding + article-video); parallelize audio/VTT/render
+- [Preview before render](./feedback_preview_before_render.md) — Never render before James previews in Remotion Studio and explicitly approves
+- [Scene Dev mandatory rules](./feedback_scene_dev_rules.md) — VTT timing (never guess startFrame), asset size ≥200*S (2×2 grid for 4+), all content within safe zone (top 144px, bottom 1840px)
+- [Post-render deliverables](./feedback_postrender_deliverables.md) — Chapter = mp4 + .vtt + .html in out/CH{N}-{title}/; HTML has NO logo bar
+- [Whisper → Traditional Chinese](./feedback_whisper_traditional_chinese.md) — Whisper outputs Simplified; always run correction pass after transcription
+- [Agent docs use live files only](./feedback_agent_docs_live_data.md) — Never hardcode chapter status in agent docs; always read progress.md
+- [Audio folder path has space](./feedback_audio_folder_path.md) — Path is `chapters/{ch}/{ch} 音檔/` (space + chapter prefix); always quote in shell
 - [Cross-project universal rules](./feedback_cross_project_rules.md) — Both projects share: Vibe Coding style + 4K output + iMessage notifications (S=3 article-video, S=2 Vibe Coding)
 - [Lottie AvatarOverlay 已捨棄](./feedback_no_lottie_avatar.md) — 所有影片不再使用右下角講者動畫；course-video.md 已更新
 - [iMessage callout — use article-video design](./feedback_imessage_callout_design.md) — Vibe Coding video must use article-video iMessage spec (sender/text, top-right stack); discard old label/side/yPct system
@@ -20,6 +26,7 @@
 - [Always update SOP immediately](./feedback_sop_update_rule.md) — Any workflow/adjustment/optimization mentioned → add to relevant SOP file immediately
 - [Script over tokens](./feedback_script_over_tokens.md) — Any task a script can do must never use tokens; scripts live in ~/.claude/scripts/
 - [No inter-lecture navigation](./feedback_no_inter_lecture_nav.md) — Never add "上一堂/下一堂" labels; only ← 返回主頁 for cross-lecture nav
+- [Output filename convention](./feedback_output_filename.md) — Rendered files: `{title}-{date}.{ext}` (e.g. `什麼是MCP-2026-04-13.mp4`); title first, then date
 
 ## Agent System
 - [Agent Organization](~/.claude/commands/agents.md) — 5 domain directors (Vibe Coding Video / Article Video / Course / Engineering / Content) + sub-agents; invocation cheatsheet

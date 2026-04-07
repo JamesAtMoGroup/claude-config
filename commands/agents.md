@@ -237,9 +237,9 @@ Visual Concept Agent → motion-spec-CH{N}.json ✅
         ↓
 Scene Dev Agent (reads motion-spec + VTT) ✅
         ↓
-QA Agent verifies ALL checklist-*.md are [x] → iMessage → wait "通過"
+QA Agent verifies ALL checklist-*.md are [x] → iMessage notify → auto-proceed
         ↓                                      → QA fails → Fix Agent → redo QA
-Render Agent
+Render Agent (runs automatically)
 ```
 
 **QA iMessage flow:**
@@ -313,15 +313,15 @@ Render Agent
 |-------|-----|
 | **Visual Concept Agent** | `visual-spec.json` per VTT cue — cannot start before QA VTT |
 | **Scene Dev Agent** | Write TSX from visual-spec.json + VTT — load ALL skills above before writing any code |
-| **QA Agent** | Animation timing report → iMessage → wait "通過" |
-| **Render Agent** | Only after all checklists ✅ |
+| **QA Agent** | Animation timing report → verify all checklists ✅ → iMessage notify → auto-proceed |
+| **Render Agent** | Run immediately after QA passes — NO approval wait |
 
 **Every agent saves** `ai-knowledge-YYYY-MM-DD/checklist-[agent].md`. Director verifies all `[x]` before next phase.
 
-**QA iMessage flow:**
+**QA iMessage flow (notify only, do NOT wait for reply):**
 ```bash
-~/.claude/scripts/imessage_send.sh "🎬 QA Report:\n$QA_SUMMARY\n\n請回覆「通過」開始 render"
-~/.claude/scripts/imessage_wait_approval.sh 3600 &
+~/.claude/scripts/imessage_send.sh "🎬 QA passed — rendering now: $DATE"
+# DO NOT run imessage_wait_approval.sh — proceed directly to render
 ```
 
 ---

@@ -1,51 +1,70 @@
 ---
-name: n8ncourse project structure
-description: Repo structure, design system, naming conventions, and content rules for the n8ncourse GitHub Pages site
+name: n8ncourse / aischool platform structure
+description: Repo structure, agent architecture, deployment, nav/logo rules, and content rules for the aischool platform and n8ncourse content
 type: project
 ---
 
-All course content lives in **JamesAtMoGroup/n8ncourse** (GitHub Pages).
+All course content lives in **JamesAtMoGroup/n8ncourse** (Zeabur).
+Working directory: `~/Projects/n8ncourse`
 
-**CRITICAL CONVENTION:** Lecture pages are named `lectureN/index.html` — NEVER `dayN/`. Display labels use "Lecture N" not "Day N".
+## Repo layout (as of 2026-04-07)
+```
+root/
+├── login.html          ← platform login (Kolable API, localStorage)
+├── index.html          ← course series portal (auth guard)
+├── courses.json        ← course series list (NOT lecture list)
+├── admin.html          ← CMS
+├── assets/
+│   └── aischool-logo.webp
+├── docs/
+│   ├── spec.md / rule.md / skill.md / progress.md
+└── n8ncourse/
+    ├── index.html      ← n8n course homepage
+    ├── courses.json    ← lecture list (29 lectures, 3 open)
+    ├── knowledge.json
+    ├── lecture1/ lecture2/ lecture3/
+```
 
-## Repo layout
-```
-n8ncourse/
-├── index.html          ← landing + 每日知識庫 (nav: 我的主頁 / 每日知識庫)
-├── admin.html          ← CMS (requires classic GitHub PAT with repo scope)
-├── knowledge.json      ← 每日知識庫 data
-├── courses.json        ← course card data (day, title, status, url)
-├── CLAUDE.md           ← full design system + content rules (source of truth)
-├── lecture1/index.html ← Lecture 1 (chapters + checkboxes + progress)
-├── lecture2/index.html ← Lecture 2 (4 sections, sidebar, no checkboxes)
-└── audio/              ← audio files uploaded via admin
-```
+## Auth
+- Login: POST https://crmnotetool.zeabur.app/api/member/search { email, brandKey: "aischool" }
+- Session: localStorage key `aischool_user` = { email, name }
+- NO Supabase — all pages use localStorage only
+- Login redirects to `./` (portal) after success
+
+## Logo Rules (CRITICAL — never revert to X Learn)
+- NEVER use "X Learn" branding — fully replaced with aischool-logo.webp
+- Root index.html nav: img 44px only, no text
+- n8ncourse/index.html nav: NO logo at all (removed to avoid overlap)
+- Lecture pages nav: img 36px only, no text, links to `../`
+- Page titles: `| AI School`, footer: `© AI School`
+
+## Nav Structure
+### n8ncourse/index.html
+- Left: `<a href="../" class="nav-back">← 返回課程選單</a>` (14px, font-weight 500)
+- Right: nav-badge + nav-user + btn-logout
+- No logo — removing it was intentional to prevent overlap with the back link
+
+### Lecture pages
+- Left: logo img (36px, links to `../`) + `← 返回課程` back button
+- These are separate elements, both on the left
+
+## Brand tokens
+### Platform pages (login.html + root index.html)
+- --bg: #000000, --accent: #7cffb2, Font: Noto Sans TC
+
+### n8ncourse pages (DO NOT CHANGE)
+- --bg: #0e0918, --accent: #ee4f27, Font: Inter
 
 ## Live URLs
-- Main: https://jamesatmogroup.github.io/n8ncourse/
-- Lecture 1: https://jamesatmogroup.github.io/n8ncourse/lecture1/
-- Lecture 2: https://jamesatmogroup.github.io/n8ncourse/lecture2/
-- Admin: https://jamesatmogroup.github.io/n8ncourse/admin.html
+- Platform: https://n8ncourse.zeabur.app/ (portal)
+- Login: https://n8ncourse.zeabur.app/login.html
+- n8ncourse: https://n8ncourse.zeabur.app/n8ncourse/
 
-## Design tokens (dark theme — never use Claude.ai/light CSS variables)
-- `--bg: #0e0918`, `--bg-2: #1a1624`
-- `--accent: #ee4f27`, `--accent-2: #fd8925`
-- `--text-1: #ffffff`, `--text-2: #c8c4b0`, `--text-3: #8a859e`
-- `--success: #34d399`, `--info: #60a5fa`
-- Font: Inter. Logo: "X Learn"
+## courses.json — Thumbnails
+- Root courses.json `"thumbnail"` field: null = letter placeholder; set to image URL/path for actual image
+- To add thumbnail: upload image to `assets/` and set `"thumbnail": "./assets/filename.webp"` in root courses.json
 
-## Lecture page layout (ALL lecture pages must follow this)
-- Left sidebar (272px): brand tag + section list + 整體進度 bar
-- Top bar: hamburger + ← 返回主頁 link + breadcrumb + progress pill
-- Scrollable content: panel hero + panel body per section
-- Animated background orbs (3, fixed, blurred)
-- Mobile: sidebar slides in via hamburger
-
-## Forbidden content / language rules
-- ❌ `三週`, `本週`, `第 N 週` → use `接下來`, `第 N 階段`, `之後`
-- ❌ `昨天` → use `上一次`
-- ❌ Any time-specific words that tie content to a schedule
-- ❌ `關於講師` / instructor bio tabs
-
-**Why:** Owner wants content that isn't tied to specific days/weeks, so it stays evergreen. Instructor identity is intentionally hidden from students.
-**How to apply:** When writing or editing any lecture page, check for forbidden words before finishing.
+## Forbidden (all lecture pages)
+- Meta tag badges in hero, upper/next lecture nav, instructor bio, timeframe words
+- "X Learn" branding anywhere
+- Hero only: LECTURE N badge + h1 + subtitle

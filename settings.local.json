@@ -215,7 +215,17 @@
       "Bash(pip3 list:*)",
       "Bash(git -C /Users/jamesshih/Downloads/crm-note-tool status)",
       "Bash(find /Users/jamesshih/Projects/article-video/src -name \"*.tsx\" -exec wc -l {})",
-      "Bash(~/.claude/scripts/imessage_send.sh \"✅ 2026-04-01 render 完成！out/2026-04-01/2026-04-01.mp4\" 2>&1)"
+      "Bash(~/.claude/scripts/imessage_send.sh \"✅ 2026-04-01 render 完成！out/2026-04-01/2026-04-01.mp4\" 2>&1)",
+      "Bash(ffmpeg -y -i \"ai-knowledge-2026-04-02/ai-knowledge-2026-04-02_part1.mp3\" -i \"ai-knowledge-2026-04-02/ai-knowledge-2026-04-02_part2.mp3\" -filter_complex \"[0:a][1:a]concat=n=2:v=0:a=1[out]\" -map \"[out]\" \"ai-knowledge-2026-04-02/ai-knowledge-2026-04-02-concat.mp3\")",
+      "Bash(ffmpeg -y -i \"ai-knowledge-2026-04-02/ai-knowledge-2026-04-02-concat.mp3\" -stream_loop -1 -i \"public/audio/course_bgmusic.wav\" -filter_complex \":*)",
+      "Bash(/Users/jamesshih/Library/Python/3.9/bin/whisper \"ai-knowledge-2026-04-02/ai-knowledge-2026-04-02-concat.mp3\" --model medium --language zh --output_format vtt --output_dir \"out/2026-04-02\")",
+      "Bash(ffmpeg -i /Users/jamesshih/Projects/article-video/public/audio/ai-knowledge-2026-04-02-processed.wav -af ebur128=peak=true -f null -)",
+      "Bash(ffmpeg -i /Users/jamesshih/Projects/article-video/public/audio/ai-knowledge-2026-04-01-processed.wav -af ebur128=peak=true -f null -)",
+      "Bash(~/.claude/scripts/imessage_wait_approval.sh 3600 2>&1)",
+      "Bash(ffmpeg -f concat -safe 0 -i /tmp/filelist.txt -acodec libmp3lame -q:a 2 /tmp/ai-knowledge-2026-04-02-combined.mp3 -y)",
+      "Bash(ffmpeg -i /tmp/ai-knowledge-2026-04-02-combined.mp3 -stream_loop -1 -i /Users/jamesshih/Projects/article-video/public/audio/course_bgmusic.wav -filter_complex \"[0:a]highpass=f=80[hp];[hp]equalizer=f=3000:width_type=o:width=2:g=2[eq];[eq]acompressor=threshold=-18dB:ratio=3:attack=5:release=50[comp];[comp]loudnorm=I=-20:LRA=5:TP=-2[loud];[1:a]volume=0.08[bg];[loud][bg]amix=inputs=2:duration=first[out]\" -map \"[out]\" -ar 44100 -ac 2 /Users/jamesshih/Projects/article-video/public/audio/ai-knowledge-2026-04-02-processed.wav -y)",
+      "Bash(ffmpeg -f concat -safe 0 -i /tmp/filelist_vtt.txt -acodec libmp3lame -q:a 2 /tmp/ai-knowledge-2026-04-02-for-whisper.mp3 -y)",
+      "Bash(/Users/jamesshih/Library/Python/3.9/bin/whisper /tmp/ai-knowledge-2026-04-02-for-whisper.mp3 --model medium --language zh --output_format vtt --output_dir /Users/jamesshih/Projects/article-video/out/2026-04-02)"
     ]
   }
 }
