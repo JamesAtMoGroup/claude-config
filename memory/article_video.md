@@ -36,6 +36,13 @@ Daily AI knowledge video pipeline using Remotion + narrator's own recorded audio
 9. **Whisper**: use `python3 -m whisper` (not `whisper`); sub-agents have no Bash access
 10. **No anlmdn**: Skip denoise filter; breaks audio quality
 
+## ElevenLabs STS — 300s Limit (updated 2026-04-08)
+
+Hard limit: 300s per request. Pipeline auto-handles:
+- If audio > 290s → split in half → STS each half → ffmpeg concat → merged file
+- Handled in `article-video-pipeline.sh` `run_sts()` function
+- All agents must know: never pass audio > 290s to STS directly
+
 ## Standard Production Requirements (updated 2026-04-02)
 
 **Concept Animations (Motion Graphics)** are now mandatory for all article-video productions:
