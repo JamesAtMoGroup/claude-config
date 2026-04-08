@@ -33,11 +33,15 @@
 - [Vibecoding assets sync](./feedback_vibecoding_assets_sync.md) — Always download Drive `assets/` subfolder alongside HTML; relative paths like `assets/xxx.png` break without it
 
 ## Agent System
-- [Agent Organization](~/.claude/commands/agents.md) — 5 domain directors (Vibe Coding Video / Article Video / Course / Engineering / Content) + sub-agents; invocation cheatsheet
+- [Agent Organization](~/.claude/commands/agents.md) — System Director + 首席幕僚 + PM Director + 5 domain directors + sub-agents; invocation cheatsheet
 - Video agents MUST read `.agents/AGENTS.md` → `rules/project.md` → `rules/pipeline.md` → `progress.md` before planning
+- [James's Challenges](./challenges.md) — Ongoing difficulties, blockers, struggles James has mentioned; maintained by Chief of Staff
 
 ## Kolable Agent
 - [Kolable Agent](./project_kolable_agent.md) — James 指定的品牌後台串接專屬角色；學米/無限/職能/財經/xlab；crm-note-tool 已部署
+
+## References
+- [Drive intake folder](./reference_drive_intake.md) — vibe-coding-intake (ID: 1XdvF9lI_Rcklr4KxvKpDNAC4L6QiwHnz); collaborators upload here; READY file triggers pipeline
 
 ## Projects
 - [iMessage QA approval flow](./project_imessage_qa.md) — QA Agent sends report to 0981928525; waits for "通過" before render; Terminal Full Disk Access just enabled

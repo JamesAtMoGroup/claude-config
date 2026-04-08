@@ -226,7 +226,8 @@
       "Bash(ffmpeg -i /tmp/ai-knowledge-2026-04-02-combined.mp3 -stream_loop -1 -i /Users/jamesshih/Projects/article-video/public/audio/course_bgmusic.wav -filter_complex \"[0:a]highpass=f=80[hp];[hp]equalizer=f=3000:width_type=o:width=2:g=2[eq];[eq]acompressor=threshold=-18dB:ratio=3:attack=5:release=50[comp];[comp]loudnorm=I=-20:LRA=5:TP=-2[loud];[1:a]volume=0.08[bg];[loud][bg]amix=inputs=2:duration=first[out]\" -map \"[out]\" -ar 44100 -ac 2 /Users/jamesshih/Projects/article-video/public/audio/ai-knowledge-2026-04-02-processed.wav -y)",
       "Bash(ffmpeg -f concat -safe 0 -i /tmp/filelist_vtt.txt -acodec libmp3lame -q:a 2 /tmp/ai-knowledge-2026-04-02-for-whisper.mp3 -y)",
       "Bash(/Users/jamesshih/Library/Python/3.9/bin/whisper /tmp/ai-knowledge-2026-04-02-for-whisper.mp3 --model medium --language zh --output_format vtt --output_dir /Users/jamesshih/Projects/article-video/out/2026-04-02)",
-      "WebFetch(domain:drive.google.com)"
+      "WebFetch(domain:drive.google.com)",
+      "WebFetch(domain:llm.datasette.io)"
     ]
   }
 }
