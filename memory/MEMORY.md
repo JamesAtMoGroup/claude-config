@@ -26,7 +26,11 @@
 - [Always update SOP immediately](./feedback_sop_update_rule.md) — Any workflow/adjustment/optimization mentioned → add to relevant SOP file immediately
 - [Script over tokens](./feedback_script_over_tokens.md) — Any task a script can do must never use tokens; scripts live in ~/.claude/scripts/
 - [No inter-lecture navigation](./feedback_no_inter_lecture_nav.md) — Never add "上一堂/下一堂" labels; only ← 返回主頁 for cross-lecture nav
+- [HTML course page rules](./feedback_html_course_page.md) — sticky navbar (top:0, no flex/height), assets順序依逐字稿, video用player不用下載連結, 禁video-wrap embed
 - [Output filename convention](./feedback_output_filename.md) — Rendered files: `{title}-{date}.{ext}` (e.g. `什麼是MCP-2026-04-13.mp4`); title first, then date
+- [ElevenLabs STS in pipeline](./feedback_elevenlabs_sts.md) — Voice changer (STS) on every .mp3 before ffmpeg; voice ID 9lHjugDhwqoxA5MhX0az; API key in ~/.zshenv
+- [HTML style injection rule](./feedback_html_style_injection.md) — Always insert new `<style>` before `</head>`; never replace `</style></head>` as a pair — destroys the closing tag
+- [Vibecoding assets sync](./feedback_vibecoding_assets_sync.md) — Always download Drive `assets/` subfolder alongside HTML; relative paths like `assets/xxx.png` break without it
 
 ## Agent System
 - [Agent Organization](~/.claude/commands/agents.md) — 5 domain directors (Vibe Coding Video / Article Video / Course / Engineering / Content) + sub-agents; invocation cheatsheet

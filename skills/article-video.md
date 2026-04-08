@@ -589,8 +589,49 @@ Visual Concept Agent 在規劃 scene 視覺佈局時，應載入以下 skill 輔
 
 ---
 
-## VTT-First Pipeline（強制順序）
+## 全自動 Pipeline（fswatch 驅動）
 
+### 輸入規格
+```
+~/Projects/article-video/inbox/YYYY-MM-DD/
+  ├── {任意名稱}.txt    ← 第一行 = 標題，其餘 = 逐字稿
+  ├── audio_part1.mp3  ← 原聲錄音
+  └── audio_part2.mp3  （選填）
+```
+- 資料夾名稱必須是 `YYYY-MM-DD`
+- `.txt` + `.mp3` 同時存在 → 自動觸發
+- 成功完成後建立 `.pipeline_done`；失敗不留標記（可自動重試）
+
+### 自動執行步驟
+```
+1. ElevenLabs STS  → 每個 .mp3 換成 voice 9lHjugDhwqoxA5MhX0az
+2. ffmpeg          → 合併 + highpass + loudnorm (-20 LUFS) + BG music (0.08 vol)
+3. Whisper         → .vtt（/Library/Python/3.9/bin/whisper, model=medium, lang=zh）
+4. Claude CLI      → Visual Concept + Scene Dev → VideoComposition_YYYY_MM_DD.tsx
+5. tsc --noEmit    → TypeScript 檢查
+6. npm run build   → Render → out/YYYY-MM-DD/{標題}-YYYY-MM-DD.mp4
+7. rclone          → Google Drive（--drive-root-folder-id 1Q2Jdflw80FXXDpGMw22OFVbwlqsMoWGz）
+8. iMessage        → 完成通知
+```
+
+### 關鍵腳本
+| 腳本 | 用途 |
+|------|------|
+| `~/.claude/scripts/article-video-pipeline.sh YYYY-MM-DD` | 主 pipeline |
+| `~/.claude/scripts/article-video-watch.sh` | fswatch watcher（launchd 常駐） |
+| `~/.claude/scripts/elevenlabs-sts.js` | ElevenLabs Speech-to-Speech |
+
+### ElevenLabs
+- API Key: 存於 `~/.zshenv` → `ELEVENLABS_API_KEY`
+- Voice ID: `9lHjugDhwqoxA5MhX0az`（存於 `~/.zshenv` → `ELEVENLABS_VOICE_ID`）
+- Model: `eleven_multilingual_sts_v2`
+- SDK: `/opt/homebrew/lib/node_modules/@elevenlabs/elevenlabs-js`
+
+### Log
+- Pipeline log: `~/Projects/article-video/pipeline.log`（每步驟寫入）
+- Watcher log: `~/Projects/article-video/watcher.log`
+
+### VTT-First Pipeline（手動模式）
 ```
 1. Audio Agent     → 正規化音檔 (-20 LUFS)
 2. Transcription   → Whisper → .vtt → 與逐字稿交叉比對 QA
