@@ -4,6 +4,70 @@
 
 **觸發詞**：「剪課程影片」、「製作影片」、「remotion 課程」、`/course-video`
 
+> ⚠️ **SOP 權威來源**：`~/Projects/vibe-coding-video/.agents/rules/pipeline.md`
+> 本 skill 為補充說明；遇衝突以 pipeline.md 為準。
+
+---
+
+## 自動化 Pipeline（2026-04-08 起正式運作）
+
+### 觸發方式
+協作者上傳素材到 Drive Intake → 放 `READY` 檔案 → LaunchAgent 每 120 秒 poll → 自動 sync + 觸發 `start-chapter.sh`
+
+**一次只跑一個 chapter**：有任何 `/tmp/vibe-lock-*` 存在時，watcher 跳過觸發，等上一個完成後再啟動下一個。
+
+### ⚠️ LaunchAgent PATH 必要設定
+所有由 LaunchAgent 觸發的 script 開頭必須加：
+```bash
+export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:$HOME/Library/Python/3.9/bin:$PATH"
+```
+原因：LaunchAgent 不繼承 `.zshrc`，`claude`、`whisper`、`npx`、`ffmpeg`、`rclone` 都需要此設定才能被找到。
+
+### James 唯一需要做的事
+1. 等 iMessage 通知 QA 通過
+2. 開 `http://localhost:3000` 預覽
+3. 回「通過」→ 自動 render + 上傳 Drive
+
+---
+
+## 整段影片 Segment 規格（segment 為 .mp4 / .mov 時）
+
+當一個 segment 的主素材是影片（整段都是螢幕操作錄影），規格如下：
+
+### 版面
+```tsx
+// 影片填滿 NAV_H 到 SUBTITLE_H 之間，不超出上下邊界
+<OffthreadVideo
+  src={staticFile("檔名.mp4")}   // 必須 ASCII 檔名
+  style={{
+    position: "absolute",
+    top: NAV_H,                              // 144px
+    left: 0,
+    width: W,                                // 3840px
+    height: H - NAV_H - SUBTITLE_H,         // 1696px
+    objectFit: "cover",
+  }}
+/>
+```
+
+### 規則
+- ❌ 禁止任何 overlay 動畫（無 motion graphics）
+- ❌ 禁止字幕疊加（另外輸出 .vtt）
+- ✅ iMessage 字卡：依備注 VTT 幀號觸發，樣式與 audio segment 相同
+- ✅ 音軌：直接播放影片自帶音軌，不另加 `<Audio>`
+
+### Visual Concept Agent 輸出格式
+```json
+{
+  "id": "3.1",
+  "type": "video_segment",
+  "slide_animation": null,
+  "supplemental_animations": [],
+  "callouts": [{ "vtt_sec": 12.5, "sender": "James", "text": "字卡內容" }]
+}
+```
+`type: "video_segment"` 是 Scene Dev Agent 判斷規格的唯一依據。
+
 ---
 
 ## 核心設計原則（最重要）
