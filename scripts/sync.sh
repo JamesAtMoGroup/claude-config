@@ -44,6 +44,12 @@ pull() {
   # commands: repo/commands/* → ~/.claude/commands/*
   rsync -a --delete "$CLONE_DIR/commands/" "$CLAUDE_DIR/commands/"
 
+  # scripts: repo/scripts/* → ~/.claude/scripts/*
+  [ -d "$CLONE_DIR/scripts" ] && rsync -a "$CLONE_DIR/scripts/" "$CLAUDE_DIR/scripts/"
+
+  # dashboard: repo/dashboard/* → ~/.claude/dashboard/*
+  [ -d "$CLONE_DIR/dashboard" ] && rsync -a "$CLONE_DIR/dashboard/" "$CLAUDE_DIR/dashboard/"
+
   # memory: repo/memory/* → ~/.claude/projects/-Users-jamesshih/memory/*
   rsync -a "$CLONE_DIR/memory/" "$MEMORY_DIR/"
 
@@ -73,6 +79,14 @@ push() {
 
   # commands: ~/.claude/commands/* → repo/commands/*
   rsync -a --delete "$CLAUDE_DIR/commands/" "$CLONE_DIR/commands/"
+
+  # scripts: ~/.claude/scripts/* → repo/scripts/*
+  rsync -a --delete \
+    --exclude='.DS_Store' \
+    "$CLAUDE_DIR/scripts/" "$CLONE_DIR/scripts/"
+
+  # dashboard: ~/.claude/dashboard/* → repo/dashboard/*
+  [ -d "$CLAUDE_DIR/dashboard" ] && rsync -a "$CLAUDE_DIR/dashboard/" "$CLONE_DIR/dashboard/"
 
   # memory: ~/.claude/projects/-Users-jamesshih/memory/* → repo/memory/*
   rsync -a "$MEMORY_DIR/" "$CLONE_DIR/memory/"
