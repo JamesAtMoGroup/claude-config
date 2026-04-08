@@ -36,6 +36,23 @@ Daily AI knowledge video pipeline using Remotion + narrator's own recorded audio
 9. **Whisper**: use `python3 -m whisper` (not `whisper`); sub-agents have no Bash access
 10. **No anlmdn**: Skip denoise filter; breaks audio quality
 
+## Three-Phase Pipeline Architecture (updated 2026-04-08)
+
+**Scripts:** `~/.claude/scripts/article-video-phase{1,2,3}.sh` + `article-video-watch-v2.sh`
+
+| Phase | Script | Content | Marker |
+|-------|--------|---------|--------|
+| 1 | phase1.sh | STS + ffmpeg normalize + Whisper | `.phase1_done` |
+| 2 | phase2.sh | Scene Dev (claude -p) + TypeScript check | `.phase2_done` |
+| 3 | phase3.sh | Render + Google Drive upload | `.phase3_done` |
+
+**Watcher priority:** Phase 3 > Phase 2 > Phase 1 (later phases run first)
+**Retry:** Delete `.phase{N}_failed` in inbox/YYYY-MM-DD/ — only that phase reruns, earlier phase results preserved
+**Busy lock:** `/tmp/article-video-pipeline.busy` — one phase at a time
+**Watcher lock:** `/tmp/article-video-watcher.lock` — single watcher instance
+
+**Why phases matter:** Phase 2 (AI code gen) fails most often. Splitting means Whisper never reruns due to bad TSX, and Render never reruns due to Scene Dev retries.
+
 ## ElevenLabs STS + Intermediate Files (updated 2026-04-08)
 
 Hard limit: 300s per request. Pipeline auto-handles:
