@@ -594,17 +594,26 @@ Visual Concept Agent 在規劃 scene 視覺佈局時，應載入以下 skill 輔
 ### 輸入規格
 ```
 ~/Projects/article-video/inbox/YYYY-MM-DD/
-  ├── {任意名稱}.txt    ← 第一行 = 標題，其餘 = 逐字稿
-  ├── audio_part1.mp3  ← 原聲錄音
-  └── audio_part2.mp3  （選填）
+  ├── {任意名稱}.md 或 .txt  ← 第一行 = 標題，其餘 = 逐字稿
+  ├── audio_part1.mp3 或 .wav ← 原聲錄音
+  └── audio_part2.mp3 或 .wav （選填，自動合併）
 ```
 - 資料夾名稱必須是 `YYYY-MM-DD`
-- `.txt` + `.mp3` 同時存在 → 自動觸發
+- 逐字稿（`.md` 或 `.txt`）+ 音檔（`.mp3` 或 `.wav`）同時存在 → 自動觸發
 - 成功完成後建立 `.pipeline_done`；失敗不留標記（可自動重試）
+
+### 觸發機制（雙重）
+- **即時**：fswatch 偵測到檔案變動，立即檢查並觸發（約 1 秒）
+- **定時**：每 5 分鐘掃描 inbox 所有資料夾，補抓未處理的集數
+
+### iMessage 通知時機
+- 🎬 偵測到並開始製作 → 立即通知
+- ✅ 完成 → 通知
+- ❌ 失敗 → 通知（含失敗步驟）
 
 ### 自動執行步驟
 ```
-1. ElevenLabs STS  → 每個 .mp3 換成 voice 9lHjugDhwqoxA5MhX0az
+1. ElevenLabs STS  → 每個音檔換成 voice 9lHjugDhwqoxA5MhX0az（.mp3/.wav 皆支援）
 2. ffmpeg          → 合併 + highpass + loudnorm (-20 LUFS) + BG music (0.08 vol)
 3. Whisper         → .vtt（/Library/Python/3.9/bin/whisper, model=medium, lang=zh）
 4. Claude CLI      → Visual Concept + Scene Dev → VideoComposition_YYYY_MM_DD.tsx
