@@ -18,7 +18,7 @@ TMPDIR="/tmp/article-video-$DATE"
 mkdir -p "$TMPDIR"
 trap "rm -rf $TMPDIR" EXIT
 
-log()  { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" | tee -a "$LOG"; }
+log()  { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" >> "$LOG"; echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"; }
 fail() { log "❌ FAILED at step: $*"; ~/.claude/scripts/imessage_send.sh "❌ article-video $DATE Phase1 失敗：$*"; exit 1; }
 
 # ── Validate inbox ──────────────────────────────────────────────────────────
@@ -149,4 +149,7 @@ log "[3/3] ✅ VTT 完成 → $VTT_OUT"
 # ── 完成 ────────────────────────────────────────────────────────────────────
 touch "$INBOX/.phase1_done"
 log "✅ Phase 1 完成 | $DATE | $TITLE"
-~/.claude/scripts/imessage_send.sh "$(python3 -c "print(f'✅ Phase 1 完成：$DATE「$TITLE」— 等待 Scene Dev')")"
+~/.claude/scripts/imessage_send.sh "$(python3 - <<PYEOF
+print(f'✅ Phase 1 完成：$DATE「$TITLE」— 等待 Scene Dev')
+PYEOF
+)"

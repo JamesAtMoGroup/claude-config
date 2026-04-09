@@ -14,7 +14,7 @@ PROJECT="/Users/jamesshih/Projects/article-video"
 LOG="$PROJECT/pipeline.log"
 GDRIVE_FOLDER_ID="1Q2Jdflw80FXXDpGMw22OFVbwlqsMoWGz"
 
-log()  { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" | tee -a "$LOG"; }
+log()  { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" >> "$LOG"; echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"; }
 fail() { log "❌ FAILED at step: $*"; ~/.claude/scripts/imessage_send.sh "❌ article-video $DATE Phase3 失敗：$*"; exit 1; }
 
 # ── Validate phase2 artifacts ───────────────────────────────────────────────
@@ -45,7 +45,7 @@ log "[1/2] ✅ Render 完成 → $MP4_OUT"
 
 # ── Step 2: Google Drive 上傳 ───────────────────────────────────────────────
 log "[2/2] 上傳 Google Drive..."
-rclone copy "$PROJECT/out/$DATE/" gdrive: \
+rclone copy "$PROJECT/out/$DATE/" "gdrive:$DATE" \
   --drive-root-folder-id "$GDRIVE_FOLDER_ID" \
   --drive-use-trash=false 2>&1 | tee -a "$LOG"
 log "[2/2] ✅ 上傳完成"
@@ -53,4 +53,7 @@ log "[2/2] ✅ 上傳完成"
 # ── 完成 ────────────────────────────────────────────────────────────────────
 touch "$INBOX/.phase3_done"
 log "✅ Pipeline 全部完成 | $DATE | $TITLE"
-~/.claude/scripts/imessage_send.sh "$(python3 -c "print(f'✅ {\"$TITLE\"} ($DATE) 完成！已上傳 Google Drive。')")"
+~/.claude/scripts/imessage_send.sh "$(python3 - <<PYEOF
+print(f'✅ $TITLE ($DATE) 完成！已上傳 Google Drive。')
+PYEOF
+)"

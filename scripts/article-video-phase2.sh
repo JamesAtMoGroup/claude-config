@@ -13,7 +13,7 @@ INBOX="/Users/jamesshih/Projects/article-video/inbox/$DATE"
 PROJECT="/Users/jamesshih/Projects/article-video"
 LOG="$PROJECT/pipeline.log"
 
-log()  { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" | tee -a "$LOG"; }
+log()  { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" >> "$LOG"; echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"; }
 fail() { log "❌ FAILED at step: $*"; ~/.claude/scripts/imessage_send.sh "❌ article-video $DATE Phase2 失敗：$*"; exit 1; }
 
 # ── Validate phase1 artifacts ───────────────────────────────────────────────
@@ -79,4 +79,7 @@ npx tsc --noEmit 2>&1 | tee -a "$LOG" && log "[2/2] ✅ TypeScript 通過" || fa
 # ── 完成 ────────────────────────────────────────────────────────────────────
 touch "$INBOX/.phase2_done"
 log "✅ Phase 2 完成 | $DATE | $TITLE"
-~/.claude/scripts/imessage_send.sh "$(python3 -c "print(f'🎨 Phase 2 完成：$DATE「$TITLE」— 等待 Render')")"
+~/.claude/scripts/imessage_send.sh "$(python3 - <<PYEOF
+print(f'🎨 Phase 2 完成：$DATE「$TITLE」— 等待 Render')
+PYEOF
+)"

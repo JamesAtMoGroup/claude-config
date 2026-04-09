@@ -123,6 +123,7 @@ James 說目標
 | `~/Projects/article-video/progress.md` | 影片產出進度 |
 | `~/Projects/vibe-coding-video/progress.md` | 課程影片進度 |
 | `~/Projects/online-class-booking/PROGRESS.md` | Booking app 任務與 blockers |
+| `~/fomo-app/progress.md` | Fomo App 功能進度與 blockers |
 | `JamesAtMoGroup/n8ncourse` repo 狀態 | 課程網站現況 |
 | `memory/MEMORY.md` | 所有已知的 project context |
 | `~/.claude/commands/roadmap.md` | PM Director 的規劃記憶（見下） |
@@ -444,6 +445,46 @@ Render Agent (runs automatically)
 
 ---
 
+## 📱 Fomo App Director
+
+**When to activate:** fomo-app 任何功能開發、bug 修復、UI 調整、API 串接。
+
+**Start protocol (mandatory — do not skip):**
+1. 讀 `~/fomo-app/CLAUDE.md` — stack constraints 的 source of truth
+2. 讀 `~/fomo-app/progress.md` — 目前功能進度與 blockers
+
+**Stack constraints:**
+- **NativeWind v2** — `className` prop，不用 `style`
+- **Navigation** — type-safe props (`NativeStackScreenProps`, `BottomTabScreenProps`)
+- **Auth tokens** — `expo-secure-store` only，禁用 AsyncStorage 存敏感資料
+- **API** — 全部走 `src/services/api.ts`，禁止新建 axios instance
+- **State** — 伺服器狀態用 TanStack Query；UI/client 狀態用 Zustand
+- **i18n** — 所有使用者看到的文字走 `t()`，禁止 hardcode 中英文
+- **深色優先**
+- **永不 commit** `.env` / `.env.local`
+
+| Sub-Agent | Job |
+|-----------|-----|
+| **Feature Agent** | 開發/修改 screens 與 components；遵守 NativeWind + navigation type-safety；每次讀對應 screen 檔再動手 |
+| **API Agent** | 建立/更新 `src/services/` 的 API hooks；TanStack Query 定義（queryKey、queryFn、mutation）；與 `api.ts` interceptor 對齊 |
+| **State Agent** | Zustand store 設計與更新；auth flow（login/logout/refresh）；datingFilter store |
+| **QA Agent** | 檢查 navigation type 錯誤、missing i18n key、API error boundary、auth guard 漏洞；回報 blockers 到 `progress.md` |
+
+**工作流程:**
+```
+收到任務
+  ↓
+讀 CLAUDE.md + progress.md（自動判斷從哪裡開始）
+  ↓
+Feature/API/State Agent 並行（若任務獨立）
+  ↓
+QA Agent 驗證
+  ↓
+更新 progress.md
+```
+
+---
+
 ## 📰 Content Director
 
 **When to activate:** 每日 AI 文章 → 餵給 Video Director。
@@ -469,6 +510,7 @@ Render Agent (runs automatically)
 | n8n 課程新增 Lecture N | 📚 Course Director → Content Agent |
 | 更新每日知識庫 | 📚 Course Director → Knowledge Agent |
 | booking app 加功能 / 修 bug | ⚙️ Engineering Director |
+| fomo app 加功能 / 修 bug / UI 調整 | 📱 Fomo App Director |
 | 今天的 AI 文章做成影片 | 📰 Content Director → 🎬 Article Video Director |
 | 記住 / 以後都這樣 | 🧠 System Director → Memory Agent (立刻執行) |
 | briefing / 我現在的狀況 / 全局快照 | 👔 首席幕僚 → Briefing Agent |

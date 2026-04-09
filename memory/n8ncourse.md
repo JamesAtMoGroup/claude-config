@@ -2,8 +2,8 @@
 name: n8ncourse / aischool platform structure
 description: Repo structure, agent architecture, deployment, nav/logo rules, and content rules for the aischool platform and n8ncourse content
 type: project
+originSessionId: b5416625-96b7-424d-9f4a-e1d919960fbb
 ---
-
 All course content lives in **JamesAtMoGroup/n8ncourse** (Zeabur).
 Working directory: `~/Projects/n8ncourse`
 
@@ -63,6 +63,18 @@ root/
 ## courses.json — Thumbnails
 - Root courses.json `"thumbnail"` field: null = letter placeholder; set to image URL/path for actual image
 - To add thumbnail: upload image to `assets/` and set `"thumbnail": "./assets/filename.webp"` in root courses.json
+
+## Google Drive Sync (GitHub Actions)
+
+- Workflow: `.github/workflows/sync-vibecoding.yml`
+- Schedule: **每小時整點自動掃一次**（`cron: '0 * * * *'`）
+- 手動觸發：GitHub Actions → `workflow_dispatch`
+- 掃描腳本：`.github/scripts/sync_drive.py`
+- 來源：`COURSES_ROOT_FOLDER_ID`（GitHub Secret）
+- 同步目標：`vibecoding/`、`n8ncourse/`、`courses.json`、`sync_manifest.json`
+- 認證 Secrets：`GOOGLE_CLIENT_ID`、`GOOGLE_CLIENT_SECRET`、`GOOGLE_REFRESH_TOKEN`、`COURSES_ROOT_FOLDER_ID`
+
+---
 
 ## Forbidden (all lecture pages)
 - Meta tag badges in hero, upper/next lecture nav, instructor bio, timeframe words

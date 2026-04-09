@@ -615,8 +615,14 @@ Render Agent          — QA PASS 後才啟動
         - 後續段落 seg_start_frame 已加上媒體幀數？
     □ Callout 字卡
         - from/to 來自 timing-map.json？to - from ≥ 90？
-    □ S=2 scaling
+    □ S=2 scaling — font size 強制驗證（CH1-2 實測：任何 < 18*S 在 4K 畫面不可讀）
         - 所有 px 值都有 *S？font size / padding / borderRadius / gap 全部乘 S？
+        - **必須執行 grep**：`grep -n "fontSize: [0-9]\{1,2\} \* S" src/FullVideo*.tsx`
+          → 結果中出現任何 10-17 * S → 全部修正到 18 * S 以上再繼續
+        - 絕對底線：`18 * S`（36px screen）。標籤/說明最小 `20 * S`（40px）
+        - 3 張圖：上 2×50% + 下 1 居中 50%（❌ 禁 3 欄並排）
+        - 場景尾段補充圖：position:absolute overlay，在 SceneWrap 外，top:NAV_H，height:H-NAV_H-SUBTITLE_H
+        - 動畫容器高度：≤ 1696px（H-NAV_H-SUBTITLE_H），超出改 flex-wrap 緊湊格式
     □ CalloutCard 設計
         - 使用共用 CalloutCard component（不重新實作）？
 
@@ -672,8 +678,12 @@ Render Agent          — QA PASS 後才啟動
     □ VTT 專有名詞
         grep：不得出現 Vycoding / VibeCoding / ViveCoding / Live Coding / 城市碼 / 以方 等
         → 發現 → 直接修正 → 記錄
-    □ S=2 scaling（抽查 5 個場景）
-        → font size / padding / gap / borderRadius 全部有 *S？
+    □ S=2 scaling + font size 強制 grep（每次必做）
+        → `grep -n "fontSize: [0-9]\{1,2\} \* S" src/FullVideo*.tsx`
+        → 任何 10–17 * S → 修正，全部 18 * S 以上才可繼續
+        → padding / gap / borderRadius 全部有 *S？
+        → 3 張圖確認 2+1 排列（非 3 欄）？
+        → 場景尾段補充圖在 SceneWrap 外的 position:absolute overlay？
     □ CalloutCard iMessage 設計
         → layout: flex row（icon 左 + text 右）？
         → borderRadius: 14*S，padding: 10*S / 14*S，blur: 48px？

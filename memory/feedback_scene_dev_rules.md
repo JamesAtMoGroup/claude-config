@@ -1,10 +1,10 @@
 ---
-name: Scene Dev mandatory rules — VTT timing, asset size, safe zones
-description: Three hard rules for all video Scene Dev agents; violations cause visible bugs
+name: Scene Dev mandatory rules — VTT timing, asset size, safe zones, font sizes
+description: Hard rules for all video Scene Dev + QA agents; all validated by CH1-2 iteration. Violations cause visible quality failures.
 type: feedback
 ---
 
-Three rules Scene Dev agents MUST follow — all three were violated in CH1-1 causing rework.
+Rules validated through CH1-1 and CH1-2 iteration. **CH1-2 is the approved quality baseline — future chapters must not repeat the same mistakes.**
 
 ## Rule 0 — Read the script .txt and implement every 備注 exactly
 
@@ -45,15 +45,87 @@ VTT: "00:21.620 --> 00:24.100 但如果你能夠把這件事情自動化"
 
 ## Rule 2 — Assets must be large enough to read at 4K
 
-- Minimum image width: `200 * S` (400px). Prefer `240–320 * S`.
-- If 4+ images appear at once → use a 2×2 grid, not a vertical stack.
+- Minimum image width: `400 * S` (800px). Prefer `420–520 * S`.
+- **2 images**: each `flex: 1` (50% each) ✅
+- **3 images**: ❌ never 3-column (each ≈1000px but spreadsheets become unreadable) → ✅ 2+1 layout: top row 2 images (50% each), bottom row 1 image centered at 50% width
+- **4+ images**: 2×2 grid, not horizontal row or vertical stack
 - Video embeds: `width: "100%"` or at least `600 * S`.
 
-**Why:** CH1-1 scene 3.2 had 4 department PNG screenshots at 160×100*S — completely unreadable on a 3840px canvas. James said "根本看不到圖片".
+**Why:** CH1-1 scene 3.2 had 4 department PNG screenshots too small — unreadable. CH1-2 scene 3.2 had 3 registration sheet PNGs in a 3-column row, each at 1000px — spreadsheet text unreadable at 4K. James called it out twice.
 
-**How to apply:** After sizing any image, ask: "Can someone read the text in this screenshot on a 3840px wide screen?" If not, increase size or change layout.
+**How to apply:** After sizing any image, ask: "Can someone read the text in this screenshot on a 3840px wide screen?" If not, increase size or change layout. For 3 images, always use 2+1.
 
 ---
+
+## Rule 2b — SVG text inside viewBox-scaled SVG
+
+When writing `<text>` inside an `<svg>` that uses `viewBox`, the coordinate space is already scaled by the SVG's width/height ratio. Rule:
+
+```
+Target screen pixels = SVG_fontSize × S
+→ SVG fontSize = target_px / S (NOT target_px * S)
+→ Use fontSize={28} for 56px, fontSize={32} for 64px, fontSize={40} for 80px
+```
+
+❌ `fontSize="18"` → 36px, unreadable label  
+❌ `fontSize={18 * S}` → double-scaled, 144px gigantic  
+✅ `fontSize={28}` → 56px screen (label)  
+✅ `fontSize={40}` → 80px screen (key result)
+
+Never use string attribute `fontSize="N"` in SVG — always JSX number. Add inline comment `// target: 56px screen`.
+
+**Why:** CH1-2 had `fontSize="18"` SVG text AND `14*S`/`16*S` CSS labels throughout — all too small. James repeatedly called out tiny text before it was fixed. CH1-2 is now the reference implementation.
+
+**How to apply:** After writing any SVG `<text>`, verify the rendered size = SVG_fontSize × S ≥ 56px.
+
+## Rule 2c — Motion graphic containers must stay within safe zone
+
+Any animated container (burst, grid, diagram) must have height ≤ 1696px (H - NAV_H - SUBTITLE_H). If a radial burst or scatter layout would exceed this, replace with a compact `flex-wrap` grid of pills instead.
+
+**Why:** CH1-2 IconBurstSVG had `height: 500*S = 1000px`, causing content to overflow the subtitle zone when stacked with surrounding cards.
+
+## Rule 2d — CSS font sizes: absolute minimum 18*S, proven by CH1-2
+
+**Rule:** No CSS `fontSize` value may be below `18 * S`. Minimum by role:
+- Absolute bottom: `18 * S` (36px screen)
+- Labels, captions, tags: `20 * S` (40px screen)
+- Body text: `26–28 * S` (52–56px screen)
+
+**Mandatory QA grep — must run before DONE:**
+```bash
+grep -n "fontSize: [0-9]\{1,2\} \* S" src/FullVideo*.tsx
+# Any result with 10–17 * S = FAIL. Fix all before proceeding.
+```
+
+**Why:** CH1-2 had `12*S`/`14*S`/`16*S` values throughout — "房間裡的天才" label at 28px, "現況/痛點" tags at 28px, "範例（直接貼上即可）" at 28px, comparison table tags at 32px. All were unreadable at 4K. James called it out repeatedly ("文字超級小"). Fixed by bumping ALL sub-18*S values: 12→18, 14→20, 16→20.
+
+**How to apply:** After writing any scene, run the grep. If any value < 18*S exists, it is a bug. Do not output DONE until the grep is clean.
+
+## Rule 2e — Scene tail-end images: overlay, not inside SceneWrap
+
+**Rule:** Any image/asset that appears late (bottom) in a long scene must be rendered as a `position: absolute` overlay **outside SceneWrap**, filling the safe zone (top: NAV_H, height: H−NAV_H−SUBTITLE_H).
+
+```tsx
+// ✅ Correct: outside SceneWrap, positioned overlay
+<div style={{
+  position: "absolute", top: NAV_H, left: 0, right: 0,
+  height: H - NAV_H - SUBTITLE_H,
+  background: C.bg,
+  opacity: interpolate(frame, [triggerStart, triggerFrame], [0, 1], clamp),
+  zIndex: 15, pointerEvents: "none",
+}}>
+  {/* images here */}
+</div>
+
+// ❌ Wrong: inside SceneWrap — overflow:hidden + scroll clips bottom images
+<SceneWrap>
+  {/* late-appearing images here — will be cut off by subtitle zone */}
+</SceneWrap>
+```
+
+**Why:** CH1-2 Scene32ClearCmd had "合併後的成果" images at frame 2049 inside SceneWrap. scrollY of 1200px wasn't enough to bring them above the subtitle zone (320px). They were always clipped. Fixed by moving to AbsoluteFill overlay.
+
+**How to apply:** If a scene has content that appears after frame 1500 AND the scene has significant content before it → use overlay pattern for tail-end images.
 
 ## Rule 3 — All content must stay within the safe zone
 

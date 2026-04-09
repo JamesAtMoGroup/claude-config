@@ -31,9 +31,10 @@
 - [ElevenLabs STS in pipeline](./feedback_elevenlabs_sts.md) — Voice changer (STS) on every .mp3 before ffmpeg; voice ID 9lHjugDhwqoxA5MhX0az; API key in ~/.zshenv
 - [HTML style injection rule](./feedback_html_style_injection.md) — Always insert new `<style>` before `</head>`; never replace `</style></head>` as a pair — destroys the closing tag
 - [Vibecoding assets sync](./feedback_vibecoding_assets_sync.md) — Always download Drive `assets/` subfolder alongside HTML; relative paths like `assets/xxx.png` break without it
+- [rclone upload subfolder rule](./feedback_rclone_upload.md) — Always upload to `gdrive:$DATE` (subfolder), never `gdrive:` (root)
 
 ## Agent System
-- [Agent Organization](~/.claude/commands/agents.md) — System Director + 首席幕僚 + PM Director + 5 domain directors + sub-agents; invocation cheatsheet
+- [Agent Organization](~/.claude/commands/agents.md) — System Director + 首席幕僚 + PM Director + 6 domain directors + sub-agents; invocation cheatsheet
 - Video agents MUST read `.agents/AGENTS.md` → `rules/project.md` → `rules/pipeline.md` → `progress.md` before planning
 - [James's Challenges](./challenges.md) — Ongoing difficulties, blockers, struggles James has mentioned; maintained by Chief of Staff
 
@@ -49,3 +50,4 @@
 - [n8ncourse](./n8ncourse.md) — Repo structure, design tokens, URLs, convention that all day pages go in this one repo
 - [vibe-coding-video](./vibe_coding_video.md) — Remotion course video; CH 0-1 30s sample done; HeyGen avatar pending credits
 - [article-video](./article_video.md) — Daily AI knowledge explainer videos; Remotion + TTS; ~/article-video; JamesAtMoGroup/article-video
+- [fomo-app](./project_fomo_app.md) — Expo RN 社交活動探索 app; ~/fomo-app; 📱 Fomo App Director (Feature/API/State/QA agents)
