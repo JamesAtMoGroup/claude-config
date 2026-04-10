@@ -53,7 +53,4 @@ log "[2/2] ✅ 上傳完成"
 # ── 完成 ────────────────────────────────────────────────────────────────────
 touch "$INBOX/.phase3_done"
 log "✅ Pipeline 全部完成 | $DATE | $TITLE"
-~/.claude/scripts/imessage_send.sh "$(python3 - <<PYEOF
-print(f'✅ $TITLE ($DATE) 完成！已上傳 Google Drive。')
-PYEOF
-)"
+~/.claude/scripts/imessage_send.sh "✅ ${TITLE} (${DATE}) 完成！已上傳 Google Drive。"

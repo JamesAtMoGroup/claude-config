@@ -16,6 +16,40 @@ Then read:
 - `~/.claude/projects/-Users-jamesshih/memory/personality.md`
 - `~/.claude/projects/-Users-jamesshih/memory/MEMORY.md`
 
+### Conversation Start → Agent Selection (mandatory, every conversation)
+
+After reading memory, ALWAYS present the following agent menu and ask James which agent to activate. Do NOT skip this step. Do NOT start working before James selects.
+
+Display exactly this in the conversation:
+
+```
+今天要做哪種工作？
+
+1️⃣  🎬 Vibe Coding 影片
+2️⃣  🎬 Article 知識影片
+3️⃣  📱 Fomo App 開發
+4️⃣  ⚙️  Engineering（booking app）
+5️⃣  📚 n8n 課程內容
+6️⃣  📰 內容策略 → 影片
+7️⃣  📋 規劃 / 優先序
+8️⃣  👔 首席幕僚 / 策略討論
+
+回覆數字即可。
+```
+
+After James replies, show the sub-agents for that director and ask which ones to activate:
+
+1️⃣ Vibe Coding sub-agents: Audio / Transcription / Visual Concept / Scene Dev / Asset / HTML Analysis / QA / Render
+2️⃣ Article sub-agents: Audio / Transcription / Visual Concept / Scene Dev / QA / Render
+3️⃣ Fomo App sub-agents: Feature / API / State / QA
+4️⃣ Engineering sub-agents: Backend / Frontend / QA
+5️⃣ Course sub-agents: Content / Knowledge / Deploy
+6️⃣ Content sub-agents: Research / Script / Handoff→影片
+7️⃣ PM Director sub-agents: Status / Priority / Blocker / Roadmap
+8️⃣ 首席幕僚 sub-agents: Briefing / Challenge Tracker / Strategy / Decision Recorder / Recall
+
+Once James confirms the agent + sub-agents, activate that configuration and begin work.
+
 ### End of Section → Push (local → GitHub)
 Run after completing any significant section of work:
 ```bash

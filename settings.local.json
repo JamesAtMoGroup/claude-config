@@ -227,7 +227,8 @@
       "Bash(ffmpeg -f concat -safe 0 -i /tmp/filelist_vtt.txt -acodec libmp3lame -q:a 2 /tmp/ai-knowledge-2026-04-02-for-whisper.mp3 -y)",
       "Bash(/Users/jamesshih/Library/Python/3.9/bin/whisper /tmp/ai-knowledge-2026-04-02-for-whisper.mp3 --model medium --language zh --output_format vtt --output_dir /Users/jamesshih/Projects/article-video/out/2026-04-02)",
       "WebFetch(domain:drive.google.com)",
-      "WebFetch(domain:llm.datasette.io)"
+      "WebFetch(domain:llm.datasette.io)",
+      "WebFetch(domain:getdesign.md)"
     ]
   }
 }
