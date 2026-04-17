@@ -1,9 +1,9 @@
 ---
-name: Scene Dev mandatory rules — VTT timing, asset size, safe zones, font sizes
-description: Hard rules for all video Scene Dev + QA agents; all validated by CH1-2 iteration. Violations cause visible quality failures.
+name: Scene Dev mandatory rules — VTT timing, asset size, safe zones, font sizes, animation DURATION
+description: Hard rules for all video Scene Dev + QA agents; validated by CH1-2 and article-video 2026-04-10 iteration. Violations cause visible quality failures.
 type: feedback
+originSessionId: 1e791791-9d59-4762-94e3-4e43d41aa5d0
 ---
-
 Rules validated through CH1-1 and CH1-2 iteration. **CH1-2 is the approved quality baseline — future chapters must not repeat the same mistakes.**
 
 ## Rule 0 — Read the script .txt and implement every 備注 exactly
@@ -126,6 +126,61 @@ grep -n "fontSize: [0-9]\{1,2\} \* S" src/FullVideo*.tsx
 **Why:** CH1-2 Scene32ClearCmd had "合併後的成果" images at frame 2049 inside SceneWrap. scrollY of 1200px wasn't enough to bring them above the subtitle zone (320px). They were always clipped. Fixed by moving to AbsoluteFill overlay.
 
 **How to apply:** If a scene has content that appears after frame 1500 AND the scene has significant content before it → use overlay pattern for tail-end images.
+
+## Rule 1b — DURATION 必須計算到「這段話說完的最後一句 VTT」+ 90f buffer（article-video 專用）
+
+```
+DURATION = (last_topic_vtt_seconds × 30 - scene_start_frame - triggerLocalFrame) + 90
+```
+
+- 動畫內含有數字/統計資料 → DURATION 必須覆蓋到那個數字被講者說出來的時刻
+- 禁止隨意填 200/280/300 等固定短值
+
+**Why:** 2026-04-10 MetaShiftAnimation DURATION=200（≈6.7秒），但 App 87% 統計在 trigger 後 628 frames 才被說出 → 動畫消失後統計才出現，畫面完全空白。
+
+---
+
+## Rule 1c — 動畫內每個 step/element 的 delay 必須對齊 VTT（article-video 專用）
+
+```
+step_delay = Math.round(step_vtt_seconds × 30) - scene_start_frame - triggerLocalFrame
+```
+
+- 禁止用固定小 stagger（delay: 30/70/110/150）除非 VTT 真的均勻分布
+
+**Why:** 2026-04-10 AgentAutonomy delay=[30,70,110,150]，但 VTT 中「拆解」在 trigger 後 336 frames 才說 → 步驟比講者早出現 5 秒以上。
+
+---
+
+## Rule 1d — Phase A 內容高度必須估算，超過 CONTENT_H=1620px 就用 element fade-out（article-video 專用）
+
+估算方式：每張卡片（上下padding + 文字行高之和 + marginBottom）逐一加總。
+
+超過 1620px → element fade-out pattern：
+```tsx
+const EARLY_FADE_START = LATE_CARD_AT - 120;
+const EARLY_REMOVE     = LATE_CARD_AT - 10;
+const showEarly        = frame < EARLY_REMOVE;
+const earlyOpacity     = frame > EARLY_FADE_START
+  ? interpolate(frame, [EARLY_FADE_START, EARLY_REMOVE], [1, 0], clamp) : 1;
+```
+
+**Why:** 2026-04-10 Scene1 有 4 張卡（Mythos+Partners+ZeroDayBug+FreeBSD），Scene3 有 5 張卡（header+intro+model1+model2+model3），全堆疊超過 1620px → ContentColumn 截掉最後一張卡。TypeScript 完全抓不到這個問題。
+
+---
+
+## Rule 1e — Scene Dev 完成後必須輸出 VTT 同步驗證表（article-video 專用）
+
+```
+動畫名稱 | trigger(local) | trigger VTT | 講者台詞 | DURATION | 覆蓋到VTT
+（無法填出「覆蓋到」= DURATION 不夠，必須重算）
+```
+
+phase2.sh 的 Step 3 會自動用 Python 驗算並輸出這張表。
+
+**Why:** TypeScript check 只能驗型別，無法驗邏輯正確性。沒有這張表，trigger 搞錯、DURATION 不夠、step delay 猜錯都不會被發現，只能靠 James 在 Studio 裡一幀一幀 scrub 才看到問題。
+
+---
 
 ## Rule 3 — All content must stay within the safe zone
 

@@ -39,7 +39,7 @@
 - [James's Challenges](./challenges.md) — Ongoing difficulties, blockers, struggles James has mentioned; maintained by Chief of Staff
 
 ## Kolable Agent
-- [Kolable Agent](./project_kolable_agent.md) — James 指定的品牌後台串接專屬角色；學米/無限/職能/財經/xlab；crm-note-tool 已部署
+- [Kolable Agent](./project_kolable_agent.md) — 品牌後台串接 + kolable-dashboard 完整製作紀錄（頁面、稽核系統、API、migration、技術決策）
 
 ## References
 - [Drive intake folder](./reference_drive_intake.md) — vibe-coding-intake (ID: 1XdvF9lI_Rcklr4KxvKpDNAC4L6QiwHnz); collaborators upload here; READY file triggers pipeline

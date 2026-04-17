@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agents</title>
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #080808;
+    --bg2: #0d0d0d;
+    --surface: #111111;
+    --border: rgba(255,255,255,0.06);
+    --text: #f0f0f0;
+    --muted: rgba(255,255,255,0.28);
+    --dim: rgba(255,255,255,0.1);
+    --gap: 2px;
+    --radius: 6px;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'SF Pro Display', -apple-system, 'Helvetica Neue', sans-serif;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Topbar ── */
+  .topbar {
+    position: sticky; top: 0; z-index: 10;
+    background: rgba(8,8,8,0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 16px 14px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .topbar-logo {
+    font-size: 15px; font-weight: 700; letter-spacing: 5px;
+    text-transform: uppercase;
+    background: linear-gradient(90deg, #fff 0%, rgba(255,255,255,0.5) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .topbar-right { display: flex; align-items: center; gap: 10px; }
+  .topbar-count {
+    font-size: 11px; color: rgba(255,255,255,0.2);
+    letter-spacing: 0.5px; font-weight: 500;
+  }
+  .topbar-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #22c55e;
+    box-shadow: 0 0 6px #22c55e;
+    animation: pulse-green 2.5s ease-in-out infinite;
+  }
+  @keyframes pulse-green {
+    0%, 100% { opacity: 1; box-shadow: 0 0 6px #22c55e; }
+    50% { opacity: 0.5; box-shadow: 0 0 12px #22c55e; }
+  }
+
+  /* ── Section ── */
+  .section-wrap { padding: 0 0 var(--gap); }
+  .section-header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 24px 14px 10px;
+  }
+  .section-label {
+    font-size: 9px; font-weight: 700; letter-spacing: 3px;
+    text-transform: uppercase; color: rgba(255,255,255,0.18);
+    flex-shrink: 0;
+  }
+  .section-line {
+    flex: 1; height: 1px;
+    background: linear-gradient(90deg, rgba(255,255,255,0.07) 0%, transparent 100%);
+  }
+  .section-count {
+    font-size: 9px; color: rgba(255,255,255,0.12);
+    letter-spacing: 0.5px; flex-shrink: 0;
+  }
+
+  /* ── Grid ── */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--gap);
+    background: rgba(255,255,255,0.03);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin: 0;
+  }
+
+  /* ── Card ── */
+  .card {
+    position: relative; aspect-ratio: 1/1; overflow: hidden;
+    cursor: pointer; background: var(--surface);
+    transition: transform 0.2s ease;
+  }
+  .card:active { transform: scale(0.97); }
+  .card::after {
+    content: '';
+    position: absolute; inset: 0;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+    border-radius: 0;
+    border: 1px solid var(--card-accent, rgba(255,255,255,0.15));
+  }
+  .card:hover::after { opacity: 1; }
+
+  /* Photo card */
+  .card-photo {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+    transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  .card:hover .card-photo { transform: scale(1.06); }
+
+  /* Gradient card (sub-agents) */
+  .card-gradient {
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 34px;
+    transition: transform 0.3s ease;
+    position: relative;
+  }
+  .card-gradient::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 30% 30%, var(--card-accent-light, transparent) 0%, transparent 65%);
+    opacity: 0.6;
+  }
+  .card:hover .card-gradient { transform: scale(1.08); }
+
+  /* Overlay */
+  .card-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(
+      to bottom,
+      transparent 25%,
+      rgba(0,0,0,0.05) 45%,
+      rgba(0,0,0,0.55) 72%,
+      rgba(0,0,0,0.85) 100%
+    );
+  }
+  .card.sub .card-overlay {
+    background: linear-gradient(
+      to bottom,
+      transparent 40%,
+      rgba(0,0,0,0.35) 68%,
+      rgba(0,0,0,0.75) 100%
+    );
+  }
+
+  /* Status pulse */
+  .status-dot {
+    position: absolute; top: 9px; right: 9px;
+    width: 7px; height: 7px; border-radius: 50%;
+    border: 1.5px solid rgba(0,0,0,0.5);
+  }
+  .status-dot::after {
+    content: '';
+    position: absolute; inset: -3px;
+    border-radius: 50%;
+    background: inherit;
+    opacity: 0;
+    animation: status-pulse 3s ease-in-out infinite;
+  }
+  @keyframes status-pulse {
+    0%, 100% { opacity: 0; transform: scale(1); }
+    50% { opacity: 0.25; transform: scale(2.2); }
+  }
+
+  /* Parent badge */
+  .parent-badge {
+    position: absolute; top: 8px; left: 8px;
+    font-size: 7px; font-weight: 800; letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 3px 7px; border-radius: 3px;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(6px);
+    color: rgba(255,255,255,0.4);
+    max-width: 76px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    border: 1px solid rgba(255,255,255,0.07);
+  }
+
+  /* Card info */
+  .card-info {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: 6px 9px 9px;
+  }
+  .card-name {
+    font-size: 11px; font-weight: 700; color: #fff;
+    line-height: 1.25; letter-spacing: 0.1px;
+    text-shadow: 0 1px 6px rgba(0,0,0,0.8);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .card-role {
+    font-size: 8px; color: rgba(255,255,255,0.35);
+    margin-top: 1px; letter-spacing: 0.3px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  /* ── Modal ── */
+  .overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.95); z-index: 200;
+    overflow-y: auto; -webkit-overflow-scrolling: touch;
+  }
+  .overlay.open { display: block; }
+
+  .profile {
+    max-width: 460px; margin: 0 auto; min-height: 100vh;
+    background: var(--bg2);
+    animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @keyframes slideUp {
+    from { transform: translateY(40px); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+  }
+
+  .profile-photo-wrap {
+    position: relative; width: 100%; overflow: hidden;
+  }
+  .profile-photo-wrap.has-photo { aspect-ratio: 3/4; }
+  .profile-photo-wrap.no-photo  { aspect-ratio: 4/3; }
+
+  .profile-photo { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .profile-gradient-bg {
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 90px; position: relative;
+  }
+  .profile-photo-gradient {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 60%;
+    background: linear-gradient(transparent, var(--bg2) 96%);
+  }
+
+  .close-btn {
+    position: absolute; top: 16px; right: 16px; z-index: 10;
+    width: 34px; height: 34px; border-radius: 50%;
+    background: rgba(0,0,0,0.55); backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.7); font-size: 12px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s;
+  }
+  .close-btn:hover { background: rgba(255,255,255,0.1); }
+
+  .profile-name-block {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: 0 20px 22px;
+  }
+  .profile-name { font-size: 28px; font-weight: 800; color: #fff; line-height: 1.1; letter-spacing: -0.3px; }
+  .profile-subtitle { font-size: 12px; color: rgba(255,255,255,0.38); margin-top: 4px; letter-spacing: 0.5px; }
+
+  .profile-body { padding: 0 20px 60px; }
+
+  .domain-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 18px 0 16px; }
+  .domain-tag {
+    font-size: 9px; font-weight: 800; letter-spacing: 1.5px;
+    padding: 4px 10px; border-radius: 4px; text-transform: uppercase;
+  }
+
+  .profile-bio {
+    font-size: 13px; color: rgba(255,255,255,0.45);
+    line-height: 1.8; margin-bottom: 20px;
+    font-weight: 400;
+  }
+
+  .divider { height: 1px; background: rgba(255,255,255,0.05); margin: 20px 0; }
+
+  .stats-row {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 10px; overflow: hidden;
+    margin-bottom: 22px;
+  }
+  .stat { padding: 14px 10px; text-align: center; }
+  .stat + .stat { border-left: 1px solid rgba(255,255,255,0.05); }
+  .stat-num { font-size: 22px; font-weight: 700; color: #fff; }
+  .stat-label { font-size: 8px; color: rgba(255,255,255,0.2); letter-spacing: 1.2px; text-transform: uppercase; margin-top: 3px; }
+
+  .section-head {
+    font-size: 8px; font-weight: 800; letter-spacing: 2.5px;
+    text-transform: uppercase; color: rgba(255,255,255,0.18);
+    margin-bottom: 10px;
+  }
+
+  .trigger-list { margin-bottom: 20px; }
+  .trigger-item {
+    font-size: 12px; color: rgba(255,255,255,0.38);
+    padding: 9px 12px; background: rgba(255,255,255,0.03);
+    border-radius: 7px; margin-bottom: 4px;
+    border-left: 2px solid var(--t-accent, #333);
+    line-height: 1.5;
+  }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 20px; }
+  .chip {
+    font-size: 11px; padding: 4px 11px; border-radius: 5px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.07);
+    color: rgba(255,255,255,0.35);
+  }
+  .chip.accent {
+    background: color-mix(in srgb, var(--t-accent, #555) 12%, transparent);
+    border-color: color-mix(in srgb, var(--t-accent, #555) 20%, transparent);
+    color: var(--t-accent, #888);
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logo">Agents</div>
+  <div class="topbar-right">
+    <div class="topbar-count" id="agent-count"></div>
+    <div class="topbar-dot"></div>
+  </div>
+</div>
+<div id="app"></div>
+
+<!-- Modal -->
+<div class="overlay" id="overlay">
+  <div class="profile" id="profile">
+    <div class="profile-photo-wrap" id="p-photo-wrap">
+      <button class="close-btn" onclick="closeProfile()">✕</button>
+      <img id="p-photo" src="" alt="" class="profile-photo" referrerpolicy="no-referrer" crossorigin="anonymous" style="display:none">
+      <div id="p-gradient-bg" class="profile-gradient-bg" style="display:none"></div>
+      <div class="profile-photo-gradient"></div>
+      <div class="profile-name-block">
+        <div class="profile-name" id="p-name"></div>
+        <div class="profile-subtitle" id="p-subtitle"></div>
+      </div>
+    </div>
+    <div class="profile-body">
+      <div class="domain-tags" id="p-tags"></div>
+      <div class="profile-bio" id="p-bio"></div>
+      <div class="stats-row" id="p-stats"></div>
+      <div class="divider"></div>
+      <div class="section-head">觸發時機</div>
+      <div class="trigger-list" id="p-triggers"></div>
+      <div id="p-sub-section">
+        <div class="section-head">Sub-Agents</div>
+        <div class="chips" id="p-subagents"></div>
+      </div>
+      <div id="p-skills-section">
+        <div class="section-head">技能 / 工具</div>
+        <div class="chips" id="p-skills"></div>
+      </div>
+      <div id="p-parent-section" style="display:none">
+        <div class="section-head">所屬 Director</div>
+        <div class="chips" id="p-parent"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const P = {
+  starbucks:  'https://images.unsplash.com/photo-1487309078313-fad80c3ec1e5?w=800&h=1000&fit=crop&crop=face&auto=format&q=90',
+  glasses:    'https://images.unsplash.com/photo-1540569014015-19a7be504e3a?w=800&h=1000&fit=crop&crop=face&auto=format&q=90',
+  whiteshirt: 'https://images.unsplash.com/photo-1681097561932-36d0df02b379?w=800&h=1000&fit=crop&crop=face&auto=format&q=90',
+  blackhat:   'https://images.unsplash.com/photo-1595032332002-a062b99ce108?w=800&h=1000&fit=crop&crop=face&auto=format&q=90',
+  curb:       'https://images.unsplash.com/photo-1542327821-87a5f0fb3c9f?w=800&h=1000&fit=crop&crop=face&auto=format&q=90',
+  rail:       'https://images.unsplash.com/photo-1512359573855-953710d3f7a8?w=800&h=1000&fit=crop&crop=face&auto=format&q=90',
+  sunnies:    'https://images.unsplash.com/photo-1628116635787-c5a41081804d?w=800&h=1000&fit=crop&crop=face&auto=format&q=90',
+};
+
+const SECTIONS = [
+  { label: 'Meta Layer', agents: [
+    { type:'director', name:'System Director', role:'Meta Orchestrator', photo:P.starbucks, accent:'#8B5CF6', domain:'META',
+      bio:'所有 Agent 的上層守衛。不執行業務，只維護系統本身。每次對話都在場——讀記憶、寫規則、管同步。',
+      triggers:['「記住」/ 「以後都這樣」→ 立刻觸發 Memory Agent','工作流有調整 → 立刻觸發 SOP Agent','每次對話結束 → Sync Agent','偵測到新 ~/Projects/ 目錄 → Project Onboarding Agent'],
+      subAgents:['Memory Agent','SOP Agent','Sync Agent','Orchestrator','Project Onboarding Agent'],
+      skills:['memory/','sync.sh','agents.md','MEMORY.md'] },
+    { type:'sub', name:'Memory Agent', role:'System Director', emoji:'🧠', accent:'#8B5CF6', domain:'META',
+      bio:'學到新 rule / feedback / preference 時立刻寫對應 memory 檔，更新 MEMORY.md index。',
+      triggers:['James 說「記住」/ 「以後都這樣」','System Director 偵測到新 feedback'],
+      skills:['memory/','MEMORY.md'] },
+    { type:'sub', name:'SOP Agent', role:'System Director', emoji:'📝', accent:'#8B5CF6', domain:'META',
+      bio:'工作流有調整、優化、新步驟時更新對應 skill 檔或 agents.md。',
+      triggers:['工作流調整 / 優化 / 新步驟被提到'],
+      skills:['~/.claude/skills/','agents.md'] },
+    { type:'sub', name:'Sync Agent', role:'System Director', emoji:'🔄', accent:'#8B5CF6', domain:'META',
+      bio:'重要工作段落結束或對話結束時執行 sync.sh push，確認 GitHub 有最新版。',
+      triggers:['重要工作段落結束','對話結束'],
+      skills:['sync.sh','JamesAtMoGroup/claude-config'] },
+    { type:'sub', name:'Orchestrator', role:'System Director', emoji:'🎯', accent:'#8B5CF6', domain:'META',
+      bio:'收到 James 的目標後讀 state，判斷派給哪個 Director，追蹤完成狀態。',
+      triggers:['James 說出目標','新任務開始'],
+      skills:['progress.md','agents.md'] },
+    { type:'sub', name:'Project Onboarding', role:'System Director', emoji:'🆕', accent:'#8B5CF6', domain:'META',
+      bio:'偵測到 ~/Projects/ 新目錄時讀 README/package.json/CLAUDE.md，判斷類型，指派 Director，建 memory 條目。',
+      triggers:['~/.claude/dashboard/.new-project/ 有 flag 檔'],
+      skills:['README.md','package.json','dashboard.json'] },
+
+    { type:'director', name:'首席幕僚', role:'Chief of Staff', photo:P.glasses, accent:'#F59E0B', domain:'META',
+      bio:'James 的全知戰略夥伴。被動等待，只在被呼叫時行動。不只回答——挑戰假設、提供框架、幫 James 看清盲點。困難立刻記進 challenges.md。',
+      triggers:['「briefing」/ 「我現在的狀況」','「你怎麼看」/ 「幫我想清楚」','「有個問題困擾我」→ 立刻記錄','「你記得...嗎」'],
+      subAgents:['Briefing Agent','Challenge Tracker','Strategy Agent','Decision Recorder','Recall Agent'],
+      skills:['soul.md','personality.md','challenges.md','Google Calendar MCP','Gmail MCP'] },
+    { type:'sub', name:'Briefing Agent', role:'首席幕僚', emoji:'📊', accent:'#F59E0B', domain:'META',
+      bio:'平行讀所有 progress 檔 + calendar，輸出結構化全局快照。',
+      triggers:['James 說「briefing」/ 「給我現況」'],
+      skills:['progress.md (全 projects)','gcal_list_events'] },
+    { type:'sub', name:'Challenge Tracker', role:'首席幕僚', emoji:'⚠️', accent:'#F59E0B', domain:'META',
+      bio:'James 提到困難/卡點/壓力/猶豫時，立刻寫入 challenges.md，不等對話結束。',
+      triggers:['James 提到任何困難、壓力、猶豫'],
+      skills:['challenges.md'] },
+    { type:'sub', name:'Strategy Agent', role:'首席幕僚', emoji:'♟️', accent:'#F59E0B', domain:'META',
+      bio:'深度討論模式——挑戰假設、提供框架、展示不同角度。不急著給答案。',
+      triggers:['「你怎麼看」/ 「這樣對嗎」/ 「幫我想清楚」'],
+      skills:['soul.md','personality.md','challenges.md'] },
+    { type:'sub', name:'Decision Recorder', role:'首席幕僚', emoji:'✍️', accent:'#F59E0B', domain:'META',
+      bio:'討論收斂到決定時，把決定寫回對應 project 的 memory 檔。',
+      triggers:['討論產出明確決定'],
+      skills:['memory/project_*.md'] },
+    { type:'sub', name:'Recall Agent', role:'首席幕僚', emoji:'🔍', accent:'#F59E0B', domain:'META',
+      bio:'搜尋 memory/ 目錄所有檔案，精確引用對應記錄。',
+      triggers:['「你記得...嗎」/ 「之前說過...」'],
+      skills:['memory/'] },
+
+    { type:'director', name:'PM Director', role:'Project Manager', photo:P.sunnies, accent:'#06B6D4', domain:'META',
+      bio:'不執行業務，只負責「做對的事」。平行讀所有 project 進度，找出最高槓桿的一件事，找出卡點與解法。',
+      triggers:['「現在最重要是什麼」/ 「今天該做什麼」','「哪裡卡住了」/ 「幫我規劃」'],
+      subAgents:['Status Agent','Priority Agent','Blocker Agent','Roadmap Agent'],
+      skills:['progress.md (全 projects)','roadmap.md','MEMORY.md'] },
+    { type:'sub', name:'Status Agent', role:'PM Director', emoji:'📈', accent:'#06B6D4', domain:'META',
+      bio:'平行讀所有 progress 檔，輸出各 project 的現況快照。',
+      triggers:['PM Director 啟動時先跑'],
+      skills:['progress.md','PROGRESS.md','courses.json'] },
+    { type:'sub', name:'Priority Agent', role:'PM Director', emoji:'🥇', accent:'#06B6D4', domain:'META',
+      bio:'依據 James 的核心目標（槓桿/影響力/收入）排出現在最高價值的一件事。',
+      triggers:['Status Agent 完成後'],
+      skills:['soul.md','roadmap.md'] },
+    { type:'sub', name:'Blocker Agent', role:'PM Director', emoji:'🚧', accent:'#06B6D4', domain:'META',
+      bio:'偵測到某 project 進度停滯時，找出卡點、缺少什麼、依賴什麼，給具體解法。',
+      triggers:['偵測到 project 進度停滯'],
+      skills:['PROGRESS.md','progress.md'] },
+    { type:'sub', name:'Roadmap Agent', role:'PM Director', emoji:'🗺️', accent:'#06B6D4', domain:'META',
+      bio:'James 說「規劃一下」時，產出優先序清單，寫入 roadmap.md + 更新 dashboard.json。',
+      triggers:['「規劃一下」/ 「這週怎麼做」'],
+      skills:['roadmap.md','dashboard.json'] },
+  ]},
+
+  { label: '影片製作', agents: [
+    { type:'director', name:'Vibe Coding Video', role:'Video Director', photo:P.whiteshirt, accent:'#F97316', domain:'VIDEO',
+      bio:'負責 vibe-coding-video 全流程。S=2，4K，glassmorphism 風格。8 個 sub-agents 按 QA gate 順序執行。',
+      triggers:['「做 CH N vibe coding」','任何 vibe-coding-video 任務'],
+      subAgents:['Audio Agent','Transcription Agent','Visual Concept Agent','Scene Dev Agent','Asset Agent','HTML Analysis Agent','QA Agent','Render Agent'],
+      skills:['remotion-best-practices/','course-video.md','gsap/','animejs/','kling-ai/'] },
+    { type:'sub', name:'Audio Agent', role:'Vibe Coding', emoji:'🎵', accent:'#F97316', domain:'VIDEO',
+      bio:'ffmpeg normalize (-16 LUFS, no denoise)，輸出 frame count，儲存 checklist-audio.md。',
+      triggers:['Pipeline 第一步，與 Transcription Agent 並行'],
+      skills:['ffmpeg','checklist-audio.md'] },
+    { type:'sub', name:'Transcription Agent', role:'Vibe Coding', emoji:'📝', accent:'#F97316', domain:'VIDEO',
+      bio:'Whisper VTT + script 驗證，繁體中文校正，儲存 checklist-transcription.md。',
+      triggers:['Pipeline 第一步，與 Audio Agent 並行'],
+      skills:['Whisper','checklist-transcription.md'] },
+    { type:'sub', name:'Visual Concept Agent', role:'Vibe Coding', emoji:'🎨', accent:'#F97316', domain:'VIDEO',
+      bio:'讀 VTT + HTML slides，找出 4-6 個概念時刻，輸出 motion-spec-CHN.json。',
+      triggers:['Audio + Transcription 完成後'],
+      skills:['motion-spec-CHN.json','checklist-visual-concept.md'] },
+    { type:'sub', name:'Scene Dev Agent', role:'Vibe Coding', emoji:'💻', accent:'#F97316', domain:'VIDEO',
+      bio:'讀 motion-spec + VTT 寫/修改 TSX。必須載入 Remotion / GSAP / design 全部 skill 再動手。',
+      triggers:['Visual Concept Agent 完成後'],
+      skills:['FullVideo03.tsx','remotion-best-practices/','gsap/','checklist-scene-dev.md'] },
+    { type:'sub', name:'Asset Agent', role:'Vibe Coding', emoji:'📦', accent:'#F97316', domain:'VIDEO',
+      bio:'驗證音檔在 chapters/{N}/audio/，對應 script 備注，儲存 checklist-asset.md。',
+      triggers:['Scene Dev 前驗證素材'],
+      skills:['chapters/','checklist-asset.md'] },
+    { type:'sub', name:'HTML Analysis Agent', role:'Vibe Coding', emoji:'🔎', accent:'#F97316', domain:'VIDEO',
+      bio:'解析 HTML slides，提取音檔時間戳，儲存 checklist-html-analysis.md。',
+      triggers:['需要分析 HTML slides 時'],
+      skills:['checklist-html-analysis.md'] },
+    { type:'sub', name:'QA Agent (VC)', role:'Vibe Coding', emoji:'✅', accent:'#F97316', domain:'VIDEO',
+      bio:'驗證所有 checklist-*.md 都是 [x]，動畫時序報告，iMessage 通知 James 等待「通過」。',
+      triggers:['Scene Dev 完成後'],
+      skills:['imessage_send.sh','imessage_wait_approval.sh'] },
+    { type:'sub', name:'Render Agent (VC)', role:'Vibe Coding', emoji:'🎬', accent:'#F97316', domain:'VIDEO',
+      bio:'QA「通過」確認後執行 render，輸出 out/CHN/CHN-complete.mp4。',
+      triggers:['QA Agent 收到「通過」'],
+      skills:['npx remotion render','out/CHN/'] },
+
+    { type:'director', name:'Article Video', role:'Video Director', photo:P.blackhat, accent:'#22C55E', domain:'VIDEO',
+      bio:'每日 AI 知識影片。S=3，4K，black + neon green 風格。Phase 1 Audio+VTT 並行，Phase 2 Visual→Scene→QA→自動 render。',
+      triggers:['「做今天的 article-video」','任何 article-video 任務'],
+      subAgents:['Audio Agent','Transcription Agent','Visual Concept Agent','Scene Dev Agent','QA Agent','Render Agent'],
+      skills:['remotion-best-practices/','article-video.md','gsap/','animejs/','kling-ai/'] },
+    { type:'sub', name:'Audio Agent', role:'Article Video', emoji:'🎵', accent:'#22C55E', domain:'VIDEO',
+      bio:'ffmpeg normalize + BG music mix (-20 LUFS Peak -2 dBFS)，輸出 processed.wav + checklist。',
+      triggers:['Phase 1，與 Transcription Agent 並行'],
+      skills:['ffmpeg','checklist-audio.md'] },
+    { type:'sub', name:'Transcription Agent', role:'Article Video', emoji:'📝', accent:'#22C55E', domain:'VIDEO',
+      bio:'Whisper VTT + script cross-ref，繁體中文校正，輸出 .vtt + checklist。',
+      triggers:['Phase 1，與 Audio Agent 並行'],
+      skills:['Whisper','checklist-transcription.md'] },
+    { type:'sub', name:'Visual Concept Agent', role:'Article Video', emoji:'🎨', accent:'#22C55E', domain:'VIDEO',
+      bio:'讀 VTT，每個 cue 產出 visual-spec.json（triggerFrame, conceptType, position, animationIdea）。',
+      triggers:['VTT QA 通過後'],
+      skills:['visual-spec.json','checklist-visual-concept.md'] },
+    { type:'sub', name:'Scene Dev Agent', role:'Article Video', emoji:'💻', accent:'#22C55E', domain:'VIDEO',
+      bio:'讀 visual-spec.json + VTT 寫 TSX。必須載入全部 skill 再動手。',
+      triggers:['Visual Concept Agent 完成後'],
+      skills:['article-video.md','remotion-best-practices/','gsap/'] },
+    { type:'sub', name:'QA Agent (AV)', role:'Article Video', emoji:'✅', accent:'#22C55E', domain:'VIDEO',
+      bio:'驗證所有 checklist ✅，動畫時序報告，iMessage 通知（不等回覆，直接 render）。',
+      triggers:['Scene Dev 完成後'],
+      skills:['imessage_send.sh'] },
+    { type:'sub', name:'Render Agent (AV)', role:'Article Video', emoji:'🎬', accent:'#22C55E', domain:'VIDEO',
+      bio:'QA 通過後立即 render，不等 James 確認。輸出 out/YYYY-MM-DD/YYYY-MM-DD.mp4。',
+      triggers:['QA Agent 通過後自動執行'],
+      skills:['npx remotion render','out/YYYY-MM-DD/'] },
+  ]},
+
+  { label: '工程開發', agents: [
+    { type:'director', name:'Fomo App', role:'App Director', photo:P.curb, accent:'#3B82F6', domain:'ENG',
+      bio:'負責 fomo-app 所有功能開發、bug 修復、UI、API 串接。Expo 54，NativeWind v2，TanStack Query v5，Zustand v5，深色優先。',
+      triggers:['「fomo app 加功能 / 修 bug / UI 調整」','任何 fomo-app 任務'],
+      subAgents:['Feature Agent','API Agent','State Agent','QA Agent'],
+      skills:['CLAUDE.md','progress.md','NativeWind v2','TanStack Query v5','Zustand v5'] },
+    { type:'sub', name:'Feature Agent', role:'Fomo App', emoji:'⚡', accent:'#3B82F6', domain:'ENG',
+      bio:'開發/修改 screens 與 components。遵守 NativeWind + navigation type-safety。每次讀對應 screen 檔再動手。',
+      triggers:['新功能 / UI 調整任務'],
+      skills:['src/screens/','src/components/','NativeWind v2'] },
+    { type:'sub', name:'API Agent', role:'Fomo App', emoji:'🔌', accent:'#3B82F6', domain:'ENG',
+      bio:'建立/更新 src/services/ 的 API hooks。TanStack Query 定義（queryKey、queryFn、mutation）。與 api.ts interceptor 對齊。',
+      triggers:['新 API endpoint 需要串接'],
+      skills:['src/services/api.ts','TanStack Query v5'] },
+    { type:'sub', name:'State Agent', role:'Fomo App', emoji:'🗃️', accent:'#3B82F6', domain:'ENG',
+      bio:'Zustand store 設計與更新。auth flow（login/logout/refresh）。datingFilter store。',
+      triggers:['需要修改 client state 或 auth flow'],
+      skills:['src/stores/authStore.ts','src/stores/datingFilterStore.ts','Zustand v5'] },
+    { type:'sub', name:'QA Agent (FA)', role:'Fomo App', emoji:'🔬', accent:'#3B82F6', domain:'ENG',
+      bio:'檢查 navigation type 錯誤、missing i18n key、API error boundary、auth guard 漏洞。回報 blockers 到 progress.md。',
+      triggers:['Feature/API/State Agent 完成後'],
+      skills:['progress.md','src/navigation/'] },
+
+    { type:'director', name:'Engineering', role:'Engineering Director', photo:P.rail, accent:'#64748B', domain:'ENG',
+      bio:'負責 online-class-booking 功能開發與 infra。Next.js 16 App Router，Supabase SSR，Zeabur 部署。不碰 Vercel/Firebase/Railway。',
+      triggers:['「booking app 加功能 / 修 bug」','任何 LINE booking app 任務'],
+      subAgents:['Backend Agent','Frontend Agent','QA Agent'],
+      skills:['online-class-booking.md','Next.js 16','Supabase SSR','Zeabur'] },
+    { type:'sub', name:'Backend Agent', role:'Engineering', emoji:'⚙️', accent:'#64748B', domain:'ENG',
+      bio:'Supabase schema、RLS policies。優先處理 5 個 pre-build blockers。',
+      triggers:['後端 schema / RLS / API route 任務'],
+      skills:['Supabase SSR','@supabase/ssr','RLS policies'] },
+    { type:'sub', name:'Frontend Agent', role:'Engineering', emoji:'🖥️', accent:'#64748B', domain:'ENG',
+      bio:'glassmorphism dark UI，bilingual ZH-TW/EN，role routing。',
+      triggers:['前端 UI / 頁面 / routing 任務'],
+      skills:['Next.js 16 App Router','glassmorphism','i18n'] },
+    { type:'sub', name:'QA Agent (Eng)', role:'Engineering', emoji:'🔬', accent:'#64748B', domain:'ENG',
+      bio:'auth flow、role routing、API 邊界錯誤檢查。',
+      triggers:['Backend/Frontend Agent 完成後'],
+      skills:['proxy.js','PROGRESS.md'] },
+  ]},
+
+  { label: '課程 & 內容', agents: [
+    { type:'director', name:'Course Director', role:'Course Director', photo:P.starbucks, accent:'#10B981', domain:'COURSE',
+      bio:'負責 n8ncourse 網站更新。新講義、知識庫、admin 內容。套 design tokens，掃禁詞，push 到 GitHub Pages，驗證 live URL 才算完成。',
+      triggers:['「n8n 課程新增 Lecture N」','「更新每日知識庫」','任何 n8ncourse 任務'],
+      subAgents:['Content Agent','Knowledge Agent','Deploy Agent'],
+      skills:['n8ncourse.md','courses.json','GitHub Pages'] },
+    { type:'sub', name:'Content Agent', role:'Course Director', emoji:'📚', accent:'#10B981', domain:'COURSE',
+      bio:'寫 lecture{N}/index.html，套 design tokens，掃禁詞（三週/昨天/關於講師），左 sidebar + top bar 版型。',
+      triggers:['新增 Lecture 頁面'],
+      skills:['n8ncourse.md','CLAUDE.md (n8ncourse)'] },
+    { type:'sub', name:'Knowledge Agent', role:'Course Director', emoji:'🧪', accent:'#10B981', domain:'COURSE',
+      bio:'新增每日 AI 知識到 knowledge.json，維護 courses.json。',
+      triggers:['更新每日知識庫'],
+      skills:['knowledge.json','courses.json'] },
+    { type:'sub', name:'Deploy Agent', role:'Course Director', emoji:'🚀', accent:'#10B981', domain:'COURSE',
+      bio:'git push → GitHub Pages，驗證 live URL 才算完成。',
+      triggers:['Content/Knowledge Agent 完成後'],
+      skills:['GitHub Pages','git push'] },
+
+    { type:'director', name:'Content Director', role:'Content Director', photo:P.whiteshirt, accent:'#EC4899', domain:'COURSE',
+      bio:'找當日最高訊噪比 AI 文章，整理摘要，轉成 ~6.5 分鐘 ZH-TW 腳本，分段對應 Remotion scenes。',
+      triggers:['「今天的 AI 文章做成影片」','任何從文章產出腳本的任務'],
+      subAgents:['Research Agent','Script Agent','Handoff → Article Video Director'],
+      skills:['article-video.md','WebSearch','WebFetch'] },
+    { type:'sub', name:'Research Agent', role:'Content Director', emoji:'🔬', accent:'#EC4899', domain:'COURSE',
+      bio:'找當日最高訊噪比 AI 文章，整理成結構化摘要。',
+      triggers:['新的 article-video 開始時'],
+      skills:['WebSearch','WebFetch'] },
+    { type:'sub', name:'Script Agent', role:'Content Director', emoji:'✍️', accent:'#EC4899', domain:'COURSE',
+      bio:'把摘要轉成 ~6.5 分鐘 ZH-TW 腳本，分段對應 Remotion scenes，標記 iMessage callout 觸發點。',
+      triggers:['Research Agent 完成後'],
+      skills:['article-video.md'] },
+    { type:'sub', name:'Handoff Agent', role:'Content Director', emoji:'🤝', accent:'#EC4899', domain:'COURSE',
+      bio:'輸出 article-YYYY-MM-DD.md，交給 Article Video Director 繼續執行。',
+      triggers:['Script Agent 完成後'],
+      skills:['article-YYYY-MM-DD.md'] },
+  ]},
+];
+
+// ── Render ────────────────────────────────────────────────────
+function gradientBg(accent) {
+  return `background: linear-gradient(145deg,
+    color-mix(in srgb, ${accent} 22%, #111) 0%,
+    color-mix(in srgb, ${accent} 8%, #0d0d0d) 60%,
+    #0a0a0a 100%)`;
+}
+
+function cardHTML(a) {
+  const isSub = a.type === 'sub';
+  const accentLight = `color-mix(in srgb, ${a.accent} 30%, transparent)`;
+  const inner = a.photo
+    ? `<img class="card-photo" src="${a.photo}" alt="${a.name}" loading="lazy" referrerpolicy="no-referrer" crossorigin="anonymous">`
+    : `<div class="card-gradient" style="${gradientBg(a.accent)}; --card-accent-light: ${accentLight}">${a.emoji}</div>`;
+  const parentBadge = isSub ? `<div class="parent-badge">${a.role}</div>` : '';
+  return `
+    <div class="card${isSub?' sub':''}"
+         style="--card-accent: color-mix(in srgb, ${a.accent} 50%, transparent)"
+         onclick='openProfile(${JSON.stringify(a).replace(/'/g,"&#39;")})'>
+      ${inner}
+      <div class="card-overlay"></div>
+      ${parentBadge}
+      <div class="status-dot" style="background:${a.accent}"></div>
+      <div class="card-info">
+        <div class="card-name">${a.name}</div>
+        <div class="card-role">${isSub ? a.role : a.domain}</div>
+      </div>
+    </div>
+  `;
+}
+
+function render() {
+  let total = 0;
+  const app = document.getElementById('app');
+  app.innerHTML = SECTIONS.map(sec => {
+    total += sec.agents.length;
+    return `
+      <div class="section-wrap">
+        <div class="section-header">
+          <div class="section-label">${sec.label}</div>
+          <div class="section-line"></div>
+          <div class="section-count">${sec.agents.length}</div>
+        </div>
+        <div class="grid">
+          ${sec.agents.map(a => cardHTML(a)).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+  document.getElementById('agent-count').textContent = total + ' agents';
+}
+
+function openProfile(a) {
+  const overlay = document.getElementById('overlay');
+  const profile = document.getElementById('profile');
+  profile.style.setProperty('--t-accent', a.accent);
+
+  const photoWrap = document.getElementById('p-photo-wrap');
+  const photoEl = document.getElementById('p-photo');
+  const gradEl  = document.getElementById('p-gradient-bg');
+  if (a.photo) {
+    photoWrap.className = 'profile-photo-wrap has-photo';
+    photoEl.src = a.photo; photoEl.style.display = 'block';
+    gradEl.style.display = 'none';
+  } else {
+    photoWrap.className = 'profile-photo-wrap no-photo';
+    photoEl.style.display = 'none';
+    gradEl.style.display = 'flex';
+    gradEl.style.cssText = `display:flex; font-size:90px; align-items:center; justify-content:center; width:100%; height:100%; ${gradientBg(a.accent)}`;
+    gradEl.textContent = a.emoji;
+  }
+
+  document.getElementById('p-name').textContent = a.name;
+  document.getElementById('p-subtitle').textContent = a.role;
+
+  document.getElementById('p-tags').innerHTML = `
+    <span class="domain-tag" style="background:color-mix(in srgb,${a.accent} 15%,transparent);color:${a.accent};border:1px solid color-mix(in srgb,${a.accent} 25%,transparent)">${a.domain}</span>
+    ${a.type==='sub'
+      ? `<span class="domain-tag" style="background:rgba(255,255,255,0.03);color:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.07)">SUB-AGENT</span>`
+      : `<span class="domain-tag" style="background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.3);border:1px solid rgba(255,255,255,0.09)">DIRECTOR</span>`}
+  `;
+
+  document.getElementById('p-bio').textContent = a.bio;
+
+  const subCount = a.subAgents ? a.subAgents.length : 0;
+  const skillCount = a.skills ? a.skills.length : 0;
+  document.getElementById('p-stats').innerHTML = `
+    <div class="stat"><div class="stat-num" style="color:${a.accent}">${subCount}</div><div class="stat-label">Sub-Agents</div></div>
+    <div class="stat"><div class="stat-num" style="color:${a.accent}">${skillCount}</div><div class="stat-label">Skills</div></div>
+    <div class="stat"><div class="stat-num" style="color:${a.accent}">${a.triggers.length}</div><div class="stat-label">Triggers</div></div>
+  `;
+
+  document.getElementById('p-triggers').innerHTML =
+    a.triggers.map(t => `<div class="trigger-item">${t}</div>`).join('');
+
+  const subSec = document.getElementById('p-sub-section');
+  if (a.subAgents && a.subAgents.length) {
+    subSec.style.display = '';
+    document.getElementById('p-subagents').innerHTML =
+      a.subAgents.map(s => `<span class="chip accent">${s}</span>`).join('');
+  } else { subSec.style.display = 'none'; }
+
+  const skillSec = document.getElementById('p-skills-section');
+  if (a.skills && a.skills.length) {
+    skillSec.style.display = '';
+    document.getElementById('p-skills').innerHTML =
+      a.skills.map(s => `<span class="chip">${s}</span>`).join('');
+  } else { skillSec.style.display = 'none'; }
+
+  const parentSec = document.getElementById('p-parent-section');
+  if (a.type === 'sub') {
+    parentSec.style.display = '';
+    document.getElementById('p-parent').innerHTML = `<span class="chip accent">${a.role}</span>`;
+  } else { parentSec.style.display = 'none'; }
+
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  overlay.scrollTop = 0;
+}
+
+function closeProfile() {
+  document.getElementById('overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.getElementById('overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('overlay')) closeProfile();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeProfile(); });
+
+render();
+</script>
+</body>
+</html>

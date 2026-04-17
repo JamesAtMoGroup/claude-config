@@ -258,6 +258,87 @@ import { fade } from "@remotion/transitions/fade";
 
 ---
 
+---
+
+## ⛔ 強制執行：Scene Dev 四大 QA 規則（違反任一 = 必須重做）
+
+> 這四條規則來自 2026-04-10 製作中反覆踩坑的教訓。TypeScript 通過不代表正確，這四條才是真正的品質關卡。
+
+### 規則 1：triggerLocalFrame 必須從 VTT 精確計算，禁止估算
+
+```python
+# 計算公式（每個動畫必須跑這個）
+triggerLocalFrame = round(vtt_seconds * 30) - scene_start_frame
+```
+
+- **觸發時機 = 講者說出該概念的第一句話的 VTT timestamp**
+- 禁止用「大約」、「差不多」、「scene 開始 + 固定偏移」
+- **常見錯誤**：ZeroDayBurst 在 scene intro 就觸發，而非「找到了數千個零日漏洞」那句；MetaShift 在介紹模型時就觸發，而非「而是他不開源」那句
+
+### 規則 2：DURATION 必須計算到「這段話說完的最後一句」+ 90 frame buffer
+
+```python
+# DURATION 計算公式
+last_vtt_for_this_topic = round(last_vtt_seconds * 30) - scene_start_frame
+DURATION = last_vtt_for_this_topic - triggerLocalFrame + 90
+```
+
+- **DURATION 不是隨便填的數字**，必須覆蓋從 trigger 到這個 topic 最後一句話
+- 動畫內含有數字/統計資料時，DURATION 必須覆蓋到那個數字被講者說出來的時刻
+- **常見錯誤**：MetaShiftAnimation DURATION=200 (≈6.7秒)，但 App 87% 統計在 trigger 後 628 frames 才出現 → 動畫早就消失了
+
+### 規則 3：動畫內每個 step/element 的 delay 必須對齊 VTT
+
+```python
+# 每個 step 的 delay 計算
+step_delay = round(step_vtt_seconds * 30) - scene_start_frame - triggerLocalFrame
+```
+
+- 有多個步驟的動畫（如 AgentAutonomy 四步驟），每步 delay 必須對應講者說那步的 VTT timestamp
+- **禁止用固定小 stagger**（如 delay: 30/70/110/150）除非每步真的均勻分布在 VTT 中
+- **常見錯誤**：AgentAutonomy delay=[30,70,110,150]，但 VTT 中「拆解」在 trigger 後 336 frames 才說 → 步驟比講者早出現 300 frames
+
+### 規則 4：Phase A 內容高度必須計算，超過 CONTENT_H=1620px 就用 element fade-out
+
+每個 Phase A 寫完後，必須用以下方式估算總高度：
+
+```
+每張卡片高度 ≈ 上下 padding + 所有文字行高之和 + 行間距
+每張卡片間距 = marginBottom
+Phase A 總高度 = Σ(每張卡高度 + marginBottom)
+```
+
+如果 Phase A 總高度 > 1620px，**必須用 element fade-out pattern**，讓早期卡片在新卡片出現前 120 frames 開始淡出、10 frames 前從 DOM 移除：
+
+```tsx
+const EARLY_FADE_START = LATE_CARD_AT - 120;
+const EARLY_REMOVE     = LATE_CARD_AT - 10;
+const showEarly        = frame < EARLY_REMOVE;
+const earlyOpacity     = frame > EARLY_FADE_START
+  ? interpolate(frame, [EARLY_FADE_START, EARLY_REMOVE], [1, 0], clamp) : 1;
+```
+
+- **常見錯誤**：Scene1 Phase A 有 4 張卡（Mythos+Partners+ZeroDayBug+FreeBSD）全部堆疊，FreeBSD 被 ContentColumn 截掉
+
+---
+
+## ⛔ 強制執行：Scene Dev 完成後必須輸出 VTT 同步驗證表
+
+寫完所有動畫後，必須輸出以下格式的對照表（人工確認或自動驗算）：
+
+```
+動畫名稱              trigger(local)  trigger VTT時間  講者說的內容          DURATION  覆蓋到
+ZeroDayBurstAnimation     1188        01:18.800        找到了數千個零日漏洞     300      01:28.800 ✓
+AgentAutonomyAnimation    2414        01:59.680        AI Agent,也就是AI代理人  906      02:30.880 ✓
+MetaShiftAnimation        1030        03:38.720        而是他不開源            1050      04:24.000 ✓（含87%統計）
+OpenClosedAnimation       1277        03:46.960        過去幾年Meta的Llama系列  880      04:16.267 ✓
+ModalitySensesAnimation   1775        06:23.120        三種感官                 280      06:32.533 ✓
+```
+
+**如果無法填出「覆蓋到」欄，代表 DURATION 不夠，必須重新計算。**
+
+---
+
 ## Concept Animations (Motion Graphics)
 
 每支影片應在 3–5 個 VTT 關鍵時刻加入 **concept animation** — 浮動於畫面上的視覺隱喻，與講者台詞精確同步。
@@ -268,7 +349,7 @@ import { fade } from "@remotion/transitions/fade";
 - **Overlay pattern**: 使用 `position: absolute` 浮於場景上方，`zIndex: 50`，`pointerEvents: none`
 - **不遮 slides（禁止）**: 動畫必須定位在 content column（x 960–2880）以外；右側用 `right: 40*S`，左側用 `left: 40*S`；**禁止 `left: "50%"` 或任何置中定位**
 - **Envelope**: 每個動畫有 fade-in (0–10f) → hold → fade-out (DURATION-20f → DURATION) 包絡線
-- **Duration**: 160–360 frames（足夠讓講者說完該段落）；超過 DURATION return null 停止 render
+- **DURATION 必須覆蓋到該 topic 最後一句 VTT + 90f**（不得隨意填寫）
 - **Hook safety**: `useCurrentFrame()` 只在 component 頂層呼叫一次，**絕對禁止在 `.map()` 、條件式（`{showA && ...}`）、或任何 JSX prop 展開內呼叫 hook**
 - **列點動畫必須逐一出現**: 有多個列點的動畫，每個點的 `appearsAt` 必須對齊 VTT 時間戳；**禁止用固定小 stagger（如 `i * 60`）一次全部列出**
 - **累積顯示**: 列點出現後持續留在畫面，不消失，直到整體 DURATION 結束才淡出

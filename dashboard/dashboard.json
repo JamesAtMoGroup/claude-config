@@ -1,5 +1,5 @@
 {
-  "lastSync": "2026-04-10T13:00:00",
+  "lastSync": "2026-04-17T12:00:00",
   "topPriority": {
     "label": "booking app — 解決 5 個 pre-build blockers",
     "reason": "這 5 個 blockers 擋住所有後續功能開發，是目前整個 studio 最高槓桿的一件事"
@@ -12,42 +12,42 @@
       "status": "active",
       "milestones": [
         {
-          "label": "04-04",
+          "label": "04-11",
           "done": false,
           "inProgress": false
         },
         {
-          "label": "04-05",
+          "label": "04-12",
           "done": false,
           "inProgress": false
         },
         {
-          "label": "04-06",
-          "done": false,
-          "inProgress": false
-        },
-        {
-          "label": "04-07",
+          "label": "04-13",
           "done": true,
           "inProgress": false
         },
         {
-          "label": "04-08",
+          "label": "04-14",
           "done": true,
           "inProgress": false
         },
         {
-          "label": "04-09",
+          "label": "04-15",
           "done": true,
           "inProgress": false
         },
         {
-          "label": "04-10",
+          "label": "04-16",
+          "done": true,
+          "inProgress": false
+        },
+        {
+          "label": "04-17",
           "done": false,
           "inProgress": true
         }
       ],
-      "nextAction": "做 04-10 article-video",
+      "nextAction": "做 04-17 article-video",
       "blockers": []
     },
     "vibeCoding": {
